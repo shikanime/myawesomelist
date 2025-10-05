@@ -1,0 +1,8 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: shikanime
+build:
+  artifacts:
+    - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist
+      ko: {}
