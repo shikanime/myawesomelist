@@ -5,4 +5,5 @@ metadata:
 build:
   artifacts:
     - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist
-      ko: {}
+      ko:
+        dir: app
