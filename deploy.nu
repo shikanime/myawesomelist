@@ -9,14 +9,12 @@ let container_id: string = (
     | first
 )
 
-let image_tag: string = (
+let image: string = (
     skaffold build --cache-artifacts=false --output={{json .}} --quiet
     | from json
     | get builds.0.tag
     | split row "@"
     | first
-    | split row ":"
-    | last
 )
 
-scw container container update $container_id tags.0=($image_tag) --wait
+scw container container update $container_id registry-image=($image) --wait
