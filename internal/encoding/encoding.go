@@ -53,28 +53,22 @@ func WithEndSection(section string) Option {
 
 // UnmarshallCollection parses projects from a repository's README and groups them by category
 func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
-	// Apply options
-	options := &options{
-		startSection: "", // Default: no start section (parse from beginning)
-		endSection:   "", // Default: no end section (parse to end)
-	}
+	options := &options{}
 	for _, opt := range opts {
 		opt(options)
 	}
-
-	var categories []Category
-	categoryMap := make(map[string]*Category)
-	var language string
 
 	// Create a goldmark parser
 	p := goldmark.New()
 	root := p.Parser().Parse(text.NewReader(in))
 
 	// Find the specified start section and begin parsing from there
-	var currentCategory string
+	var language string
+	var category string
 	var foundStartSection bool
 	var reachedEndSection bool
 	var foundAwesomeHeader bool
+	categoryMap := make(map[string]*Category)
 
 	// If no start section specified, start parsing immediately
 	if options.startSection == "" {
@@ -120,19 +114,19 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 				// Check if we've reached the specified start section
 				if options.startSection != "" && strings.Contains(headingText, options.startSection) {
 					foundStartSection = true
-					currentCategory = strings.TrimSpace(headingText)
+					category = strings.TrimSpace(headingText)
 				} else if foundStartSection {
 					// Update current category for subsequent sections
-					currentCategory = strings.TrimSpace(headingText)
+					category = strings.TrimSpace(headingText)
 				}
 			}
 
 		case *ast.List:
-			if foundStartSection && !reachedEndSection && currentCategory != "" {
+			if foundStartSection && !reachedEndSection && category != "" {
 				// Ensure category exists in map
-				if _, exists := categoryMap[currentCategory]; !exists {
-					categoryMap[currentCategory] = &Category{
-						Name:     currentCategory,
+				if _, exists := categoryMap[category]; !exists {
+					categoryMap[category] = &Category{
+						Name:     category,
 						Projects: []Project{},
 					}
 				}
@@ -145,7 +139,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 							return ast.WalkStop, fmt.Errorf("failed to decode project: %v", err)
 						}
 						if project.Name != "" {
-							categoryMap[currentCategory].Projects = append(categoryMap[currentCategory].Projects, project)
+							categoryMap[category].Projects = append(categoryMap[category].Projects, project)
 						}
 					}
 				}
@@ -164,6 +158,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 	}
 
 	// Convert map to slice to maintain order
+	var categories []Category
 	for _, category := range categoryMap {
 		categories = append(categories, *category)
 	}

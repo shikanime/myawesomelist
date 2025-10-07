@@ -36,6 +36,7 @@ func NewGitHubLimiter(authenticated bool) *rate.Limiter {
 	return limiter
 }
 
+// GitHubClient represents a client for GitHub API operations
 type GitHubClient struct {
 	client  *github.Client
 	limiter *rate.Limiter
@@ -59,57 +60,6 @@ func NewGitHubClient() *GitHubClient {
 	}
 }
 
-// Project represents a project with GitHub information
-type Project struct {
-	Name            string
-	Description     string
-	URL             string
-	StargazersCount *int
-	OpenIssueCount  *int
-}
-
-// Category represents a category of projects
-type Category struct {
-	Name     string
-	Projects []Project
-}
-
-// Collection represents a collection of projects grouped by language
-type Collection struct {
-	Language   string
-	Categories []Category
-}
-
-// Options represents configuration options for fetching data
-type Options struct {
-	includeGitHubRepoInfo bool
-	eopts                 []encoding.Option
-}
-
-// Option is a function that configures Options
-type Option func(*Options)
-
-// WithGitHubRepoInfo enables fetching GitHub repository information (stargazers and open issues)
-func WithGitHubRepoInfo() Option {
-	return func(o *Options) {
-		o.includeGitHubRepoInfo = true
-	}
-}
-
-// WithStartSection overrides the start section for parsing categories
-func WithStartSection(section string) Option {
-	return func(o *Options) {
-		o.eopts = append(o.eopts, encoding.WithStartSection(section))
-	}
-}
-
-// WithEndSection overrides the end section for parsing categories
-func WithEndSection(section string) Option {
-	return func(o *Options) {
-		o.eopts = append(o.eopts, encoding.WithEndSection(section))
-	}
-}
-
 // GetReadme creates a reader for the README.md file of the specified repository
 func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string) ([]byte, error) {
 	if err := c.limiter.Wait(ctx); err != nil {
@@ -125,16 +75,11 @@ func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file content: %v", err)
 	}
-	content, err := base64.StdEncoding.DecodeString(*file.Content)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode content: %v", err)
-	}
-	return content, nil
+	return base64.StdEncoding.DecodeString(*file.Content)
 }
 
 // GetCollection fetches a project collection from a single awesome repository
 func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, opts ...Option) (Collection, error) {
-	// Apply options
 	options := &Options{}
 	for _, opt := range opts {
 		opt(options)
@@ -188,7 +133,8 @@ func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *P
 	for _, opt := range opts {
 		opt(options)
 	}
-	if options.includeGitHubRepoInfo && strings.Contains(project.URL, "github.com") {
+
+	if options.includeRepoInfo && strings.Contains(project.URL, "github.com") {
 		slog.Debug("Enriching project with GitHub repo info",
 			"project", project.Name,
 			"url", project.URL)
@@ -222,35 +168,18 @@ func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *P
 
 		project.StargazersCount = repository.StargazersCount
 		project.OpenIssueCount = repository.OpenIssuesCount
-
-		starCount := 0
-		if repository.StargazersCount != nil {
-			starCount = *repository.StargazersCount
-		}
-		issueCount := 0
-		if repository.OpenIssuesCount != nil {
-			issueCount = *repository.OpenIssuesCount
-		}
-
-		slog.Debug("Successfully enriched project",
-			"project", project.Name,
-			"stars", starCount,
-			"open_issues", issueCount)
 	} else {
 		slog.Debug("Skipping enrichment for project",
 			"project", project.Name,
-			"include_github_repo_info", options.includeGitHubRepoInfo,
+			"include_github_repo_info", options.includeRepoInfo,
 			"is_github", strings.Contains(project.URL, "github.com"))
 	}
+
 	return nil
 }
 
 // EnrichCollectionWithRepoInfo enriches all projects in a collection with GitHub information using parallel processing
 func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collection Collection, opts ...Option) []error {
-	slog.Info("Starting enrichment for collection",
-		"language", collection.Language,
-		"categories", len(collection.Categories))
-
 	var categoryWg sync.WaitGroup
 	var errors []error
 	for _, category := range collection.Categories {
