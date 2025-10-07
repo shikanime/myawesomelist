@@ -149,7 +149,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
-		return Collection{}, fmt.Errorf("failed to walk AST: %v", err)
+		return Collection{}, err
 	}
 
 	if options.startSection != "" && !foundStartSection {
@@ -204,7 +204,7 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Proje
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
-		return Project{}, fmt.Errorf("failed to walk list item: %v", err)
+		return Project{}, err
 	}
 	return project, nil
 }
