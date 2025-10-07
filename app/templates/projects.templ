@@ -1,0 +1,80 @@
+package templates
+
+import (
+	"fmt"
+	"myawesomelist.shikanime.studio/app/types"
+)
+
+templ ProjectsPage(collections []types.ProjectCollection) {
+	@Layout("My Awesome List - Projects") {
+		<div class="space-y-8">
+			for _, collection := range collections {
+				<div class="bg-white rounded-lg shadow-md overflow-hidden">
+					<div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+						<h2 class="text-2xl font-bold text-white flex items-center">
+							if collection.Language == "Go" {
+								<svg class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M1.811 10.231c-.047 0-.058-.023-.035-.059l.246-.315c.023-.035.081-.058.128-.058h4.172c.046 0 .058.035.035.07l-.199.303c-.023.036-.082.059-.117.059H1.811zM.047 11.306c-.047 0-.059-.023-.035-.058l.245-.316c.023-.035.082-.058.129-.058h5.516c.047 0 .07.035.058.07l-.093.28c-.012.047-.058.07-.105.07H.047zM2.828 12.381c-.047 0-.059-.035-.035-.07l.163-.292c.023-.035.070-.058.117-.058h2.337c.047 0 .070.035.070.082l-.023.245c0 .047-.023.070-.070.070H2.828zM21.293 12.033c.128.047.128.082.023.14l-.175.117c-.047.035-.117.035-.175.023l-2.699-.434c-.128-.023-.175-.070-.105-.151l.128-.128c.047-.047.128-.070.199-.047l2.804.48zM19.196 11.306c-.047 0-.070-.035-.047-.082l.070-.21c.023-.047.070-.070.117-.070h1.633c.047 0 .070.035.070.082l-.023.21c0 .047-.023.070-.070.070h-1.75zM17.42 10.231c-.047 0-.070-.035-.047-.082l.070-.21c.023-.047.070-.070.117-.070h2.152c.047 0 .070.035.070.082l-.023.21c0 .047-.023.070-.070.070H17.42z"/>
+								</svg>
+							} else {
+								<svg class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M19.077 1.5c2.55 0 4.423 2.028 4.423 4.578v11.844c0 2.55-1.873 4.578-4.423 4.578H4.923C2.373 22.5.5 20.472.5 17.922V6.078C.5 3.528 2.373 1.5 4.923 1.5h14.154zm-7.077 6L7.5 12l4.5 4.5L16.5 12 12 7.5z"/>
+								</svg>
+							}
+							Awesome { collection.Language } Projects
+							<span class="ml-auto text-sm font-normal bg-white bg-opacity-20 px-3 py-1 rounded-full">
+								{ fmt.Sprintf("%d projects", len(collection.Projects)) }
+							</span>
+						</h2>
+					</div>
+					<div class="p-6">
+						@ProjectsByCategory(collection.Projects)
+					</div>
+				</div>
+			}
+		</div>
+	}
+}
+
+templ ProjectsByCategory(projects []types.Project) {
+	<div class="space-y-6">
+		for i, project := range projects {
+			if i == 0 || project.Category != projects[i-1].Category {
+				<div class="category-card bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+					<h3 class="text-xl font-semibold text-gray-800 mb-4">{ project.Category }</h3>
+					<div class="space-y-3">
+						@ProjectItem(project)
+						for j := i + 1; j < len(projects) && projects[j].Category == project.Category; j++ {
+							@ProjectItem(projects[j])
+						}
+					</div>
+				</div>
+			}
+		}
+	</div>
+}
+
+templ ProjectItem(project types.Project) {
+	<div class="project-item bg-white rounded-md p-4 border border-gray-200 hover:shadow-md transition-all duration-200">
+		<div class="flex items-start justify-between">
+			<div class="flex-1">
+				<h4 class="text-lg font-medium text-gray-900 mb-2">
+					<a href={ templ.URL(project.URL) } target="_blank" rel="noopener noreferrer"
+					   class="text-blue-600 hover:text-blue-800 hover:underline">
+						{ project.Name }
+					</a>
+				</h4>
+				<p class="text-gray-600 text-sm leading-relaxed">{ project.Description }</p>
+			</div>
+			<div class="ml-4 flex-shrink-0">
+				<a href={ templ.URL(project.URL) } target="_blank" rel="noopener noreferrer"
+				   class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors duration-200">
+					<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+					</svg>
+					View
+				</a>
+			</div>
+		</div>
+	</div>
+}
