@@ -1,0 +1,164 @@
+package templates
+
+import (
+	"fmt"
+	"myawesomelist.shikanime.studio/internal/awesome"
+	"myawesomelist.shikanime.studio/internal/encoding"
+)
+
+templ CollectionsPage(collections []awesome.Collection) {
+	@Layout("My Awesome List - Projects") {
+		<div class="space-y-8">
+			for _, collection := range collections {
+				<div class="bg-white rounded-lg shadow-md overflow-hidden">
+					<div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+						<h2 class="text-2xl font-bold text-white flex items-center">
+							<svg class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M19.077 1.5c2.55 0 4.423 2.028 4.423 4.578v11.844c0 2.55-1.873 4.578-4.423 4.578H4.923C2.373 22.5.5 20.472.5 17.922V6.078C.5 3.528 2.373 1.5 4.923 1.5h14.154zm-7.077 6L7.5 12l4.5 4.5L16.5 12 12 7.5z"/>
+							</svg>
+							Awesome { collection.Language } Projects
+							<span class="ml-auto text-sm font-normal bg-white bg-opacity-20 px-3 py-1 rounded-full">
+								{ fmt.Sprintf("%d categories", len(collection.Categories)) }
+							</span>
+						</h2>
+					</div>
+					<div class="p-6">
+						@CategoriesView(collection.Categories)
+					</div>
+				</div>
+			}
+		</div>
+
+		<!-- JavaScript for collapsible functionality -->
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				// Add click event listeners to all category headers
+				document.querySelectorAll('.category-header').forEach(function(header) {
+					header.addEventListener('click', function() {
+						const categoryContent = this.nextElementSibling;
+						const chevronIcon = this.querySelector('.chevron-icon');
+						const isExpanded = !categoryContent.classList.contains('hidden');
+
+						if (isExpanded) {
+							// Collapse
+							categoryContent.classList.add('hidden');
+							chevronIcon.style.transform = 'rotate(0deg)';
+							this.setAttribute('aria-expanded', 'false');
+						} else {
+							// Expand
+							categoryContent.classList.remove('hidden');
+							chevronIcon.style.transform = 'rotate(90deg)';
+							this.setAttribute('aria-expanded', 'true');
+						}
+					});
+				});
+
+				// Add global expand/collapse all functionality
+				const expandAllBtn = document.getElementById('expand-all');
+				const collapseAllBtn = document.getElementById('collapse-all');
+
+				if (expandAllBtn) {
+					expandAllBtn.addEventListener('click', function() {
+						document.querySelectorAll('.category-content').forEach(function(content) {
+							content.classList.remove('hidden');
+						});
+						document.querySelectorAll('.chevron-icon').forEach(function(icon) {
+							icon.style.transform = 'rotate(90deg)';
+						});
+						document.querySelectorAll('.category-header').forEach(function(header) {
+							header.setAttribute('aria-expanded', 'true');
+						});
+					});
+				}
+
+				if (collapseAllBtn) {
+					collapseAllBtn.addEventListener('click', function() {
+						document.querySelectorAll('.category-content').forEach(function(content) {
+							content.classList.add('hidden');
+						});
+						document.querySelectorAll('.chevron-icon').forEach(function(icon) {
+							icon.style.transform = 'rotate(0deg)';
+						});
+						document.querySelectorAll('.category-header').forEach(function(header) {
+							header.setAttribute('aria-expanded', 'false');
+						});
+					});
+				}
+			});
+		</script>
+	}
+}
+
+templ CategoriesView(categories []encoding.Category) {
+	<div class="space-y-6">
+		<!-- Control buttons -->
+		<div class="flex justify-end space-x-2 mb-4">
+			<button id="expand-all" class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors duration-200">
+				Expand All
+			</button>
+			<button id="collapse-all" class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200">
+				Collapse All
+			</button>
+		</div>
+
+		for _, category := range categories {
+			<div class="category-card bg-gray-50 rounded-lg border-l-4 border-blue-500 overflow-hidden">
+				<!-- Collapsible category header -->
+				<button class="category-header w-full text-left p-4 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+				        aria-expanded="false"
+				        role="button"
+				        tabindex="0">
+					<div class="flex items-center justify-between">
+						<h3 class="text-xl font-semibold text-gray-800">{ category.Name }</h3>
+						<div class="flex items-center space-x-2">
+							<span class="text-sm text-gray-500 bg-white px-2 py-1 rounded-full">
+								{ fmt.Sprintf("%d projects", len(category.Projects)) }
+							</span>
+							<svg class="chevron-icon w-5 h-5 text-gray-500 transition-transform duration-200"
+							     style="transform: rotate(0deg);"
+							     fill="none"
+							     stroke="currentColor"
+							     viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+							</svg>
+						</div>
+					</div>
+				</button>
+
+				<!-- Collapsible category content -->
+				<div class="category-content p-4 pt-0 hidden">
+					<div class="space-y-3">
+						for _, project := range category.Projects {
+							@ProjectItem(project)
+						}
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ ProjectItem(project encoding.Project) {
+	<div class="project-item bg-white rounded-md p-4 border border-gray-200 hover:shadow-md transition-all duration-200">
+		<div class="flex items-start justify-between">
+			<div class="flex-1">
+				<h4 class="text-lg font-medium text-gray-900 mb-2">
+					<a href={ templ.URL(project.URL) } target="_blank" rel="noopener noreferrer"
+					   class="text-blue-600 hover:text-blue-800 hover:underline">
+						{ project.Name }
+					</a>
+				</h4>
+				<p class="text-gray-600 text-sm leading-relaxed">{ project.Description }</p>
+			</div>
+			<div class="ml-4 flex-shrink-0">
+				<a href={ templ.URL(project.URL) } target="_blank" rel="noopener noreferrer"
+				   class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors duration-200">
+					<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+					</svg>
+					View
+				</a>
+			</div>
+		</div>
+	</div>
+}
