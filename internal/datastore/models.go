@@ -6,13 +6,13 @@ import (
 
 // CollectionRecord represents a stored collection in the database
 type CollectionRecord struct {
-	ID         int64                `json:"id" db:"id"`
-	Language   string               `json:"language" db:"language"`
-	Owner      string               `json:"owner" db:"owner"`
-	Repo       string               `json:"repo" db:"repo"`
-	Categories []CategoryRecord     `json:"categories"`
-	CreatedAt  time.Time            `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time            `json:"updated_at" db:"updated_at"`
+	ID         int64            `json:"id" db:"id"`
+	Language   string           `json:"language" db:"language"`
+	Owner      string           `json:"owner" db:"owner"`
+	Repo       string           `json:"repo" db:"repo"`
+	Categories []CategoryRecord `json:"categories"`
+	CreatedAt  time.Time        `json:"created_at" db:"created_at"`
+	UpdatedAt  time.Time        `json:"updated_at" db:"updated_at"`
 }
 
 // CategoryRecord represents a stored category in the database
