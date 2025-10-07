@@ -11,7 +11,6 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"fmt"
 	"myawesomelist.shikanime.studio/internal/awesome"
-	"myawesomelist.shikanime.studio/internal/encoding"
 )
 
 func CollectionsPage(collections []awesome.Collection) templ.Component {
@@ -59,7 +58,7 @@ func CollectionsPage(collections []awesome.Collection) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(collection.Language)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 19, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 18, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -72,7 +71,7 @@ func CollectionsPage(collections []awesome.Collection) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d categories", len(collection.Categories)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 21, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 20, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -91,7 +90,7 @@ func CollectionsPage(collections []awesome.Collection) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><!-- JavaScript for collapsible functionality --> <script>\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\t// Add click event listeners to all category headers\n\t\t\t\tdocument.querySelectorAll('.category-header').forEach(function(header) {\n\t\t\t\t\theader.addEventListener('click', function() {\n\t\t\t\t\t\tconst categoryContent = this.nextElementSibling;\n\t\t\t\t\t\tconst chevronIcon = this.querySelector('.chevron-icon');\n\t\t\t\t\t\tconst isExpanded = !categoryContent.classList.contains('hidden');\n\n\t\t\t\t\t\tif (isExpanded) {\n\t\t\t\t\t\t\t// Collapse\n\t\t\t\t\t\t\tcategoryContent.classList.add('hidden');\n\t\t\t\t\t\t\tchevronIcon.style.transform = 'rotate(0deg)';\n\t\t\t\t\t\t\tthis.setAttribute('aria-expanded', 'false');\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t// Expand\n\t\t\t\t\t\t\tcategoryContent.classList.remove('hidden');\n\t\t\t\t\t\t\tchevronIcon.style.transform = 'rotate(90deg)';\n\t\t\t\t\t\t\tthis.setAttribute('aria-expanded', 'true');\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t});\n\n\t\t\t\t// Add global expand/collapse all functionality\n\t\t\t\tconst expandAllBtn = document.getElementById('expand-all');\n\t\t\t\tconst collapseAllBtn = document.getElementById('collapse-all');\n\n\t\t\t\tif (expandAllBtn) {\n\t\t\t\t\texpandAllBtn.addEventListener('click', function() {\n\t\t\t\t\t\tdocument.querySelectorAll('.category-content').forEach(function(content) {\n\t\t\t\t\t\t\tcontent.classList.remove('hidden');\n\t\t\t\t\t\t});\n\t\t\t\t\t\tdocument.querySelectorAll('.chevron-icon').forEach(function(icon) {\n\t\t\t\t\t\t\ticon.style.transform = 'rotate(90deg)';\n\t\t\t\t\t\t});\n\t\t\t\t\t\tdocument.querySelectorAll('.category-header').forEach(function(header) {\n\t\t\t\t\t\t\theader.setAttribute('aria-expanded', 'true');\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tif (collapseAllBtn) {\n\t\t\t\t\tcollapseAllBtn.addEventListener('click', function() {\n\t\t\t\t\t\tdocument.querySelectorAll('.category-content').forEach(function(content) {\n\t\t\t\t\t\t\tcontent.classList.add('hidden');\n\t\t\t\t\t\t});\n\t\t\t\t\t\tdocument.querySelectorAll('.chevron-icon').forEach(function(icon) {\n\t\t\t\t\t\t\ticon.style.transform = 'rotate(0deg)';\n\t\t\t\t\t\t});\n\t\t\t\t\t\tdocument.querySelectorAll('.category-header').forEach(function(header) {\n\t\t\t\t\t\t\theader.setAttribute('aria-expanded', 'false');\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t});\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><!-- JavaScript for collapsible functionality --> <script>\n\t\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\t\t// Add click event listeners to all category headers\n\t\t\t\tdocument.querySelectorAll('.category-header').forEach(function(header) {\n\t\t\t\t\theader.addEventListener('click', function() {\n\t\t\t\t\t\tconst categoryContent = this.nextElementSibling;\n\t\t\t\t\t\tconst chevronIcon = this.querySelector('.chevron-icon');\n\n\t\t\t\t\t\tif (categoryContent.classList.contains('hidden')) {\n\t\t\t\t\t\t\t// Show content\n\t\t\t\t\t\t\tcategoryContent.classList.remove('hidden');\n\t\t\t\t\t\t\tchevronIcon.style.transform = 'rotate(90deg)';\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t// Hide content\n\t\t\t\t\t\t\tcategoryContent.classList.add('hidden');\n\t\t\t\t\t\t\tchevronIcon.style.transform = 'rotate(0deg)';\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t});\n\t\t\t});\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -105,7 +104,7 @@ func CollectionsPage(collections []awesome.Collection) templ.Component {
 	})
 }
 
-func CategoriesView(categories []encoding.Category) templ.Component {
+func CategoriesView(categories []awesome.Category) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -138,7 +137,7 @@ func CategoriesView(categories []encoding.Category) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(category.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 112, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 76, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -151,7 +150,7 @@ func CategoriesView(categories []encoding.Category) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d projects", len(category.Projects)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 115, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 79, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -180,7 +179,7 @@ func CategoriesView(categories []encoding.Category) templ.Component {
 	})
 }
 
-func ProjectItem(project encoding.Project) templ.Component {
+func ProjectItem(project awesome.Project) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -201,14 +200,14 @@ func ProjectItem(project encoding.Project) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"project-item bg-white rounded-md p-4 border border-gray-200 hover:shadow-md transition-all duration-200\"><div class=\"flex items-start justify-between\"><div class=\"flex-1\"><h4 class=\"text-lg font-medium text-gray-900 mb-2\"><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"project-item bg-white rounded-md p-4 border border-gray-200 hover:shadow-md transition-all duration-200\"><div class=\"flex items-start justify-between\"><div class=\"flex-1\"><div class=\"flex items-center mb-2\"><h4 class=\"text-lg font-medium text-gray-900\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 templ.SafeURL
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(project.URL))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 146, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 111, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -221,39 +220,91 @@ func ProjectItem(project encoding.Project) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(project.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 148, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 113, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</a></h4><p class=\"text-gray-600 text-sm leading-relaxed\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</a></h4>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(project.Description)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 151, Col: 74}
+		if project.StargazersCount != nil && *project.StargazersCount > 0 || project.OpenIssueCount != nil && *project.OpenIssueCount > 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"ml-3 flex items-center space-x-3\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if project.StargazersCount != nil && *project.StargazersCount > 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"flex items-center text-yellow-600\"><svg class=\"w-4 h-4 mr-1\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z\"></path></svg> <span class=\"text-sm font-medium\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var11 string
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", *project.StargazersCount))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 123, Col: 87}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</span></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			if project.OpenIssueCount != nil && *project.OpenIssueCount > 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"flex items-center text-red-600\"><svg class=\"w-4 h-4 mr-1\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z\"></path></svg> <span class=\"text-sm font-medium\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var12 string
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d issues", *project.OpenIssueCount))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 131, Col: 93}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</span></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div><p class=\"text-gray-600 text-sm leading-relaxed\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p></div><div class=\"ml-4 flex-shrink-0\"><a href=\"")
+		var templ_7745c5c3_Var13 string
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(project.Description)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 137, Col: 74}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var12 templ.SafeURL
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(project.URL))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 154, Col: 36}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</p></div><div class=\"ml-4 flex-shrink-0\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors duration-200\"><svg class=\"w-3 h-3 mr-1\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> View</a></div></div></div>")
+		var templ_7745c5c3_Var14 templ.SafeURL
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(project.URL))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/collections.templ`, Line: 140, Col: 36}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors duration-200\"><svg class=\"w-3 h-3 mr-1\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> View</a></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

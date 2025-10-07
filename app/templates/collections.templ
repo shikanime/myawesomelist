@@ -3,7 +3,6 @@ package templates
 import (
 	"fmt"
 	"myawesomelist.shikanime.studio/internal/awesome"
-	"myawesomelist.shikanime.studio/internal/encoding"
 )
 
 templ CollectionsPage(collections []awesome.Collection) {
@@ -37,59 +36,24 @@ templ CollectionsPage(collections []awesome.Collection) {
 					header.addEventListener('click', function() {
 						const categoryContent = this.nextElementSibling;
 						const chevronIcon = this.querySelector('.chevron-icon');
-						const isExpanded = !categoryContent.classList.contains('hidden');
 
-						if (isExpanded) {
-							// Collapse
-							categoryContent.classList.add('hidden');
-							chevronIcon.style.transform = 'rotate(0deg)';
-							this.setAttribute('aria-expanded', 'false');
-						} else {
-							// Expand
+						if (categoryContent.classList.contains('hidden')) {
+							// Show content
 							categoryContent.classList.remove('hidden');
 							chevronIcon.style.transform = 'rotate(90deg)';
-							this.setAttribute('aria-expanded', 'true');
+						} else {
+							// Hide content
+							categoryContent.classList.add('hidden');
+							chevronIcon.style.transform = 'rotate(0deg)';
 						}
 					});
 				});
-
-				// Add global expand/collapse all functionality
-				const expandAllBtn = document.getElementById('expand-all');
-				const collapseAllBtn = document.getElementById('collapse-all');
-
-				if (expandAllBtn) {
-					expandAllBtn.addEventListener('click', function() {
-						document.querySelectorAll('.category-content').forEach(function(content) {
-							content.classList.remove('hidden');
-						});
-						document.querySelectorAll('.chevron-icon').forEach(function(icon) {
-							icon.style.transform = 'rotate(90deg)';
-						});
-						document.querySelectorAll('.category-header').forEach(function(header) {
-							header.setAttribute('aria-expanded', 'true');
-						});
-					});
-				}
-
-				if (collapseAllBtn) {
-					collapseAllBtn.addEventListener('click', function() {
-						document.querySelectorAll('.category-content').forEach(function(content) {
-							content.classList.add('hidden');
-						});
-						document.querySelectorAll('.chevron-icon').forEach(function(icon) {
-							icon.style.transform = 'rotate(0deg)';
-						});
-						document.querySelectorAll('.category-header').forEach(function(header) {
-							header.setAttribute('aria-expanded', 'false');
-						});
-					});
-				}
 			});
 		</script>
 	}
 }
 
-templ CategoriesView(categories []encoding.Category) {
+templ CategoriesView(categories []awesome.Category) {
 	<div class="space-y-6">
 		<!-- Control buttons -->
 		<div class="flex justify-end space-x-2 mb-4">
@@ -138,16 +102,38 @@ templ CategoriesView(categories []encoding.Category) {
 	</div>
 }
 
-templ ProjectItem(project encoding.Project) {
+templ ProjectItem(project awesome.Project) {
 	<div class="project-item bg-white rounded-md p-4 border border-gray-200 hover:shadow-md transition-all duration-200">
 		<div class="flex items-start justify-between">
 			<div class="flex-1">
-				<h4 class="text-lg font-medium text-gray-900 mb-2">
-					<a href={ templ.URL(project.URL) } target="_blank" rel="noopener noreferrer"
-					   class="text-blue-600 hover:text-blue-800 hover:underline">
-						{ project.Name }
-					</a>
-				</h4>
+				<div class="flex items-center mb-2">
+					<h4 class="text-lg font-medium text-gray-900">
+						<a href={ templ.URL(project.URL) } target="_blank" rel="noopener noreferrer"
+						   class="text-blue-600 hover:text-blue-800 hover:underline">
+							{ project.Name }
+						</a>
+					</h4>
+					if project.StargazersCount != nil && *project.StargazersCount > 0 || project.OpenIssueCount != nil && *project.OpenIssueCount > 0 {
+						<div class="ml-3 flex items-center space-x-3">
+						if project.StargazersCount != nil && *project.StargazersCount > 0 {
+							<div class="flex items-center text-yellow-600">
+								<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+									<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+								</svg>
+								<span class="text-sm font-medium">{ fmt.Sprintf("%d", *project.StargazersCount) }</span>
+							</div>
+						}
+						if project.OpenIssueCount != nil && *project.OpenIssueCount > 0 {
+							<div class="flex items-center text-red-600">
+								<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+								</svg>
+								<span class="text-sm font-medium">{ fmt.Sprintf("%d issues", *project.OpenIssueCount) }</span>
+							</div>
+						}
+					</div>
+					}
+				</div>
 				<p class="text-gray-600 text-sm leading-relaxed">{ project.Description }</p>
 			</div>
 			<div class="ml-4 flex-shrink-0">
