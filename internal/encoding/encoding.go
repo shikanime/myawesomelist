@@ -1,12 +1,9 @@
-package avelinoawesomego
+package encoding
 
 import (
-	"context"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
-	"github.com/google/go-github/v75/github"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
@@ -16,39 +13,26 @@ type Project struct {
 	Name        string
 	Description string
 	URL         string
-	Category    string
+	Language    string
 }
 
-// ReadContent creates a reader for the README.md file of the Avelino/awesome-go repository
-func ReadContent(ctx context.Context, client *github.Client) ([]byte, error) {
-	file, _, _, err := client.Repositories.GetContents(
-		ctx,
-		"avelino",
-		"awesome-go",
-		"README.md",
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get file content: %v", err)
-	}
-	content, err := base64.StdEncoding.DecodeString(*file.Content)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode content: %v", err)
-	}
-	return content, nil
+type Category struct {
+	Name     string
+	Projects []Project
 }
 
-// DecodeProjects parses projects from the Avelino/awesome-go repository
-func DecodeProjects(in []byte) ([]Project, error) {
-	var projects []Project
+// UnmarshallCategories parses projects from a repository's README and groups them by category
+func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
+	var categories []Category
+	categoryMap := make(map[string]*Category)
 
 	// Create a goldmark parser
 	p := goldmark.New()
 	root := p.Parser().Parse(text.NewReader(in))
 
-	// Find the ActorModel section and start parsing from there
+	// Find the specified start section and begin parsing from there
 	var currentCategory string
-	var foundActorModel bool
+	var foundStartSection bool
 
 	// Walk through the AST
 	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -64,27 +48,35 @@ func DecodeProjects(in []byte) ([]Project, error) {
 					return ast.WalkStop, fmt.Errorf("failed to decode heading text: %v", err)
 				}
 
-				// Check if we've reached the ActorModel section
-				if strings.Contains(strings.ToLower(headingText), "actor model") {
-					foundActorModel = true
+				// Check if we've reached the specified start section
+				if strings.Contains(headingText, startSection) {
+					foundStartSection = true
 					currentCategory = strings.TrimSpace(headingText)
-				} else if foundActorModel {
+				} else if foundStartSection {
 					// Update current category for subsequent sections
 					currentCategory = strings.TrimSpace(headingText)
 				}
 			}
 
 		case *ast.List:
-			if foundActorModel && currentCategory != "" {
+			if foundStartSection && currentCategory != "" {
+				// Ensure category exists in map
+				if _, exists := categoryMap[currentCategory]; !exists {
+					categoryMap[currentCategory] = &Category{
+						Name:     currentCategory,
+						Projects: []Project{},
+					}
+				}
+
 				// Parse list items as projects
 				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
 					if listItem, ok := child.(*ast.ListItem); ok {
-						project, err := DecodeProjectsFromListItem(listItem, in, currentCategory)
+						project, err := UnmarshallProjectFromListItem(listItem, in)
 						if err != nil {
 							return ast.WalkStop, fmt.Errorf("failed to decode project: %v", err)
 						}
 						if project.Name != "" {
-							projects = append(projects, project)
+							categoryMap[currentCategory].Projects = append(categoryMap[currentCategory].Projects, project)
 						}
 					}
 				}
@@ -98,36 +90,22 @@ func DecodeProjects(in []byte) ([]Project, error) {
 		return nil, fmt.Errorf("failed to walk AST: %v", err)
 	}
 
-	if !foundActorModel {
-		return nil, fmt.Errorf("ActorModel section not found in the document")
+	if !foundStartSection {
+		return nil, fmt.Errorf("%s section not found in the document", startSection)
 	}
 
-	return projects, nil
-}
-
-// DecodeTextFromNode extracts text content from an AST node
-func DecodeTextFromNode(node ast.Node, source []byte) (string, error) {
-	var text strings.Builder
-	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if !entering {
-			return ast.WalkContinue, nil
-		}
-
-		if textNode, ok := n.(*ast.Text); ok {
-			text.Write(textNode.Segment.Value(source))
-		}
-
-		return ast.WalkContinue, nil
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to walk node: %v", err)
+	// Convert map to slice to maintain order
+	for _, category := range categoryMap {
+		categories = append(categories, *category)
 	}
-	return text.String(), nil
+
+	return categories, nil
 }
 
-// DecodeProjectsFromListItem extracts project information from a list item
-func DecodeProjectsFromListItem(listItem *ast.ListItem, source []byte, category string) (Project, error) {
-	project := Project{Category: category}
+// UnmarshallProjectFromListItem extracts project information from a list item
+func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Project, error) {
+	project := Project{}
+
 	err := ast.Walk(listItem, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
@@ -165,11 +143,19 @@ func DecodeProjectsFromListItem(listItem *ast.ListItem, source []byte, category 
 	return project, nil
 }
 
-// GetProjects parses projects from the Avelino/awesome-go repository
-func GetProjects(ctx context.Context, client *github.Client) ([]Project, error) {
-	content, err := ReadContent(ctx, client)
+// DecodeTextFromNode extracts text content from an AST node
+func DecodeTextFromNode(node ast.Node, source []byte) (string, error) {
+	var text strings.Builder
+	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			if textNode, ok := n.(*ast.Text); ok {
+				text.Write(textNode.Segment.Value(source))
+			}
+		}
+		return ast.WalkContinue, nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create reader: %v", err)
+		return "", err
 	}
-	return DecodeProjects(content)
+	return text.String(), nil
 }

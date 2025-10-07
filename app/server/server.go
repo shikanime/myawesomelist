@@ -7,15 +7,45 @@ import (
 	"time"
 
 	"github.com/google/go-github/v75/github"
-	"myawesomelist.shikanime.studio/app/avelinoawesomego"
-	"myawesomelist.shikanime.studio/app/h4ccawesomeelixir"
-	"myawesomelist.shikanime.studio/app/sorryccawesomejavascript"
 	"myawesomelist.shikanime.studio/app/templates"
-	"myawesomelist.shikanime.studio/app/types"
+	"myawesomelist.shikanime.studio/internal/awesome"
 )
 
 type Server struct {
 	client *github.Client
+}
+
+var repos = []awesome.GetCollectionsConfig{
+	{
+		Language: "Go",
+		CategoriesConfig: awesome.GetCategoriesConfig{
+			ContentConfig: awesome.GetContentConfig{
+				Owner: "avelino",
+				Repo:  "awesome-go",
+			},
+			StartSection: "Actor Model",
+		},
+	},
+	{
+		Language: "Elixir",
+		CategoriesConfig: awesome.GetCategoriesConfig{
+			ContentConfig: awesome.GetContentConfig{
+				Owner: "h4cc",
+				Repo:  "awesome-elixir",
+			},
+			StartSection: "Actors",
+		},
+	},
+	{
+		Language: "JavaScript",
+		CategoriesConfig: awesome.GetCategoriesConfig{
+			ContentConfig: awesome.GetContentConfig{
+				Owner: "sorrycc",
+				Repo:  "awesome-javascript",
+			},
+			StartSection: "Package Managers",
+		},
+	},
 }
 
 func New() *Server {
@@ -39,108 +69,28 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Fetching projects from GitHub repositories...")
 
-	// Get projects from awesome-go
-	goProjects, err := avelinoawesomego.GetProjects(ctx, s.client)
+	collections, err := awesome.GetCollections(ctx, s.client, repos)
 	if err != nil {
-		log.Printf("Failed to parse Go projects: %v", err)
-		http.Error(w, "Failed to load Go projects", http.StatusInternalServerError)
+		log.Printf("Failed to get collections: %v", err)
+		http.Error(w, "Failed to load project collections", http.StatusInternalServerError)
 		return
-	}
-	log.Printf("Loaded %d Go projects", len(goProjects))
-
-	// Get projects from awesome-elixir
-	elixirProjects, err := h4ccawesomeelixir.GetProjects(ctx, s.client)
-	if err != nil {
-		log.Printf("Failed to parse Elixir projects: %v", err)
-		http.Error(w, "Failed to load Elixir projects", http.StatusInternalServerError)
-		return
-	}
-	log.Printf("Loaded %d Elixir projects", len(elixirProjects))
-
-	// Get projects from awesome-javascript
-	jsProjects, err := sorryccawesomejavascript.GetProjects(ctx, s.client)
-	if err != nil {
-		log.Printf("Failed to parse JavaScript projects: %v", err)
-		http.Error(w, "Failed to load JavaScript projects", http.StatusInternalServerError)
-		return
-	}
-	log.Printf("Loaded %d JavaScript projects", len(jsProjects))
-
-	// Convert to common types
-	collections := []types.ProjectCollection{
-		{
-			Language: "Go",
-			Projects: convertGoProjects(goProjects),
-		},
-		{
-			Language: "Elixir",
-			Projects: convertElixirProjects(elixirProjects),
-		},
-		{
-			Language: "JavaScript",
-			Projects: convertJavaScriptProjects(jsProjects),
-		},
 	}
 
 	// Set content type
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// Render the template
-	component := templates.ProjectsPage(collections)
+	component := templates.CollectionsPage(collections)
 	err = component.Render(ctx, w)
 	if err != nil {
 		log.Printf("Failed to render template: %v", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("Successfully rendered page with %d total projects", len(goProjects)+len(elixirProjects)+len(jsProjects))
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"ok","service":"myawesomelist"}`))
-}
-
-func convertGoProjects(projects []avelinoawesomego.Project) []types.Project {
-	result := make([]types.Project, len(projects))
-	for i, p := range projects {
-		result[i] = types.Project{
-			Name:        p.Name,
-			Description: p.Description,
-			URL:         p.URL,
-			Category:    p.Category,
-			Language:    "Go",
-		}
-	}
-	return result
-}
-
-func convertElixirProjects(projects []h4ccawesomeelixir.Project) []types.Project {
-	result := make([]types.Project, len(projects))
-	for i, p := range projects {
-		result[i] = types.Project{
-			Name:        p.Name,
-			Description: p.Description,
-			URL:         p.URL,
-			Category:    p.Category,
-			Language:    "Elixir",
-		}
-	}
-	return result
-}
-
-func convertJavaScriptProjects(projects []sorryccawesomejavascript.Project) []types.Project {
-	result := make([]types.Project, len(projects))
-	for i, p := range projects {
-		result[i] = types.Project{
-			Name:        p.Name,
-			Description: p.Description,
-			URL:         p.URL,
-			Category:    p.Category,
-			Language:    "JavaScript",
-		}
-	}
-	return result
 }
