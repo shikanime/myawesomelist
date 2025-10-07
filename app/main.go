@@ -1,18 +1,23 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
-	"net/http"
+	"os"
 
-	"github.com/a-h/templ"
+	"myawesomelist.shikanime.studio/app/server"
 )
 
 func main() {
-	http.Handle("/", templ.Handler(hello("World")))
+	var port string
+	flag.StringVar(&port, "port", "8080", "Port to run the server on")
+	flag.Parse()
 
-	port := ":8080"
-	fmt.Printf("Server starting on http://localhost%s\n", port)
+	// Allow port to be set via environment variable
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		port = envPort
+	}
 
-	log.Fatal(http.ListenAndServe(port, nil))
+	srv := server.New()
+	log.Fatal(srv.Start(port))
 }
