@@ -22,22 +22,26 @@ A web application that displays curated projects from awesome-go, awesome-elixir
 ### Running the Application
 
 1. **Clone the repository**:
+
    ```bash
    git clone <repository-url>
    cd myawesomelist
    ```
 
 2. **Install dependencies**:
+
    ```bash
    go mod tidy
    ```
 
 3. **Generate templ files** (if needed):
+
    ```bash
    templ generate
    ```
 
 4. **Run the application**:
+
    ```bash
    go run ./app
    ```
@@ -57,12 +61,14 @@ The application fetches star counts from the GitHub API. To avoid rate limiting:
    - No additional permissions needed for public repositories
 
 2. **Set the token as an environment variable**:
+
    ```bash
    export GITHUB_TOKEN=your_token_here
    go run ./app
    ```
 
    Or use the Makefile:
+
    ```bash
    GITHUB_TOKEN=your_token_here make dev-with-token
    ```
@@ -98,6 +104,7 @@ make clean
 You can specify a custom port using either:
 
 1. **Command line flag**:
+
    ```bash
    go run ./app -port=3000
    ```
