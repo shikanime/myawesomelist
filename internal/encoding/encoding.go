@@ -9,22 +9,62 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-type Project struct {
-	Name        string
-	Description string
-	URL         string
-	Language    string
+// Collection represents a collection of categories
+type Collection struct {
+	Language   string
+	Categories []Category
 }
 
+// Category represents a category of projects
 type Category struct {
 	Name     string
 	Projects []Project
 }
 
-// UnmarshallCategories parses projects from a repository's README and groups them by category
-func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
+// Project represents a single project in a category
+type Project struct {
+	Name        string
+	Description string
+	URL         string
+}
+
+// options represents configuration options for parsing
+type options struct {
+	startSection string
+	endSection   string
+}
+
+// Option is a function that configures options
+type Option func(*options)
+
+// WithStartSection sets the start section for parsing categories
+func WithStartSection(section string) Option {
+	return func(o *options) {
+		o.startSection = section
+	}
+}
+
+// WithEndSection sets the end section to stop parsing categories
+func WithEndSection(section string) Option {
+	return func(o *options) {
+		o.endSection = section
+	}
+}
+
+// UnmarshallCollection parses projects from a repository's README and groups them by category
+func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
+	// Apply options
+	options := &options{
+		startSection: "", // Default: no start section (parse from beginning)
+		endSection:   "", // Default: no end section (parse to end)
+	}
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	var categories []Category
 	categoryMap := make(map[string]*Category)
+	var language string
 
 	// Create a goldmark parser
 	p := goldmark.New()
@@ -33,6 +73,13 @@ func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
 	// Find the specified start section and begin parsing from there
 	var currentCategory string
 	var foundStartSection bool
+	var reachedEndSection bool
+	var foundAwesomeHeader bool
+
+	// If no start section specified, start parsing immediately
+	if options.startSection == "" {
+		foundStartSection = true
+	}
 
 	// Walk through the AST
 	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -40,16 +87,38 @@ func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
 			return ast.WalkContinue, nil
 		}
 
+		// Stop parsing if we've reached the end section
+		if reachedEndSection {
+			return ast.WalkStop, nil
+		}
+
 		switch n := node.(type) {
 		case *ast.Heading:
+			headingText, err := DecodeTextFromNode(n, in)
+			if err != nil {
+				return ast.WalkStop, fmt.Errorf("failed to decode heading text: %v", err)
+			}
+
+			// Extract language from first "Awesome {language}" header (level 1)
+			if n.Level == 1 && !foundAwesomeHeader && strings.HasPrefix(strings.ToLower(headingText), "awesome ") {
+				// Extract language from "Awesome {language}" format
+				parts := strings.Fields(headingText)
+				if len(parts) >= 2 {
+					language = strings.Join(parts[1:], " ")
+				}
+				foundAwesomeHeader = true
+			}
+
 			if n.Level == 2 { // Main category headings are level 2
-				headingText, err := DecodeTextFromNode(n, in)
-				if err != nil {
-					return ast.WalkStop, fmt.Errorf("failed to decode heading text: %v", err)
+
+				// Check if we've reached the end section
+				if options.endSection != "" && foundStartSection && strings.Contains(headingText, options.endSection) {
+					reachedEndSection = true
+					return ast.WalkStop, nil
 				}
 
 				// Check if we've reached the specified start section
-				if strings.Contains(headingText, startSection) {
+				if options.startSection != "" && strings.Contains(headingText, options.startSection) {
 					foundStartSection = true
 					currentCategory = strings.TrimSpace(headingText)
 				} else if foundStartSection {
@@ -59,7 +128,7 @@ func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
 			}
 
 		case *ast.List:
-			if foundStartSection && currentCategory != "" {
+			if foundStartSection && !reachedEndSection && currentCategory != "" {
 				// Ensure category exists in map
 				if _, exists := categoryMap[currentCategory]; !exists {
 					categoryMap[currentCategory] = &Category{
@@ -87,11 +156,11 @@ func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to walk AST: %v", err)
+		return Collection{}, fmt.Errorf("failed to walk AST: %v", err)
 	}
 
-	if !foundStartSection {
-		return nil, fmt.Errorf("%s section not found in the document", startSection)
+	if options.startSection != "" && !foundStartSection {
+		return Collection{}, fmt.Errorf("%s section not found in the document", options.startSection)
 	}
 
 	// Convert map to slice to maintain order
@@ -99,7 +168,10 @@ func UnmarshallCategories(in []byte, startSection string) ([]Category, error) {
 		categories = append(categories, *category)
 	}
 
-	return categories, nil
+	return Collection{
+		Language:   language,
+		Categories: categories,
+	}, nil
 }
 
 // UnmarshallProjectFromListItem extracts project information from a list item

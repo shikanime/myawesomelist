@@ -35,7 +35,6 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 		Owner: "gostor",
 		Repo:  "awesome-go-storage",
 		Options: []Option{
-			WithGitHubRepoInfo(),
 			WithStartSection("Storage Server"),
 		},
 	},
