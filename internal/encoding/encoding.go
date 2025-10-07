@@ -93,7 +93,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 				return ast.WalkStop, fmt.Errorf("failed to decode heading text: %v", err)
 			}
 
-			// Extract language from first "Awesome {language}" header (level 1)
+			// Extract language from first heading
 			if n.Level == 1 && !foundAwesomeHeader && strings.HasPrefix(strings.ToLower(headingText), "awesome ") {
 				// Extract language from "Awesome {language}" format
 				parts := strings.Fields(headingText)
@@ -103,8 +103,8 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 				foundAwesomeHeader = true
 			}
 
-			if n.Level == 2 { // Main category headings are level 2
-
+			// Main category headings are level 2
+			if n.Level == 2 {
 				// Check if we've reached the end section
 				if options.endSection != "" && foundStartSection && strings.Contains(headingText, options.endSection) {
 					reachedEndSection = true
@@ -148,7 +148,6 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 
 		return ast.WalkContinue, nil
 	})
-
 	if err != nil {
 		return Collection{}, fmt.Errorf("failed to walk AST: %v", err)
 	}
