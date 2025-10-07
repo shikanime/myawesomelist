@@ -9,27 +9,15 @@ import (
 )
 
 func main() {
-	var addr string
-	flag.StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
+	var port string
+	flag.StringVar(&port, "port", "8080", "Port to run the server on")
 	flag.Parse()
 
-	// If addr is not provided via flag, check for legacy port flag or environment
-	if addr == "" {
-		// Check for legacy PORT environment variable or default
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "8080"
-		}
-
-		// Check for HOST environment variable or default
-		host := os.Getenv("HOST")
-		if host == "" {
-			host = "localhost"
-		}
-
-		addr = host + ":" + port
+	// Allow port to be set via environment variable
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		port = envPort
 	}
 
 	srv := server.New()
-	log.Fatal(srv.Start(addr))
+	log.Fatal(srv.Start(port))
 }
