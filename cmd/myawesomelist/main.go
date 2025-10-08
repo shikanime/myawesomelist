@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"myawesomelist.shikanime.studio/app/server"
+	"myawesomelist.shikanime.studio/cmd/myawesomelist/app"
 )
 
 func main() {
@@ -30,6 +30,6 @@ func main() {
 		addr = host + ":" + port
 	}
 
-	srv := server.New()
+	srv := app.New()
 	log.Fatal(srv.Start(addr))
 }

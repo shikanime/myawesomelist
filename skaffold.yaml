@@ -6,4 +6,4 @@ build:
   artifacts:
     - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist
       ko:
-        dir: app
+        dir: cmd/myawesomelist

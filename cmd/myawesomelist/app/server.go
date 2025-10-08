@@ -1,11 +1,10 @@
-package server
+package app
 
 import (
 	"context"
 	"log"
 	"net/http"
 
-	"myawesomelist.shikanime.studio/app/templates"
 	"myawesomelist.shikanime.studio/internal/awesome"
 )
 
@@ -52,7 +51,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// Render the template
-	component := templates.CollectionsPage(collections)
+	component := CollectionsPage(collections)
 	err := component.Render(ctx, w)
 	if err != nil {
 		log.Printf("Failed to render template: %v", err)
