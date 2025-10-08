@@ -33,7 +33,6 @@
       ];
       perSystem =
         {
-          self',
           pkgs,
           system,
           ...
