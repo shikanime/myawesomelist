@@ -2,7 +2,19 @@
 #! nix develop --impure --command nu
 
 # Update gitignore
-gitnr create repo:github/gitignore/refs/heads/main/Nix.gitignore repo:shikanime/gitignore/refs/heads/main/Devenv.gitignore tt:go tt:jetbrains+all tt:linux tt:macos tt:terraform tt:vim tt:visualstudiocode tt:windows | save --force .gitignore
+(
+    gitnr
+        create repo:github/gitignore/refs/heads/main/Nix.gitignore
+        repo:shikanime/gitignore/refs/heads/main/Devenv.gitignore
+        repo:shikanime/gitignore/refs/heads/main/Latex.gitignore
+        tt:jetbrains+all
+        tt:linux
+        tt:macos
+        tt:terraform
+        tt:vim
+        tt:visualstudiocode
+        tt:windows | save --force .gitignore
+)
 
 # Update workflows
 print "[workflows] Updating GitHub Actions workflows..."
