@@ -91,7 +91,7 @@
                   --open-browser false
               '';
               tailwindcss.exec = ''
-                ${pkgs.tailwindcss}/bin/tailwindcss \
+                ${pkgs.nodejs}/bin/npx tailwindcss \
                   -i ./cmd/myawesomelist/app/assets/app.css \
                   -o ./cmd/myawesomelist/app/public/styles.css \
                   --minify \
