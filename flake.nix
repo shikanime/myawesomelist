@@ -75,8 +75,10 @@
               tflint.enable = true;
             };
             packages = [
+              pkgs.air
               pkgs.gitnr
               pkgs.ko
+              pkgs.nodejs
               pkgs.nushell
               pkgs.scaleway-cli
               pkgs.skaffold

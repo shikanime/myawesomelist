@@ -10,6 +10,7 @@
         tt:jetbrains+all
         tt:linux
         tt:macos
+        tt:node
         tt:terraform
         tt:vim
         tt:visualstudiocode
