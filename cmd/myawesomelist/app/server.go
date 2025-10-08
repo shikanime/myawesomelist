@@ -2,11 +2,17 @@ package app
 
 import (
 	"context"
+	"embed"
+	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 
 	"myawesomelist.shikanime.studio/internal/awesome"
 )
+
+//go:embed public
+var public embed.FS
 
 type Server struct {
 	client *awesome.ClientSet
@@ -19,6 +25,7 @@ func New() *Server {
 }
 
 func (s *Server) Start(addr string) error {
+	// Set up route handlers
 	http.HandleFunc("/", s.handleHome)
 	http.HandleFunc("/health", s.handleHealth)
 	log.Printf("Server starting on %s", addr)
