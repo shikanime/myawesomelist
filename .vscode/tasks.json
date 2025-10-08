@@ -1,0 +1,122 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "templ: watch",
+            "type": "shell",
+            "command": "templ",
+            "args": [
+                "generate",
+                "--watch",
+                "--proxy=http://localhost:8080",
+                "--open-browser=false"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "go: watch",
+            "type": "shell",
+            "command": "air",
+            "args": [
+                "--build.cmd", "go build -o ${workspaceFolder}/cmd/myawesomelist/myawesomelist~ ${workspaceFolder}/cmd/myawesomelist",
+                "--build.bin", "${workspaceFolder}/cmd/myawesomelist/myawesomelist~",
+                "--build.delay", "100",
+                "--build.exclude_dir", "node_modules",
+                "--build.include_ext", "go",
+                "--build.stop_on_error", "false",
+                "--misc.clean_on_exit", "true",
+                "--tmp_dir", "${workspaceFolder}/.air/tmp/go"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "isBackground": true,
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3,
+                            "severity": 4,
+                            "message": 5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "label": "tailwind: watch",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tailwindcss",
+                "-i", "${workspaceFolder}/cmd/myawesomelist/app/assets/app.css",
+                "-o", "${workspaceFolder}/cmd/myawesomelist/app/public/styles.css",
+                "--minify",
+                "--watch"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "assets: watch",
+            "type": "shell",
+            "command": "air",
+            "args": [
+                "--build.cmd", "templ generate --notify-proxy ${workspaceFolder}/cmd/myawesomelist/app/assets",
+                "--build.bin", "true",
+                "--build.delay", "100",
+                "--build.include_dir", "${workspaceFolder}/cmd/myawesomelist/app/assets",
+                "--build.include_ext", "css",
+                "--tmp_dir", "${workspaceFolder}/.air/tmp/assets"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
+    ]
+}
