@@ -3,17 +3,18 @@
 
 # Update gitignore
 (
-    gitnr
-        create repo:github/gitignore/refs/heads/main/Nix.gitignore
+    gitnr create
+        repo:github/gitignore/refs/heads/main/Nix.gitignore
         repo:shikanime/gitignore/refs/heads/main/Devenv.gitignore
-        repo:shikanime/gitignore/refs/heads/main/Latex.gitignore
+        tt:go
         tt:jetbrains+all
         tt:linux
         tt:macos
         tt:terraform
         tt:vim
         tt:visualstudiocode
-        tt:windows | save --force .gitignore
+        tt:windows
+    | save --force .gitignore
 )
 
 # Update workflows
