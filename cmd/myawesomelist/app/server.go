@@ -28,6 +28,16 @@ func (s *Server) Start(addr string) error {
 	// Set up route handlers
 	http.HandleFunc("/", s.handleHome)
 	http.HandleFunc("/health", s.handleHealth)
+
+	// Set up assets handler with embedded filesystem
+	publicFS, err := fs.Sub(public, "public")
+	if err != nil {
+		return fmt.Errorf("failed to create sub filesystem: %w", err)
+	}
+	http.Handle("/assets/",
+		http.StripPrefix("/assets/",
+			http.FileServer(http.FS(publicFS))))
+
 	log.Printf("Server starting on %s", addr)
 	log.Printf("Visit http://%s to view the application", addr)
 	return http.ListenAndServe(addr, nil)

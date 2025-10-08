@@ -1,0 +1,24 @@
+{
+  "name": "myawesomelist",
+  "version": "1.0.0",
+  "description": "A web application that displays curated projects from awesome-go, awesome-elixir, and awesome-javascript repositories with GitHub star counts.",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shikanime/myawesomelist.git"
+  },
+  "author": {
+    "name": "Shikanime",
+    "email": "shikanimedeva@gmail.com",
+    "url": "https://github.com/shikanime"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shikanime/myawesomelist/issues"
+  },
+  "homepage": "https://github.com/shikanime/myawesomelist#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.14",
+    "tailwindcss": "^4.1.14"
+  }
+}
