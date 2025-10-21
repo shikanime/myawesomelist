@@ -57,23 +57,16 @@
             ];
           };
           devenv.shells.default = {
-            containers = pkgs.lib.mkForce { };
-            languages = {
-              go.enable = true;
-              opentofu.enable = true;
-              nix.enable = true;
-            };
             cachix = {
               enable = true;
               push = "shikanime";
             };
-            git-hooks.hooks = {
-              actionlint.enable = true;
-              deadnix.enable = true;
-              flake-checker.enable = true;
-              shellcheck.enable = true;
-              tflint.enable = true;
-            };
+              containers = pkgs.lib.mkForce { };
+              languages = {
+                go.enable = true;
+                opentofu.enable = true;
+                nix.enable = true;
+              };
             packages = [
               pkgs.gitnr
               pkgs.ko
@@ -83,6 +76,21 @@
               pkgs.skaffold
               templ.packages.${system}.templ
             ];
+            processes = {
+              devenv.exec = ''
+                ${templ.packages.${system}.templ}/bin/templ generate \
+                  --watch \
+                  --proxy http://localhost:8080 \
+                  --open-browser false
+              '';
+              tailwindcss.exec = ''
+                ${pkgs.nodejs}/bin/npx tailwindcss \
+                  -i ./cmd/myawesomelist/app/assets/app.css \
+                  -o ./cmd/myawesomelist/app/public/styles.css \
+                  --minify \
+                  --watch
+              '';
+            };
           };
         };
       systems = [
