@@ -2,6 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch www",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/www/node_modules/.bin/vite",
+      "args": ["--open"],
+      "cwd": "${workspaceFolder}/www",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Launch myawesomelist",
       "type": "go",
       "request": "launch",

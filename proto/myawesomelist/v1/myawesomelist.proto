@@ -9,7 +9,6 @@ message Project {
   string name = 1;
   string description = 2;
   string url = 3;
-  // Presence-aware optional fields (supported in modern proto3)
   optional int64 stargazers_count = 4;
   optional int64 open_issue_count = 5;
 }
@@ -35,10 +34,7 @@ message RepoRef {
 // Requests/Responses
 
 message ListCollectionsRequest {
-  // When true, backend enriches projects with GitHub repo info
   bool include_repo_info = 1;
-  // If empty, server uses its DefaultGitHubRepos; otherwise overrides
-  repeated RepoRef repos = 2;
 }
 
 message ListCollectionsResponse {

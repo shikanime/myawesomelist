@@ -39,7 +39,7 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[v1.ListCollectionsResponse],
 	error,
 ) {
-	repos := req.Msg.Repos
+	repos := req.Msg.GetRepos()
 	includeRepo := req.Msg.GetIncludeRepoInfo()
 
 	// Use default repos when none provided
@@ -188,7 +188,7 @@ func (s *AwesomeService) SearchProjects(
 	*connect.Response[v1.SearchProjectsResponse],
 	error,
 ) {
-	repos := req.Msg.Repos
+	repos := req.Msg.GetRepos()
 	includeRepo := req.Msg.GetIncludeRepoInfo()
 	q := strings.ToLower(req.Msg.GetQuery())
 	limit := req.Msg.GetLimit()

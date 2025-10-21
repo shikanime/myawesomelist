@@ -1,7 +1,5 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
-import { Link } from "react-router-dom";
 
 export function meta({}: Route.MetaArgs) {
   return [
