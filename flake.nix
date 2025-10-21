@@ -33,7 +33,6 @@
       ];
       perSystem =
         {
-          self',
           pkgs,
           system,
           ...
@@ -51,6 +50,7 @@
               terraform.enable = true;
             };
             settings.global.excludes = [
+              "public/**"
               "*.terraform.lock.hcl"
               ".gitattributes"
               "LICENSE"
