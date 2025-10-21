@@ -55,9 +55,11 @@ go run ./cmd/myawesomelist serve
 ```
 
 - Override address via flag:
+
 ```bash
 go run ./cmd/myawesomelist serve --addr 0.0.0.0:8080
 ```
+
 - Address falls back to `HOST` and `PORT` envs:
   - `HOST` default: `localhost`
   - `PORT` default: `8080`
@@ -70,21 +72,25 @@ go run ./cmd/myawesomelist serve --addr 0.0.0.0:8080
 ### Running the Web App (Frontend)
 
 1. Open a new terminal and go to `www`:
+
 ```bash
 cd www
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. If your API is not at `http://localhost:8080`, set:
+
 ```bash
 export VITE_API_BASE_URL="http://localhost:8080"
 ```
 
 4. Start the dev server:
+
 ```bash
 npm run dev
 ```
