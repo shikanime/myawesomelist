@@ -70,13 +70,13 @@
               containers = pkgs.lib.mkForce { };
               languages = {
                 go.enable = true;
-                opentofu.enable = true;
+                javascript.enable = true;
                 nix.enable = true;
+                opentofu.enable = true;
                 shell.enable = true;
               };
               packages = [
                 pkgs.ko
-                pkgs.nodejs
                 pkgs.nushell
                 pkgs.scaleway-cli
                 pkgs.skaffold
