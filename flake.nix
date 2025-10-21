@@ -75,7 +75,6 @@
                 shell.enable = true;
               };
               packages = [
-                pkgs.gitnr
                 pkgs.ko
                 pkgs.nodejs
                 pkgs.nushell
