@@ -68,6 +68,7 @@
                 push = "shikanime";
               };
               containers = pkgs.lib.mkForce { };
+              github.enable = true;
               languages = {
                 go.enable = true;
                 javascript.enable = true;
@@ -78,6 +79,7 @@
               packages = [
                 pkgs.ko
                 pkgs.nushell
+                pkgs.sapling
                 pkgs.scaleway-cli
                 pkgs.skaffold
                 templ.packages.${system}.templ
