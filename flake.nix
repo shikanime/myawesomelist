@@ -66,13 +66,13 @@
               enable = true;
               push = "shikanime";
             };
-            containers = pkgs.lib.mkForce { };
-            languages = {
-              go.enable = true;
-              opentofu.enable = true;
-              nix.enable = true;
-              shell.enable = true;
-            };
+              containers = pkgs.lib.mkForce { };
+              languages = {
+                go.enable = true;
+                opentofu.enable = true;
+                nix.enable = true;
+                shell.enable = true;
+              };
             packages = [
               pkgs.gitnr
               pkgs.ko
