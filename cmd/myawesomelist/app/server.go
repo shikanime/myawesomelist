@@ -12,13 +12,21 @@ type Server struct {
 	cs *awesome.ClientSet
 }
 
-func New() *Server {
+func NewServer(ds *awesome.DataStore, opts ...awesome.ClientSetOption) *Server {
 	return &Server{
-		cs: awesome.NewClientSet(),
+		cs: awesome.NewClientSet(ds, opts...),
 	}
 }
 
-func (s *Server) Start(addr string) error {
+// Close gracefully shuts down the server and closes database connections
+func (s *Server) Close() error {
+	if s.cs != nil && s.cs.GitHub != nil {
+		return s.cs.GitHub.Close()
+	}
+	return nil
+}
+
+func (s *Server) ListenAndServe(addr string) error {
 	http.HandleFunc("/health", s.handleHealth)
 	svc := NewAwesomeService(s.cs)
 	path, handler := myawesomelistv1connect.NewAwesomeServiceHandler(svc)

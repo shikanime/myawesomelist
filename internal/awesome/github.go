@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log/slog"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -38,34 +37,57 @@ func NewGitHubLimiter(authenticated bool) *rate.Limiter {
 
 // GitHubClient represents a client for GitHub API operations
 type GitHubClient struct {
-	client  *github.Client
-	limiter *rate.Limiter
+	c *github.Client
+	l *rate.Limiter
+	d *DataStore
+}
+
+type GitHubClientOptions struct {
+	token string
+}
+
+type GitHubClientOption func(*GitHubClientOptions)
+
+func WithToken(token string) GitHubClientOption {
+	return func(o *GitHubClientOptions) { o.token = token }
 }
 
 // NewGitHubClient creates a new GitHub client with optional authentication
-func NewGitHubClient() *GitHubClient {
-	// Check for GitHub token in environment variable
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+func NewGitHubClient(ds *DataStore, opts ...GitHubClientOption) *GitHubClient {
+	// Use provided datastore as-is; main is responsible for ds.Connect()
+	if ds == nil || ds.db == nil {
+		slog.Warn("Datastore not configured; disabled")
+		ds = &DataStore{db: nil}
+	}
+
+	var o GitHubClientOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	if o.token != "" {
 		slog.Info("Using authenticated GitHub client")
 		return &GitHubClient{
-			client:  github.NewClient(nil).WithAuthToken(token),
-			limiter: NewGitHubLimiter(true),
+			c: github.NewClient(nil).WithAuthToken(o.token),
+			l: NewGitHubLimiter(true),
+			d: ds,
 		}
-	} else {
-		slog.Warn("Using unauthenticated GitHub client (rate limited)")
-		return &GitHubClient{
-			client:  github.NewClient(nil),
-			limiter: NewGitHubLimiter(false),
-		}
+	}
+
+	slog.Warn("Using unauthenticated GitHub client (rate limited)")
+	return &GitHubClient{
+		c: github.NewClient(nil),
+		l: NewGitHubLimiter(false),
+		d: ds,
 	}
 }
 
 // GetReadme creates a reader for the README.md file of the specified repository
 func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string) ([]byte, error) {
-	if err := c.limiter.Wait(ctx); err != nil {
+	if err := c.l.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
-	file, _, _, err := c.client.Repositories.GetContents(
+	file, _, _, err := c.c.Repositories.GetContents(
 		ctx,
 		owner,
 		repo,
@@ -84,6 +106,37 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 	for _, opt := range opts {
 		opt(options)
 	}
+
+	// First, try to get the collection from the datastore
+	if cachedCollection, err := c.d.GetCollection(ctx, owner, repo); err != nil {
+		slog.Warn("Failed to query datastore for collection",
+			"owner", owner,
+			"repo", repo,
+			"error", err)
+	} else if cachedCollection != nil {
+		slog.Info("Retrieved collection from datastore cache",
+			"owner", owner,
+			"repo", repo,
+			"categories", len(cachedCollection.Categories))
+
+		// If we need repo info and it's not already enriched, enrich it
+		if options.includeRepoInfo {
+			errors := c.EnrichCollectionWithRepoInfo(ctx, *cachedCollection, opts...)
+			if len(errors) > 0 {
+				slog.Warn("Encountered errors during enrichment of cached collection",
+					"owner", owner,
+					"repo", repo,
+					"total_errors", len(errors))
+			}
+		}
+
+		return *cachedCollection, nil
+	}
+
+	// Collection not found in datastore or is stale, fetch from GitHub API
+	slog.Info("Fetching collection from GitHub API",
+		"owner", owner,
+		"repo", repo)
 
 	content, err := c.GetReadme(ctx, owner, repo)
 	if err != nil {
@@ -116,12 +169,23 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 		Language:   collection.Language,
 		Categories: categories,
 	}
+
+	// Enrich with repo info if requested
 	errors := c.EnrichCollectionWithRepoInfo(ctx, enrichedCollection, opts...)
 	if len(errors) > 0 {
 		slog.Warn("Encountered errors during enrichment",
 			"owner", owner,
 			"repo", repo,
 			"total_errors", len(errors))
+	}
+
+	// Store the collection in the datastore for future use
+	if err := c.d.UpSertCollection(ctx, owner, repo, enrichedCollection); err != nil {
+		slog.Warn("Failed to store collection in datastore",
+			"owner", owner,
+			"repo", repo,
+			"error", err)
+		// Don't return error here, as the main operation succeeded
 	}
 
 	return enrichedCollection, nil
@@ -153,10 +217,10 @@ func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *P
 			"project", project.Name)
 
 		// Get repository information (includes stargazer count and open issues)
-		if err = c.limiter.Wait(ctx); err != nil {
+		if err = c.l.Wait(ctx); err != nil {
 			return fmt.Errorf("rate limiter wait failed: %w", err)
 		}
-		repository, _, err := c.client.Repositories.Get(ctx, owner, repo)
+		repository, _, err := c.c.Repositories.Get(ctx, owner, repo)
 		if err != nil {
 			slog.Error("Failed to get repo info from GitHub API",
 				"project", project.Name,
@@ -206,4 +270,12 @@ func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collect
 	categoryWg.Wait()
 
 	return errors
+}
+
+// Close closes the GitHub client and its datastore
+func (c *GitHubClient) Close() error {
+	if c.d != nil {
+		return c.d.Close()
+	}
+	return nil
 }

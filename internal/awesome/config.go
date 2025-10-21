@@ -1,5 +1,14 @@
 package awesome
 
+import (
+	"errors"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
 // GitHubRepoConfig represents configuration for a GitHub repository
 type GitHubRepoConfig struct {
 	Owner   string
@@ -38,4 +47,67 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 			WithStartSection("Storage Server"),
 		},
 	},
+}
+
+// GetDsn resolves the final DSN using env vars
+func GetDsn() (*url.URL, error) {
+	source := os.Getenv("DSN")
+	if source == "" {
+		user := os.Getenv("PGUSER")
+		if user == "" {
+			user = os.Getenv("USER")
+		}
+		if user == "" {
+			user = "postgres"
+		}
+
+		dbName := os.Getenv("PGDATABASE")
+		if dbName == "" {
+			dbName = "postgres"
+		}
+
+		host := os.Getenv("PGHOST")
+		if host == "" {
+			host = "localhost"
+		}
+
+		port, hasPortEnv := os.LookupEnv("PGPORT")
+		if !hasPortEnv || port == "" {
+			port = "5432"
+		}
+
+		if strings.HasPrefix(host, "/") {
+			socketDir := host
+
+			// If PGHOST points to a file, derive directory and only infer port when PGPORT isn't set.
+			if fi, err := os.Stat(host); err == nil && !fi.IsDir() {
+				socketDir = filepath.Dir(host)
+				if !hasPortEnv {
+					base := filepath.Base(host)
+					// Expected filename pattern: ".s.PGSQL.<port>"
+					if strings.HasPrefix(base, ".s.PGSQL.") {
+						if inferred := strings.TrimPrefix(base, ".s.PGSQL."); inferred != "" {
+							if _, err := strconv.Atoi(inferred); err == nil {
+								port = inferred
+							}
+						}
+					}
+				}
+			}
+
+			q := url.Values{}
+			q.Set("host", socketDir)
+			q.Set("port", port)
+			q.Set("sslmode", "disable")
+			source = "postgres://" + user + "@/" + dbName + "?" + q.Encode()
+		} else {
+			source = "postgres://" + user + "@" + host + ":" + port + "/" + dbName + "?sslmode=disable"
+		}
+	}
+
+	u, err := url.Parse(source)
+	if err != nil || u.Scheme == "" {
+		return nil, errors.New("invalid DSN: must be in format driver://dataSourceName")
+	}
+	return u, nil
 }

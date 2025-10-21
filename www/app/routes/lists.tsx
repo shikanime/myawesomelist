@@ -76,7 +76,9 @@ export default function Lists() {
                     </div>
                     <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                       {p.stargazersCount ? (
-                        <span>⭐ {p.stargazersCount.toLocaleString()} stars</span>
+                        <span>
+                          ⭐ {p.stargazersCount.toLocaleString()} stars
+                        </span>
                       ) : (
                         <span>⭐ —</span>
                       )}

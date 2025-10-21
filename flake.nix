@@ -76,12 +76,14 @@
               packages = [
                 pkgs.buf
                 pkgs.gitnr
+                pkgs.go-migrate
                 pkgs.ko
                 pkgs.nodejs
                 pkgs.nushell
                 pkgs.scaleway-cli
                 pkgs.skaffold
               ];
+              services.postgres.enable = true;
             };
           };
         };
