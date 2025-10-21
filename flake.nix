@@ -74,6 +74,15 @@
                 nix.enable = true;
                 shell.enable = true;
               };
+              packages = [
+                pkgs.gitnr
+                pkgs.ko
+                pkgs.nodejs
+                pkgs.nushell
+                pkgs.scaleway-cli
+                pkgs.skaffold
+                templ.packages.${system}.templ
+              ];
               processes = {
                 devenv.exec = ''
                   ${templ.packages.${system}.templ}/bin/templ generate \
@@ -89,15 +98,6 @@
                     --watch
                 '';
               };
-              packages = [
-                pkgs.gitnr
-                pkgs.ko
-                pkgs.nodejs
-                pkgs.nushell
-                pkgs.scaleway-cli
-                pkgs.skaffold
-                templ.packages.${system}.templ
-              ];
             };
           };
         };
