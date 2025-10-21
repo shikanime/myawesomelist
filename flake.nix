@@ -61,19 +61,12 @@
               enable = true;
               push = "shikanime";
             };
-            containers = pkgs.lib.mkForce { };
-            git-hooks.hooks = {
-              actionlint.enable = true;
-              deadnix.enable = true;
-              flake-checker.enable = true;
-              shellcheck.enable = true;
-              tflint.enable = true;
-            };
-            languages = {
-              go.enable = true;
-              opentofu.enable = true;
-              nix.enable = true;
-            };
+              containers = pkgs.lib.mkForce { };
+              languages = {
+                go.enable = true;
+                opentofu.enable = true;
+                nix.enable = true;
+              };
             packages = [
               pkgs.gitnr
               pkgs.ko
