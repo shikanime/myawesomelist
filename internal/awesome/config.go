@@ -111,3 +111,23 @@ func GetDsn() (*url.URL, error) {
 	}
 	return u, nil
 }
+
+func GetGitHubToken() string {
+	// Prefer GITHUB_TOKEN; fall back to GH_TOKEN if present
+	if t := os.Getenv("GITHUB_TOKEN"); t != "" {
+		return t
+	}
+	return os.Getenv("GH_TOKEN")
+}
+
+func GetAddr() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	return host + ":" + port
+}

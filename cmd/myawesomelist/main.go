@@ -26,8 +26,8 @@ var (
 		Use:   "myawesomelist",
 		Short: "Awesome list server and utilities",
 	}
-	serverCmd = &cobra.Command{
-		Use:   "server",
+	serveCmd = &cobra.Command{
+		Use:   "serve",
 		Short: "Run the API server",
 		RunE:  runServer,
 	}
@@ -52,10 +52,10 @@ var (
 )
 
 func init() {
-	serverCmd.Flags().StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
+	serveCmd.Flags().StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
 	rootCmd.PersistentFlags().StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
 	migrateCmd.AddCommand(upCmd, downCmd)
-	rootCmd.AddCommand(serverCmd, migrateCmd)
+	rootCmd.AddCommand(serveCmd, migrateCmd)
 }
 
 func runServer(cmd *cobra.Command, args []string) error {
@@ -69,27 +69,13 @@ func runServer(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Fallback to env if addr not provided
-	finalAddr := addr
-	if finalAddr == "" {
-		// Check for legacy PORT environment variable or default
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "8080"
-		}
-
-		// Check for HOST environment variable or default
-		host := os.Getenv("HOST")
-		if host == "" {
-			host = "localhost"
-		}
-
-		finalAddr = host + ":" + port
+	// Fallback to env if flag is empty
+	if addr == "" {
+		addr = awesome.GetAddr()
 	}
-
 	errCh := make(chan error, 1)
 	go func() {
-		errCh <- srv.ListenAndServe(finalAddr)
+		errCh <- srv.ListenAndServe(addr)
 	}()
 
 	quit := make(chan os.Signal, 1)
@@ -114,7 +100,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 }
 
 func runMigrateUp(cmd *cobra.Command, args []string) error {
-	db, err := openDb()
+	db, err := openDbFromEnv()
 	if err != nil {
 		return err
 	}
@@ -130,7 +116,7 @@ func runMigrateUp(cmd *cobra.Command, args []string) error {
 }
 
 func runMigrateDown(cmd *cobra.Command, args []string) error {
-	db, err := openDb()
+	db, err := openDbFromEnv()
 	if err != nil {
 		return err
 	}
@@ -145,9 +131,10 @@ func runMigrateDown(cmd *cobra.Command, args []string) error {
 	return mg.Down()
 }
 
+// newServerFromEnv creates a new Server instance with options from environment variables.
 func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
 	var opts []awesome.ClientSetOption
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+	if token := awesome.GetGitHubToken(); token != "" {
 		opts = append(opts, awesome.WithGitHubOptions(awesome.WithToken(token)))
 	}
 	return app.NewServer(ds, opts...), nil
@@ -155,7 +142,7 @@ func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
 
 // openDataStoreFromEnv opens a connection to the database and constructs a DataStore.
 func openDataStoreFromEnv() (*awesome.DataStore, error) {
-	db, err := openDb()
+	db, err := openDbFromEnv()
 	if err != nil {
 		return nil, err
 	}
@@ -166,25 +153,26 @@ func openDataStoreFromEnv() (*awesome.DataStore, error) {
 	return ds, nil
 }
 
-func openDb() (*sql.DB, error) {
-	var source *url.URL
+// openDbFromEnv opens a connection to the database using the provided DSN or falls back to the environment variable.
+func openDbFromEnv() (*sql.DB, error) {
+	var dsnUrl *url.URL
 	var err error
-	if dsn != "" {
-		source, err = url.Parse(dsn)
+	if dsn == "" {
+		dsnUrl, err = awesome.GetDsn()
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		source, err = awesome.GetDsn()
+		dsnUrl, err = url.Parse(dsn)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if source.Scheme == "" {
+	if dsnUrl.Scheme == "" {
 		return nil, errors.New("invalid DSN: must be in format driver://dataSourceName")
 	}
 
-	db, err := sql.Open(source.Scheme, source.String())
+	db, err := sql.Open(dsnUrl.Scheme, dsnUrl.String())
 	if err != nil {
 		return nil, err
 	}

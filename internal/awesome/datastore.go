@@ -89,7 +89,7 @@ func (ds *DataStore) UpSertCollection(ctx context.Context, owner, repo string, c
 	}
 
 	query := `
-		INSERT INTO collections (owner, repo, language, data, updated_at)
+		INSERT INTO collections (owner, repo, language, data)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (owner, repo)
 		DO UPDATE SET
