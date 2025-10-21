@@ -1,0 +1,15 @@
+version: v2
+clean: true
+plugins:
+  - local: protoc-gen-es
+    out: www/app/proto
+    include_imports: true
+    opt: target=ts
+  - local: protoc-gen-go
+    out: pkgs/proto
+    opt: paths=source_relative
+  - local: protoc-gen-connect-go
+    out: pkgs/proto
+    opt: paths=source_relative
+inputs:
+  - directory: proto

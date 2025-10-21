@@ -1,80 +1,39 @@
 package app
 
 import (
-	"context"
-	"embed"
-	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 
 	"myawesomelist.shikanime.studio/internal/awesome"
+	myawesomelistv1connect "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1/myawesomelistv1connect"
 )
 
-//go:embed public
-var public embed.FS
-
 type Server struct {
-	client *awesome.ClientSet
+	cs *awesome.ClientSet
 }
 
-func New() *Server {
+func NewServer(ds *awesome.DataStore, opts ...awesome.ClientSetOption) *Server {
 	return &Server{
-		client: awesome.NewClientSet(),
+		cs: awesome.NewClientSet(ds, opts...),
 	}
 }
 
-func (s *Server) Start(addr string) error {
-	// Set up route handlers
-	http.HandleFunc("/", s.handleHome)
+// Close gracefully shuts down the server and closes database connections
+func (s *Server) Close() error {
+	if s.cs != nil && s.cs.GitHub != nil {
+		return s.cs.GitHub.Close()
+	}
+	return nil
+}
+
+func (s *Server) ListenAndServe(addr string) error {
 	http.HandleFunc("/health", s.handleHealth)
-
-	// Set up assets handler with embedded filesystem
-	publicFS, err := fs.Sub(public, "public")
-	if err != nil {
-		return fmt.Errorf("failed to create sub filesystem: %w", err)
-	}
-	http.Handle("/assets/",
-		http.StripPrefix("/assets/",
-			http.FileServer(http.FS(publicFS))))
-
+	svc := NewAwesomeService(s.cs)
+	path, handler := myawesomelistv1connect.NewAwesomeServiceHandler(svc)
+	http.Handle(path, handler)
 	log.Printf("Server starting on %s", addr)
-	log.Printf("Visit http://%s to view the application", addr)
+	log.Printf("gRPC (Connect/gRPC-Web) mounted at %s", path)
 	return http.ListenAndServe(addr, nil)
-}
-
-func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-
-	log.Printf("Fetching projects from GitHub repositories with stargazer counts...")
-
-	var collections []awesome.Collection
-	for _, repo := range awesome.DefaultGitHubRepos {
-		collection, err := s.client.GitHub.GetCollection(
-			ctx,
-			repo.Owner,
-			repo.Repo,
-			repo.Options...,
-		)
-		if err != nil {
-			log.Printf("Failed to get collection for %s/%s: %v", repo.Owner, repo.Repo, err)
-			http.Error(w, "Failed to load project collections", http.StatusInternalServerError)
-			return
-		}
-		collections = append(collections, collection)
-	}
-
-	// Set content type
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	// Render the template
-	component := CollectionsPage(collections)
-	err := component.Render(ctx, w)
-	if err != nil {
-		log.Printf("Failed to render template: %v", err)
-		http.Error(w, "Failed to render page", http.StatusInternalServerError)
-		return
-	}
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {

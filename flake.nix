@@ -4,7 +4,6 @@
     devlib.url = "github:shikanime-studio/devlib";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    templ.url = "github:a-h/templ";
     treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
@@ -24,7 +23,6 @@
       devenv,
       devlib,
       flake-parts,
-      templ,
       treefmt-nix,
       ...
     }:
@@ -47,7 +45,6 @@
               gofmt.enable = true;
               nixfmt.enable = true;
               prettier.enable = true;
-              shfmt.enable = true;
               statix.enable = true;
               terraform.enable = true;
             };
@@ -77,28 +74,16 @@
                 shell.enable = true;
               };
               packages = [
+                pkgs.buf
+                pkgs.gitnr
+                pkgs.go-migrate
                 pkgs.ko
+                pkgs.nodejs
                 pkgs.nushell
-                pkgs.sapling
                 pkgs.scaleway-cli
                 pkgs.skaffold
-                templ.packages.${system}.templ
               ];
-              processes = {
-                devenv.exec = ''
-                  ${templ.packages.${system}.templ}/bin/templ generate \
-                    --watch \
-                    --proxy http://localhost:8080 \
-                    --open-browser false
-                '';
-                tailwindcss.exec = ''
-                  ${pkgs.nodejs}/bin/npx tailwindcss \
-                    -i ./cmd/myawesomelist/app/assets/app.css \
-                    -o ./cmd/myawesomelist/app/public/styles.css \
-                    --minify \
-                    --watch
-                '';
-              };
+              services.postgres.enable = true;
             };
           };
         };

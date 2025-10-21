@@ -35,7 +35,7 @@ type Option func(*Options)
 // WithRepoInfo enables fetching GitHub repository information (stargazers and open issues)
 func WithRepoInfo() Option {
 	return func(o *Options) {
-		o.includeRepoInfo = false
+		o.includeRepoInfo = true
 	}
 }
 
