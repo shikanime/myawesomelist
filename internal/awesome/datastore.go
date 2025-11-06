@@ -68,6 +68,7 @@ func (ds *DataStore) GetCollection(ctx context.Context, owner, repo string) (*my
 	return &collection, nil
 }
 
+// PrepareGetCollection renders and prepares the SQL statement to fetch a collection.
 func (ds *DataStore) PrepareGetCollection(ctx context.Context, owner, repo string) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.GetCollectionQuery(owner, repo)
 	if err != nil {
@@ -104,6 +105,7 @@ func (ds *DataStore) UpSertCollection(ctx context.Context, owner, repo string, c
 	return nil
 }
 
+// PrepareUpsertCollection renders and prepares the SQL statement to upsert a collection.
 func (ds *DataStore) PrepareUpsertCollection(ctx context.Context, owner, repo string, collection *myawesomelistv1.Collection) (*sql.Stmt, []any, error) {
 	data, err := json.Marshal(collection)
 	if err != nil {
@@ -155,6 +157,7 @@ func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit int32, 
 	return projects, nil
 }
 
+// PrepareSearchProjects renders and prepares the SQL statement for project search.
 func (ds *DataStore) PrepareSearchProjects(ctx context.Context, q string, repos []myawesomelistv1.Repository, limit int32) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.SearchProjectsQuery(q, repos, limit)
 	if err != nil {
