@@ -268,11 +268,7 @@ func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collect
 	return errors
 }
 
-// SearchProjects performs SQL-backed search over stored collections.
 func (c *GitHubClient) SearchProjects(ctx context.Context, q string, limit int32, repos []v1.Repository) ([]*v1.Project, error) {
-	return c.d.SearchProjects(ctx, q, limit, repos)
-}
-
 // Close closes the GitHub client and its datastore
 func (c *GitHubClient) Close() error {
 	if c.d != nil {
