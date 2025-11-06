@@ -6,8 +6,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/www/node_modules/.bin/vite",
-      "cwd": "${workspaceFolder}/www",
-      "console": "integratedTerminal"
+      "cwd": "${workspaceFolder}/www"
     },
     {
       "name": "Launch myawesomelist",
