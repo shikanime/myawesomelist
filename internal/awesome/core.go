@@ -20,7 +20,7 @@ func NewCoreClient(ds *DataStore) *Core {
 func (c *Core) SearchProjects(
 	ctx context.Context,
 	q string,
-	limit int32,
+	limit uint32,
 	repos []*myawesomelistv1.Repository,
 ) ([]*myawesomelistv1.Project, error) {
 	return c.ds.SearchProjects(ctx, q, limit, repos)

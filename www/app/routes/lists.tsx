@@ -1,11 +1,9 @@
-// top-level imports
 import { useLoaderData, useFetcher } from "react-router";
 import type { Route } from "./+types/lists";
 import { awesomeClient } from "~/api/client";
 import type {
   Collection,
   Project,
-  ProjectsStats,
 } from "../proto/myawesomelist/v1/myawesomelist_pb";
 import { useState, useEffect } from "react";
 import { useIntersectionObserver, useTimeout } from "usehooks-ts";
@@ -94,7 +92,7 @@ export default function Lists() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {(category.projects ?? []).map((p, pIdx) => (
                       <ProjectCard
-                        key={`${collection.language}-${category.name}-${p.name}-${p.url}-${pIdx}`}
+                        key={`${collection.language}-${category.name}-${p.name}-${p.repo?.hostname}-${p.repo?.owner}-${p.repo?.repo}-${pIdx}`}
                         project={p}
                       />
                     ))}
@@ -126,19 +124,11 @@ function ProjectCard({ project }: { project: Project }) {
 
   useEffect(() => {
     if (!isIntersecting || stats) return;
-
-    let owner: string | undefined;
-    let repo: string | undefined;
-    try {
-      const parsed = parseGitHubOwnerRepoFromUrl(project.url ?? "");
-      owner = parsed.owner;
-      repo = parsed.repo;
-    } catch {
-      // Silently skip if URL is invalid
-    }
-    if (!owner || !repo) return;
-
-    const params = new URLSearchParams({ owner, repo });
+    const params = new URLSearchParams({
+      hostname: project.repo?.hostname ?? "",
+      owner: project.repo?.owner ?? "",
+      repo: project.repo?.repo ?? "",
+    });
     fetcher.load(`/projects/stats?${params.toString()}`);
   }, [isIntersecting]);
 
@@ -187,7 +177,7 @@ function ProjectCard({ project }: { project: Project }) {
               />
             )}
             <a
-              href={project.url}
+              href={`https://${project.repo?.hostname}/${project.repo?.owner}/${project.repo?.repo}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
@@ -215,17 +205,4 @@ function ProjectCard({ project }: { project: Project }) {
       </div>
     </>
   );
-}
-
-function parseGitHubOwnerRepoFromUrl(url: string): {
-  owner?: string;
-  repo?: string;
-} {
-  const u = new URL(url);
-  if (u.hostname !== "github.com") return {};
-  const parts = u.pathname.split("/").filter(Boolean);
-  if (parts.length < 2) {
-    throw new Error("Invalid GitHub URL");
-  }
-  return { owner: parts[0], repo: parts[1] };
 }

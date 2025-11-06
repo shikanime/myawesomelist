@@ -62,7 +62,7 @@ var searchProjectsTpl = template.Must(template.New("searchProjects").Parse(`
 `))
 
 // SearchProjectsArgs builds the args: pattern, [owner, repo]*, limit
-func SearchProjectsArgs(q string, repos []*myawesomelistv1.Repository, limit int32) []any {
+func SearchProjectsArgs(q string, repos []*myawesomelistv1.Repository, limit uint32) []any {
 	args := []any{"%" + q + "%"}
 	for i := range repos {
 		args = append(args, repos[i].Owner, repos[i].Repo)
@@ -71,7 +71,7 @@ func SearchProjectsArgs(q string, repos []*myawesomelistv1.Repository, limit int
 }
 
 // SearchProjectsQuery builds the SQL query for project search.
-func SearchProjectsQuery(q string, repos []*myawesomelistv1.Repository, limit int32) (string, []any, error) {
+func SearchProjectsQuery(q string, repos []*myawesomelistv1.Repository, limit uint32) (string, []any, error) {
 	repoPositions := make([]SearchRepoPos, 0, len(repos))
 	for i := range repos {
 		ownerPos := i*2 + 2

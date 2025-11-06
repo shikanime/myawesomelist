@@ -3,6 +3,7 @@ import type { Route } from "./+types/projects.stats";
 import { z } from "zod";
 
 export const SearchParamsSchema = z.object({
+  hostname: z.string().min(1, "hostname is required"),
   owner: z.string().min(1, "owner is required"),
   repo: z.string().min(1, "repo is required"),
 });

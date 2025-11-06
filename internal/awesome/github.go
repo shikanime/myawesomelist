@@ -141,7 +141,11 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 			projects[j] = &myawesomelistv1.Project{
 				Name:        encProj.Name,
 				Description: encProj.Description,
-				Url:         encProj.URL,
+				Repo: &myawesomelistv1.Repository{
+					Hostname: "github.com",
+					Owner:    owner,
+					Repo:     repo,
+				},
 			}
 		}
 		categories[i] = &myawesomelistv1.Category{

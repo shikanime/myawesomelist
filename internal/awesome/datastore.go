@@ -125,7 +125,7 @@ func (ds *DataStore) PrepareUpsertCollection(ctx context.Context, owner, repo st
 }
 
 // SearchProjects executes a datastore-backed search across repositories.
-func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit int32, repos []*myawesomelistv1.Repository) ([]*myawesomelistv1.Project, error) {
+func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit uint32, repos []*myawesomelistv1.Repository) ([]*myawesomelistv1.Project, error) {
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
@@ -161,7 +161,7 @@ func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit int32, 
 }
 
 // PrepareSearchProjects renders and prepares the SQL statement for project search.
-func (ds *DataStore) PrepareSearchProjects(ctx context.Context, q string, repos []*myawesomelistv1.Repository, limit int32) (*sql.Stmt, []any, error) {
+func (ds *DataStore) PrepareSearchProjects(ctx context.Context, q string, repos []*myawesomelistv1.Repository, limit uint32) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.SearchProjectsQuery(q, repos, limit)
 	if err != nil {
 		return nil, nil, err
