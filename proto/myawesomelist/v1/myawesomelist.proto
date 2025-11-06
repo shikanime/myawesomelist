@@ -13,7 +13,7 @@ message ProjectsStats {
 message Project {
   string name = 1;
   string description = 2;
-  string url = 3;
+  Repository repo = 3;
 }
 
 // Category groups projects under a section
@@ -30,8 +30,9 @@ message Collection {
 
 // Identify a source awesome repository (owner/repo)
 message Repository {
-  string owner = 1;
-  string repo = 2;
+  string hostname = 1;
+  string owner = 2;
+  string repo = 3;
 }
 
 // Requests/Responses
@@ -69,7 +70,7 @@ message ListProjectsResponse {
 
 message SearchProjectsRequest {
   string query = 1;
-  int32 limit = 2;
+  uint32 limit = 2;
   repeated Repository repos = 3;
 }
 

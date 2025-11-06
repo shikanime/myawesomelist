@@ -1,12 +1,6 @@
-// top-level imports
 import { useLoaderData, useFetcher } from "react-router";
 import type { Route } from "./+types/lists";
 import { awesomeClient } from "~/api/client";
-import type {
-  Collection,
-  Project,
-  ProjectsStats,
-} from "../proto/myawesomelist/v1/myawesomelist_pb";
 import { useState, useEffect } from "react";
 import { useIntersectionObserver, useTimeout } from "usehooks-ts";
 import {
@@ -14,6 +8,10 @@ import {
   ProjectStatsSchema,
 } from "~/routes/projects.stats";
 import { z } from "zod";
+import type {
+  Collection,
+  Project,
+} from "~/proto/myawesomelist/v1/myawesomelist_pb";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -27,34 +25,7 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader(_: Route.LoaderArgs) {
   const res = await awesomeClient.listCollections({});
-
-  // Zod schemas to validate and normalize collections shape
-  const ProjectsStatsSchema = z.object({
-    stargazersCount: z.coerce.number().int().nonnegative().optional(),
-    openIssueCount: z.coerce.number().int().nonnegative().optional(),
-  });
-
-  const ProjectSchema = z.object({
-    name: z.string().catch(""),
-    url: z.string().catch(""),
-    description: z.string().catch(""),
-    stats: ProjectsStatsSchema.nullable().optional(),
-  });
-
-  const CategorySchema = z.object({
-    name: z.string().catch(""),
-    projects: z.array(ProjectSchema).catch([]),
-  });
-
-  const CollectionSchema = z.object({
-    language: z.string().catch(""),
-    categories: z.array(CategorySchema).catch([]),
-  });
-
-  const CollectionsSchema = z.array(CollectionSchema);
-
-  // Validate and return a stable, serializable payload
-  return CollectionsSchema.parse(res.collections ?? []);
+  return res.collections;
 }
 
 export default function Lists() {
@@ -94,7 +65,7 @@ export default function Lists() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {(category.projects ?? []).map((p, pIdx) => (
                       <ProjectCard
-                        key={`${collection.language}-${category.name}-${p.name}-${p.url}-${pIdx}`}
+                        key={`${collection.language}-${category.name}-${p.name}-${p.repo?.hostname}-${p.repo?.owner}-${p.repo?.repo}-${pIdx}`}
                         project={p}
                       />
                     ))}
@@ -115,7 +86,7 @@ function ProjectCard({ project }: { project: Project }) {
     null,
   );
   const [errorToast, setErrorToast] = useState<string | null>(null);
-  const fetcher = useFetcher<z.infer<typeof ProjectStatsResponseSchema>>();
+  const fetcher = useFetcher<typeof ProjectStatsResponseSchema>();
 
   useTimeout(() => setErrorToast(null), errorToast ? 4000 : null);
 
@@ -126,19 +97,11 @@ function ProjectCard({ project }: { project: Project }) {
 
   useEffect(() => {
     if (!isIntersecting || stats) return;
-
-    let owner: string | undefined;
-    let repo: string | undefined;
-    try {
-      const parsed = parseGitHubOwnerRepoFromUrl(project.url ?? "");
-      owner = parsed.owner;
-      repo = parsed.repo;
-    } catch {
-      // Silently skip if URL is invalid
-    }
-    if (!owner || !repo) return;
-
-    const params = new URLSearchParams({ owner, repo });
+    const params = new URLSearchParams({
+      hostname: project.repo?.hostname ?? "",
+      owner: project.repo?.owner ?? "",
+      repo: project.repo?.repo ?? "",
+    });
     fetcher.load(`/projects/stats?${params.toString()}`);
   }, [isIntersecting]);
 
@@ -187,7 +150,7 @@ function ProjectCard({ project }: { project: Project }) {
               />
             )}
             <a
-              href={project.url}
+              href={`https://${project.repo?.hostname}/${project.repo?.owner}/${project.repo?.repo}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
@@ -215,17 +178,4 @@ function ProjectCard({ project }: { project: Project }) {
       </div>
     </>
   );
-}
-
-function parseGitHubOwnerRepoFromUrl(url: string): {
-  owner?: string;
-  repo?: string;
-} {
-  const u = new URL(url);
-  if (u.hostname !== "github.com") return {};
-  const parts = u.pathname.split("/").filter(Boolean);
-  if (parts.length < 2) {
-    throw new Error("Invalid GitHub URL");
-  }
-  return { owner: parts[0], repo: parts[1] };
 }

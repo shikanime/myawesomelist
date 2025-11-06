@@ -7,43 +7,56 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
 // GitHubRepoConfig represents configuration for a GitHub repository
 type GitHubRepoConfig struct {
-	Owner   string
-	Repo    string
+	Repo    *myawesomelistv1.Repository
 	Options []Option
 }
 
 // DefaultGitHubRepos contains the default list of awesome repositories to fetch
 var DefaultGitHubRepos = []GitHubRepoConfig{
 	{
-		Owner: "avelino",
-		Repo:  "awesome-go",
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "avelino",
+			Repo:     "awesome-go",
+		},
 		Options: []Option{
 			WithStartSection("Actor Model"),
 			WithSubsectionAsCategory(),
 		},
 	},
 	{
-		Owner: "h4cc",
-		Repo:  "awesome-elixir",
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "h4cc",
+			Repo:     "awesome-elixir",
+		},
 		Options: []Option{
 			WithStartSection("Actors"),
 		},
 	},
 	{
-		Owner: "sorrycc",
-		Repo:  "awesome-javascript",
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "sorrycc",
+			Repo:     "awesome-javascript",
+		},
 		Options: []Option{
 			WithStartSection("Package Managers"),
 			WithEndSection("Worth Reading"),
 		},
 	},
 	{
-		Owner: "gostor",
-		Repo:  "awesome-go-storage",
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "gostor",
+			Repo:     "awesome-go-storage",
+		},
 		Options: []Option{
 			WithStartSection("Storage Server"),
 		},

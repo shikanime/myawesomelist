@@ -55,14 +55,15 @@ func (s *AwesomeService) ListCollections(
 ) {
 	collections := make([]*myawesomelistv1.Collection, 0, len(awesome.DefaultGitHubRepos))
 	for _, rr := range awesome.DefaultGitHubRepos {
-		coll, err := s.cs.GitHub().GetCollection(ctx, rr.Owner, rr.Repo)
+		coll, err := s.cs.GitHub().GetCollection(ctx, rr.Repo, rr.Options...)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
-		// Use protobuf collection directly
 		collections = append(collections, coll)
 	}
-	return connect.NewResponse(&myawesomelistv1.ListCollectionsResponse{Collections: collections}), nil
+	return connect.NewResponse(
+		&myawesomelistv1.ListCollectionsResponse{Collections: collections},
+	), nil
 }
 
 func (s *AwesomeService) GetCollection(
@@ -79,17 +80,21 @@ func (s *AwesomeService) GetCollection(
 			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
 		)
 	}
-	coll, err := s.cs.GitHub().GetCollection(
-		ctx,
-		repo.GetOwner(),
-		repo.GetRepo(),
-	)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	switch repo.GetHostname() {
+	case "github.com":
+		coll, err := s.cs.GitHub().GetCollection(ctx, repo)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+		return connect.NewResponse(
+			&myawesomelistv1.GetCollectionResponse{Collection: coll},
+		), nil
+	default:
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			connect.NewError(connect.CodeUnimplemented, errors.New("hostname is not supported")),
+		)
 	}
-	return connect.NewResponse(
-		&myawesomelistv1.GetCollectionResponse{Collection: coll},
-	), nil
 }
 
 func (s *AwesomeService) ListCategories(
@@ -106,16 +111,21 @@ func (s *AwesomeService) ListCategories(
 			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
 		)
 	}
-	coll, err := s.cs.GitHub().GetCollection(
-		ctx,
-		repo.GetOwner(),
-		repo.GetRepo(),
-	)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	switch repo.GetHostname() {
+	case "github.com":
+		coll, err := s.cs.GitHub().GetCollection(ctx, repo)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+		return connect.NewResponse(
+			&myawesomelistv1.ListCategoriesResponse{Categories: coll.Categories},
+		), nil
+	default:
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			connect.NewError(connect.CodeUnimplemented, errors.New("hostname is not supported")),
+		)
 	}
-	// Protobuf categories already in the collection
-	return connect.NewResponse(&myawesomelistv1.ListCategoriesResponse{Categories: coll.Categories}), nil
 }
 
 func (s *AwesomeService) ListProjects(
@@ -132,22 +142,26 @@ func (s *AwesomeService) ListProjects(
 			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
 		)
 	}
-	coll, err := s.cs.GitHub().GetCollection(
-		ctx,
-		repo.GetOwner(),
-		repo.GetRepo(),
-	)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-	var projects []*myawesomelistv1.Project
-	for _, c := range coll.Categories {
-		if c.Name == req.Msg.GetCategoryName() {
-			projects = c.Projects
-			break
+	switch repo.GetHostname() {
+	case "github.com":
+		coll, err := s.cs.GitHub().GetCollection(ctx, repo)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
 		}
+		var projects []*myawesomelistv1.Project
+		for _, c := range coll.Categories {
+			if c.Name == req.Msg.GetCategoryName() {
+				projects = c.Projects
+				break
+			}
+		}
+		return connect.NewResponse(&myawesomelistv1.ListProjectsResponse{Projects: projects}), nil
+	default:
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			connect.NewError(connect.CodeUnimplemented, errors.New("hostname is not supported")),
+		)
 	}
-	return connect.NewResponse(&myawesomelistv1.ListProjectsResponse{Projects: projects}), nil
 }
 
 func (s *AwesomeService) SearchProjects(
@@ -160,26 +174,14 @@ func (s *AwesomeService) SearchProjects(
 	q := req.Msg.GetQuery()
 	limit := req.Msg.GetLimit()
 	repos := req.Msg.GetRepos()
-	if limit <= 0 {
-		limit = 50
-	}
 
-	// Build repo list from request or use defaults
-	var repoList []*myawesomelistv1.Repository
 	if len(repos) == 0 {
 		for _, rr := range awesome.DefaultGitHubRepos {
-			repoList = append(repoList, &myawesomelistv1.Repository{Owner: rr.Owner, Repo: rr.Repo})
-		}
-	} else {
-		for _, r := range repos {
-			if r == nil {
-				continue
-			}
-			repoList = append(repoList, &myawesomelistv1.Repository{Owner: r.GetOwner(), Repo: r.GetRepo()})
+			repos = append(repos, rr.Repo)
 		}
 	}
 
-	projects, err := s.cs.Core().SearchProjects(ctx, q, limit, repoList)
+	projects, err := s.cs.Core().SearchProjects(ctx, q, limit, repos)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -203,9 +205,17 @@ func (s *AwesomeService) GetProjectStats(
 		)
 	}
 
-	stats, err := s.cs.GitHub().GetProjectStats(ctx, repo.GetOwner(), repo.GetRepo())
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	switch repo.GetHostname() {
+	case "github.com":
+		stats, err := s.cs.GitHub().GetProjectStats(ctx, repo)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+		return connect.NewResponse(&myawesomelistv1.GetProjectStatsResponse{Stats: stats}), nil
+	default:
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			connect.NewError(connect.CodeUnimplemented, errors.New("hostname is not supported")),
+		)
 	}
-	return connect.NewResponse(&myawesomelistv1.GetProjectStatsResponse{Stats: stats}), nil
 }

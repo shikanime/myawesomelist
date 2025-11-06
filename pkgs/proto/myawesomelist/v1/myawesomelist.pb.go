@@ -78,7 +78,7 @@ type Project struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Url           string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	Repo          *Repository            `protobuf:"bytes,3,opt,name=repo,proto3" json:"repo,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -127,11 +127,11 @@ func (x *Project) GetDescription() string {
 	return ""
 }
 
-func (x *Project) GetUrl() string {
+func (x *Project) GetRepo() *Repository {
 	if x != nil {
-		return x.Url
+		return x.Repo
 	}
-	return ""
+	return nil
 }
 
 // Category groups projects under a section
@@ -243,8 +243,9 @@ func (x *Collection) GetCategories() []*Category {
 // Identify a source awesome repository (owner/repo)
 type Repository struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Owner         string                 `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	Repo          string                 `protobuf:"bytes,2,opt,name=repo,proto3" json:"repo,omitempty"`
+	Hostname      string                 `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Owner         string                 `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	Repo          string                 `protobuf:"bytes,3,opt,name=repo,proto3" json:"repo,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -277,6 +278,13 @@ func (x *Repository) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Repository.ProtoReflect.Descriptor instead.
 func (*Repository) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Repository) GetHostname() string {
+	if x != nil {
+		return x.Hostname
+	}
+	return ""
 }
 
 func (x *Repository) GetOwner() string {
@@ -648,7 +656,7 @@ func (x *ListProjectsResponse) GetProjects() []*Project {
 type SearchProjectsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Limit         uint32                 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	Repos         []*Repository          `protobuf:"bytes,3,rep,name=repos,proto3" json:"repos,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -691,7 +699,7 @@ func (x *SearchProjectsRequest) GetQuery() string {
 	return ""
 }
 
-func (x *SearchProjectsRequest) GetLimit() int32 {
+func (x *SearchProjectsRequest) GetLimit() uint32 {
 	if x != nil {
 		return x.Limit
 	}
@@ -990,11 +998,11 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\x10stargazers_count\x18\x01 \x01(\x03H\x00R\x0fstargazersCount\x88\x01\x01\x12-\n" +
 	"\x10open_issue_count\x18\x02 \x01(\x03H\x01R\x0eopenIssueCount\x88\x01\x01B\x13\n" +
 	"\x11_stargazers_countB\x13\n" +
-	"\x11_open_issue_count\"Q\n" +
+	"\x11_open_issue_count\"q\n" +
 	"\aProject\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03url\x18\x03 \x01(\tR\x03url\"U\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x120\n" +
+	"\x04repo\x18\x03 \x01(\v2\x1c.myawesomelist.v1.RepositoryR\x04repo\"U\n" +
 	"\bCategory\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x125\n" +
 	"\bprojects\x18\x02 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"d\n" +
@@ -1003,11 +1011,12 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\blanguage\x18\x01 \x01(\tR\blanguage\x12:\n" +
 	"\n" +
 	"categories\x18\x02 \x03(\v2\x1a.myawesomelist.v1.CategoryR\n" +
-	"categories\"6\n" +
+	"categories\"R\n" +
 	"\n" +
-	"Repository\x12\x14\n" +
-	"\x05owner\x18\x01 \x01(\tR\x05owner\x12\x12\n" +
-	"\x04repo\x18\x02 \x01(\tR\x04repo\"\x18\n" +
+	"Repository\x12\x1a\n" +
+	"\bhostname\x18\x01 \x01(\tR\bhostname\x12\x14\n" +
+	"\x05owner\x18\x02 \x01(\tR\x05owner\x12\x12\n" +
+	"\x04repo\x18\x03 \x01(\tR\x04repo\"\x18\n" +
 	"\x16ListCollectionsRequest\"Y\n" +
 	"\x17ListCollectionsResponse\x12>\n" +
 	"\vcollections\x18\x01 \x03(\v2\x1c.myawesomelist.v1.CollectionR\vcollections\"H\n" +
@@ -1030,7 +1039,7 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"w\n" +
 	"\x15SearchProjectsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x05R\x05limit\x122\n" +
+	"\x05limit\x18\x02 \x01(\rR\x05limit\x122\n" +
 	"\x05repos\x18\x03 \x03(\v2\x1c.myawesomelist.v1.RepositoryR\x05repos\"O\n" +
 	"\x16SearchProjectsResponse\x125\n" +
 	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"\x11\n" +
@@ -1089,40 +1098,41 @@ var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*GetProjectStatsResponse)(nil), // 20: myawesomelist.v1.GetProjectStatsResponse
 }
 var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
-	1,  // 0: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
-	2,  // 1: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
-	3,  // 2: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
-	4,  // 3: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.Repository
-	3,  // 4: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
-	4,  // 5: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.Repository
-	2,  // 6: myawesomelist.v1.ListCategoriesResponse.categories:type_name -> myawesomelist.v1.Category
-	4,  // 7: myawesomelist.v1.ListProjectsRequest.repo:type_name -> myawesomelist.v1.Repository
-	1,  // 8: myawesomelist.v1.ListProjectsResponse.projects:type_name -> myawesomelist.v1.Project
-	4,  // 9: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.Repository
-	1,  // 10: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
-	4,  // 11: myawesomelist.v1.GetProjectStatsRequest.repo:type_name -> myawesomelist.v1.Repository
-	0,  // 12: myawesomelist.v1.GetProjectStatsResponse.stats:type_name -> myawesomelist.v1.ProjectsStats
-	15, // 13: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
-	17, // 14: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest
-	5,  // 15: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
-	7,  // 16: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
-	9,  // 17: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
-	11, // 18: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
-	13, // 19: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
-	19, // 20: myawesomelist.v1.AwesomeService.GetProjectStats:input_type -> myawesomelist.v1.GetProjectStatsRequest
-	16, // 21: myawesomelist.v1.AwesomeService.Liveness:output_type -> myawesomelist.v1.LivenessResponse
-	18, // 22: myawesomelist.v1.AwesomeService.Readiness:output_type -> myawesomelist.v1.ReadinessResponse
-	6,  // 23: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
-	8,  // 24: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
-	10, // 25: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
-	12, // 26: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
-	14, // 27: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
-	20, // 28: myawesomelist.v1.AwesomeService.GetProjectStats:output_type -> myawesomelist.v1.GetProjectStatsResponse
-	21, // [21:29] is the sub-list for method output_type
-	13, // [13:21] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	4,  // 0: myawesomelist.v1.Project.repo:type_name -> myawesomelist.v1.Repository
+	1,  // 1: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
+	2,  // 2: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
+	3,  // 3: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
+	4,  // 4: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.Repository
+	3,  // 5: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
+	4,  // 6: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.Repository
+	2,  // 7: myawesomelist.v1.ListCategoriesResponse.categories:type_name -> myawesomelist.v1.Category
+	4,  // 8: myawesomelist.v1.ListProjectsRequest.repo:type_name -> myawesomelist.v1.Repository
+	1,  // 9: myawesomelist.v1.ListProjectsResponse.projects:type_name -> myawesomelist.v1.Project
+	4,  // 10: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.Repository
+	1,  // 11: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
+	4,  // 12: myawesomelist.v1.GetProjectStatsRequest.repo:type_name -> myawesomelist.v1.Repository
+	0,  // 13: myawesomelist.v1.GetProjectStatsResponse.stats:type_name -> myawesomelist.v1.ProjectsStats
+	15, // 14: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
+	17, // 15: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest
+	5,  // 16: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
+	7,  // 17: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
+	9,  // 18: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
+	11, // 19: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
+	13, // 20: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
+	19, // 21: myawesomelist.v1.AwesomeService.GetProjectStats:input_type -> myawesomelist.v1.GetProjectStatsRequest
+	16, // 22: myawesomelist.v1.AwesomeService.Liveness:output_type -> myawesomelist.v1.LivenessResponse
+	18, // 23: myawesomelist.v1.AwesomeService.Readiness:output_type -> myawesomelist.v1.ReadinessResponse
+	6,  // 24: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
+	8,  // 25: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
+	10, // 26: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
+	12, // 27: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
+	14, // 28: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
+	20, // 29: myawesomelist.v1.AwesomeService.GetProjectStats:output_type -> myawesomelist.v1.GetProjectStatsResponse
+	22, // [22:30] is the sub-list for method output_type
+	14, // [14:22] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_myawesomelist_v1_myawesomelist_proto_init() }

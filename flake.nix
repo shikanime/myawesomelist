@@ -43,6 +43,7 @@
             enableDefaultExcludes = true;
             programs = {
               gofmt.enable = true;
+              golines.enable = true;
               nixfmt.enable = true;
               prettier.enable = true;
               statix.enable = true;

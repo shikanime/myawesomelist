@@ -2,35 +2,45 @@ package sqlx
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"text/template"
 
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
-func GetCollectionQuery(owner, repo string) (string, []any, error) {
+func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, []any, error) {
 	query := `
         SELECT language, data, updated_at
         FROM collections
-        WHERE owner = $1 AND repo = $2
+        WHERE hostname = $1 AND owner = $2 AND repo = $3
     `
-	return query, []any{owner, repo}, nil
+	return query, []any{repo.Hostname, repo.Owner, repo.Repo}, nil
 }
 
-func UpsertCollectionQuery(owner, repo, language, data string) (string, []any, error) {
+func UpsertCollectionQuery(
+	repo *myawesomelistv1.Repository,
+	col *myawesomelistv1.Collection,
+) (string, []any, error) {
+	data, err := json.Marshal(col)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to marshal collection: %w", err)
+	}
 	query := `
-        INSERT INTO collections (owner, repo, language, data)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (owner, repo)
+        INSERT INTO collections (hostname, owner, repo, language, data)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (hostname, owner, repo)
         DO UPDATE SET
             language = EXCLUDED.language,
             data = EXCLUDED.data
     `
-	return query, []any{owner, repo, language, data}, nil
+	return query, []any{repo.Hostname, repo.Owner, repo.Repo, col.Language, data}, nil
 }
 
 type SearchRepoPos struct {
-	OwnerPosition int
-	RepoPosition  int
+	HostnamePosition int
+	OwnerPosition    int
+	RepoPosition     int
 }
 
 type SearchProjectsParams struct {
@@ -54,34 +64,40 @@ var searchProjectsTpl = template.Must(template.New("searchProjects").Parse(`
       AND (
         {{- range $i, $pos := .RepoPositions -}}
           {{- if $i }} OR {{ end -}}
-          (c.owner = ${{ $pos.OwnerPosition }} AND c.repo = ${{ $pos.RepoPosition }})
+          (c.hostname = ${{ $pos.HostnamePosition }} AND c.owner = ${{ $pos.OwnerPosition }} AND c.repo = ${{ $pos.RepoPosition }})
         {{- end -}}
       )
     {{- end }}
     LIMIT ${{ .LimitPosition }}
 `))
 
-// SearchProjectsArgs builds the args: pattern, [owner, repo]*, limit
-func SearchProjectsArgs(q string, repos []*myawesomelistv1.Repository, limit int32) []any {
+// SearchProjectsArgs builds the args: pattern, [hostname, owner, repo]*, limit
+func SearchProjectsArgs(q string, repos []*myawesomelistv1.Repository, limit uint32) []any {
 	args := []any{"%" + q + "%"}
 	for i := range repos {
-		args = append(args, repos[i].Owner, repos[i].Repo)
+		args = append(args, repos[i].Hostname, repos[i].Owner, repos[i].Repo)
 	}
 	return append(args, limit)
 }
 
 // SearchProjectsQuery builds the SQL query for project search.
-func SearchProjectsQuery(q string, repos []*myawesomelistv1.Repository, limit int32) (string, []any, error) {
+func SearchProjectsQuery(
+	q string,
+	repos []*myawesomelistv1.Repository,
+	limit uint32,
+) (string, []any, error) {
 	repoPositions := make([]SearchRepoPos, 0, len(repos))
 	for i := range repos {
-		ownerPos := i*2 + 2
-		repoPos := i*2 + 3
+		hostnamePos := i*3 + 1
+		ownerPos := i*3 + 2
+		repoPos := i*3 + 3
 		repoPositions = append(repoPositions, SearchRepoPos{
-			OwnerPosition: ownerPos,
-			RepoPosition:  repoPos,
+			HostnamePosition: hostnamePos,
+			OwnerPosition:    ownerPos,
+			RepoPosition:     repoPos,
 		})
 	}
-	limitPos := 2*len(repos) + 2
+	limitPos := 3*len(repos) + 2
 
 	params := SearchProjectsParams{
 		RepoPositions: repoPositions,
@@ -95,23 +111,32 @@ func SearchProjectsQuery(q string, repos []*myawesomelistv1.Repository, limit in
 	return buf.String(), SearchProjectsArgs(q, repos, limit), nil
 }
 
-func GetProjectStatsQuery(owner, repo string) (string, []any, error) {
+func GetProjectStatsQuery(repo *myawesomelistv1.Repository) (string, []any, error) {
 	query := `
         SELECT stargazers_count, open_issue_count, updated_at
         FROM project_stats
-        WHERE owner = $1 AND repo = $2
+        WHERE hostname = $1 AND owner = $2 AND repo = $3
     `
-	return query, []any{owner, repo}, nil
+	return query, []any{repo.Hostname, repo.Owner, repo.Repo}, nil
 }
 
-func UpsertProjectStatsQuery(owner, repo string, stargazersCount, openIssueCount int64) (string, []any, error) {
+func UpsertProjectStatsQuery(
+	repo *myawesomelistv1.Repository,
+	stats *myawesomelistv1.ProjectsStats,
+) (string, []any, error) {
 	query := `
-        INSERT INTO project_stats (owner, repo, stargazers_count, open_issue_count)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (owner, repo)
+        INSERT INTO project_stats (hostname, owner, repo, stargazers_count, open_issue_count)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (hostname, owner, repo)
         DO UPDATE SET
             stargazers_count = EXCLUDED.stargazers_count,
             open_issue_count = EXCLUDED.open_issue_count
     `
-	return query, []any{owner, repo, stargazersCount, openIssueCount}, nil
+	return query, []any{
+		repo.Hostname,
+		repo.Owner,
+		repo.Repo,
+		stats.StargazersCount,
+		stats.OpenIssueCount,
+	}, nil
 }

@@ -166,7 +166,10 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 	}
 
 	if options.startSection != "" && !foundStartSection {
-		return Collection{}, fmt.Errorf("%s section not found in the document", options.startSection)
+		return Collection{}, fmt.Errorf(
+			"%s section not found in the document",
+			options.startSection,
+		)
 	}
 
 	// Convert map to slice to maintain order
