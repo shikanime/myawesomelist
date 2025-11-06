@@ -36,7 +36,6 @@ func WithEndSection(section string) Option {
 
 // WithSubsectionAsCategory enables H3 subsections to be treated as categories.
 func WithSubsectionAsCategory() Option {
-	// New: enable H3 subsections as separate categories
 	return func(o *Options) {
 		o.eopts = append(o.eopts, encoding.WithSubsectionAsCategory())
 	}
