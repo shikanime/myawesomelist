@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/google/go-github/v75/github"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 	"myawesomelist.shikanime.studio/internal/encoding"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
@@ -119,12 +119,11 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 
 		// If we need repo info and it's not already enriched, enrich it
 		if options.includeRepoInfo {
-			errors := c.EnrichCollectionWithRepoInfo(ctx, cachedCollection, opts...)
-			if len(errors) > 0 {
+			if err := c.EnrichCollectionWithRepoInfo(ctx, cachedCollection, opts...); err != nil {
 				slog.Warn("Encountered errors during enrichment of cached collection",
 					"owner", owner,
 					"repo", repo,
-					"total_errors", len(errors))
+					"error", err)
 			}
 		}
 
@@ -169,12 +168,11 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 	}
 
 	// Enrich with repo info if requested
-	errors := c.EnrichCollectionWithRepoInfo(ctx, enrichedCollection, opts...)
-	if len(errors) > 0 {
+	if err := c.EnrichCollectionWithRepoInfo(ctx, enrichedCollection, opts...); err != nil {
 		slog.Warn("Encountered errors during enrichment",
 			"owner", owner,
 			"repo", repo,
-			"total_errors", len(errors))
+			"error", err)
 	}
 
 	// Store the collection in the datastore for future use
@@ -250,32 +248,30 @@ func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *m
 }
 
 // EnrichCollectionWithRepoInfo enriches all projects in a collection with GitHub information using parallel processing
-func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collection *myawesomelistv1.Collection, opts ...Option) []error {
-	var categoryWg sync.WaitGroup
-	var errors []error
+func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collection *myawesomelistv1.Collection, opts ...Option) error {
+	g, ctx := errgroup.WithContext(ctx)
 	for _, category := range collection.Categories {
-		categoryWg.Go(func() {
+		cat := category // capture loop variable
+		g.Go(func() error {
 			slog.Debug("Processing category",
-				"category", category.Name,
-				"projects", len(category.Projects))
+				"category", cat.Name,
+				"projects", len(cat.Projects))
 
-			var projectWg sync.WaitGroup
-			for _, project := range category.Projects {
-				p := project
-				projectWg.Go(func() {
-					if err := c.EnrichProjectWithRepoInfo(ctx, p, opts...); err != nil {
+			pg, pctx := errgroup.WithContext(ctx)
+			for _, project := range cat.Projects {
+				proj := project // capture loop variable
+				pg.Go(func() error {
+					if err := c.EnrichProjectWithRepoInfo(pctx, proj, opts...); err != nil {
 						slog.Warn("Error processing project",
-							"project", project.Name,
-							"category", category.Name,
+							"project", proj.Name,
+							"category", cat.Name,
 							"error", err)
-						errors = append(errors, err)
 					}
+					return nil
 				})
 			}
-			projectWg.Wait()
+			return pg.Wait()
 		})
 	}
-	categoryWg.Wait()
-
-	return errors
+	return g.Wait()
 }
