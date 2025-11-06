@@ -5,12 +5,13 @@
 package myawesomelistv1connect
 
 import (
-	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	v1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 	http "net/http"
 	strings "strings"
+
+	connect "connectrpc.com/connect"
+	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
 // This is a compile-time assertion to ensure that this generated file and the connect package are
@@ -22,7 +23,7 @@ const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// AwesomeServiceName is the fully-qualified name of the AwesomeService service.
-	AwesomeServiceName = "myawesomelist.v1.AwesomeService"
+	AwesomeServiceName = "myawesomelist.myawesomelistv1.AwesomeService"
 )
 
 // These constants are the fully-qualified names of the RPCs defined in this package. They're
@@ -34,39 +35,39 @@ const (
 // period.
 const (
 	// AwesomeServiceLivenessProcedure is the fully-qualified name of the AwesomeService's Liveness RPC.
-	AwesomeServiceLivenessProcedure = "/myawesomelist.v1.AwesomeService/Liveness"
+	AwesomeServiceLivenessProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/Liveness"
 	// AwesomeServiceReadinessProcedure is the fully-qualified name of the AwesomeService's Readiness
 	// RPC.
-	AwesomeServiceReadinessProcedure = "/myawesomelist.v1.AwesomeService/Readiness"
+	AwesomeServiceReadinessProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/Readiness"
 	// AwesomeServiceListCollectionsProcedure is the fully-qualified name of the AwesomeService's
 	// ListCollections RPC.
-	AwesomeServiceListCollectionsProcedure = "/myawesomelist.v1.AwesomeService/ListCollections"
+	AwesomeServiceListCollectionsProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/ListCollections"
 	// AwesomeServiceGetCollectionProcedure is the fully-qualified name of the AwesomeService's
 	// GetCollection RPC.
-	AwesomeServiceGetCollectionProcedure = "/myawesomelist.v1.AwesomeService/GetCollection"
+	AwesomeServiceGetCollectionProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/GetCollection"
 	// AwesomeServiceListCategoriesProcedure is the fully-qualified name of the AwesomeService's
 	// ListCategories RPC.
-	AwesomeServiceListCategoriesProcedure = "/myawesomelist.v1.AwesomeService/ListCategories"
+	AwesomeServiceListCategoriesProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/ListCategories"
 	// AwesomeServiceListProjectsProcedure is the fully-qualified name of the AwesomeService's
 	// ListProjects RPC.
-	AwesomeServiceListProjectsProcedure = "/myawesomelist.v1.AwesomeService/ListProjects"
+	AwesomeServiceListProjectsProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/ListProjects"
 	// AwesomeServiceSearchProjectsProcedure is the fully-qualified name of the AwesomeService's
 	// SearchProjects RPC.
-	AwesomeServiceSearchProjectsProcedure = "/myawesomelist.v1.AwesomeService/SearchProjects"
+	AwesomeServiceSearchProjectsProcedure = "/myawesomelist.myawesomelistv1.AwesomeService/SearchProjects"
 )
 
-// AwesomeServiceClient is a client for the myawesomelist.v1.AwesomeService service.
+// AwesomeServiceClient is a client for the myawesomelist.myawesomelistv1.AwesomeService service.
 type AwesomeServiceClient interface {
-	Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error)
-	Readiness(context.Context, *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error)
-	ListCollections(context.Context, *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error)
-	GetCollection(context.Context, *connect.Request[v1.GetCollectionRequest]) (*connect.Response[v1.GetCollectionResponse], error)
-	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
-	ListProjects(context.Context, *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error)
-	SearchProjects(context.Context, *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error)
+	Liveness(context.Context, *connect.Request[myawesomelistv1.LivenessRequest]) (*connect.Response[myawesomelistv1.LivenessResponse], error)
+	Readiness(context.Context, *connect.Request[myawesomelistv1.ReadinessRequest]) (*connect.Response[myawesomelistv1.ReadinessResponse], error)
+	ListCollections(context.Context, *connect.Request[myawesomelistv1.ListCollectionsRequest]) (*connect.Response[myawesomelistv1.ListCollectionsResponse], error)
+	GetCollection(context.Context, *connect.Request[myawesomelistv1.GetCollectionRequest]) (*connect.Response[myawesomelistv1.GetCollectionResponse], error)
+	ListCategories(context.Context, *connect.Request[myawesomelistv1.ListCategoriesRequest]) (*connect.Response[myawesomelistv1.ListCategoriesResponse], error)
+	ListProjects(context.Context, *connect.Request[myawesomelistv1.ListProjectsRequest]) (*connect.Response[myawesomelistv1.ListProjectsResponse], error)
+	SearchProjects(context.Context, *connect.Request[myawesomelistv1.SearchProjectsRequest]) (*connect.Response[myawesomelistv1.SearchProjectsResponse], error)
 }
 
-// NewAwesomeServiceClient constructs a client for the myawesomelist.v1.AwesomeService service. By
+// NewAwesomeServiceClient constructs a client for the myawesomelist.myawesomelistv1.AwesomeService service. By
 // default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
 // and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
 // connect.WithGRPC() or connect.WithGRPCWeb() options.
@@ -75,45 +76,45 @@ type AwesomeServiceClient interface {
 // http://api.acme.com or https://acme.com/grpc).
 func NewAwesomeServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) AwesomeServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	awesomeServiceMethods := v1.File_myawesomelist_v1_myawesomelist_proto.Services().ByName("AwesomeService").Methods()
+	awesomeServiceMethods := myawesomelistv1.File_myawesomelist_v1_myawesomelist_proto.Services().ByName("AwesomeService").Methods()
 	return &awesomeServiceClient{
-		liveness: connect.NewClient[v1.LivenessRequest, v1.LivenessResponse](
+		liveness: connect.NewClient[myawesomelistv1.LivenessRequest, myawesomelistv1.LivenessResponse](
 			httpClient,
 			baseURL+AwesomeServiceLivenessProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("Liveness")),
 			connect.WithClientOptions(opts...),
 		),
-		readiness: connect.NewClient[v1.ReadinessRequest, v1.ReadinessResponse](
+		readiness: connect.NewClient[myawesomelistv1.ReadinessRequest, myawesomelistv1.ReadinessResponse](
 			httpClient,
 			baseURL+AwesomeServiceReadinessProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("Readiness")),
 			connect.WithClientOptions(opts...),
 		),
-		listCollections: connect.NewClient[v1.ListCollectionsRequest, v1.ListCollectionsResponse](
+		listCollections: connect.NewClient[myawesomelistv1.ListCollectionsRequest, myawesomelistv1.ListCollectionsResponse](
 			httpClient,
 			baseURL+AwesomeServiceListCollectionsProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("ListCollections")),
 			connect.WithClientOptions(opts...),
 		),
-		getCollection: connect.NewClient[v1.GetCollectionRequest, v1.GetCollectionResponse](
+		getCollection: connect.NewClient[myawesomelistv1.GetCollectionRequest, myawesomelistv1.GetCollectionResponse](
 			httpClient,
 			baseURL+AwesomeServiceGetCollectionProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("GetCollection")),
 			connect.WithClientOptions(opts...),
 		),
-		listCategories: connect.NewClient[v1.ListCategoriesRequest, v1.ListCategoriesResponse](
+		listCategories: connect.NewClient[myawesomelistv1.ListCategoriesRequest, myawesomelistv1.ListCategoriesResponse](
 			httpClient,
 			baseURL+AwesomeServiceListCategoriesProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("ListCategories")),
 			connect.WithClientOptions(opts...),
 		),
-		listProjects: connect.NewClient[v1.ListProjectsRequest, v1.ListProjectsResponse](
+		listProjects: connect.NewClient[myawesomelistv1.ListProjectsRequest, myawesomelistv1.ListProjectsResponse](
 			httpClient,
 			baseURL+AwesomeServiceListProjectsProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("ListProjects")),
 			connect.WithClientOptions(opts...),
 		),
-		searchProjects: connect.NewClient[v1.SearchProjectsRequest, v1.SearchProjectsResponse](
+		searchProjects: connect.NewClient[myawesomelistv1.SearchProjectsRequest, myawesomelistv1.SearchProjectsResponse](
 			httpClient,
 			baseURL+AwesomeServiceSearchProjectsProcedure,
 			connect.WithSchema(awesomeServiceMethods.ByName("SearchProjects")),
@@ -124,59 +125,59 @@ func NewAwesomeServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // awesomeServiceClient implements AwesomeServiceClient.
 type awesomeServiceClient struct {
-	liveness        *connect.Client[v1.LivenessRequest, v1.LivenessResponse]
-	readiness       *connect.Client[v1.ReadinessRequest, v1.ReadinessResponse]
-	listCollections *connect.Client[v1.ListCollectionsRequest, v1.ListCollectionsResponse]
-	getCollection   *connect.Client[v1.GetCollectionRequest, v1.GetCollectionResponse]
-	listCategories  *connect.Client[v1.ListCategoriesRequest, v1.ListCategoriesResponse]
-	listProjects    *connect.Client[v1.ListProjectsRequest, v1.ListProjectsResponse]
-	searchProjects  *connect.Client[v1.SearchProjectsRequest, v1.SearchProjectsResponse]
+	liveness        *connect.Client[myawesomelistv1.LivenessRequest, myawesomelistv1.LivenessResponse]
+	readiness       *connect.Client[myawesomelistv1.ReadinessRequest, myawesomelistv1.ReadinessResponse]
+	listCollections *connect.Client[myawesomelistv1.ListCollectionsRequest, myawesomelistv1.ListCollectionsResponse]
+	getCollection   *connect.Client[myawesomelistv1.GetCollectionRequest, myawesomelistv1.GetCollectionResponse]
+	listCategories  *connect.Client[myawesomelistv1.ListCategoriesRequest, myawesomelistv1.ListCategoriesResponse]
+	listProjects    *connect.Client[myawesomelistv1.ListProjectsRequest, myawesomelistv1.ListProjectsResponse]
+	searchProjects  *connect.Client[myawesomelistv1.SearchProjectsRequest, myawesomelistv1.SearchProjectsResponse]
 }
 
-// Liveness calls myawesomelist.v1.AwesomeService.Liveness.
-func (c *awesomeServiceClient) Liveness(ctx context.Context, req *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error) {
+// Liveness calls myawesomelist.myawesomelistv1.AwesomeService.Liveness.
+func (c *awesomeServiceClient) Liveness(ctx context.Context, req *connect.Request[myawesomelistv1.LivenessRequest]) (*connect.Response[myawesomelistv1.LivenessResponse], error) {
 	return c.liveness.CallUnary(ctx, req)
 }
 
-// Readiness calls myawesomelist.v1.AwesomeService.Readiness.
-func (c *awesomeServiceClient) Readiness(ctx context.Context, req *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error) {
+// Readiness calls myawesomelist.myawesomelistv1.AwesomeService.Readiness.
+func (c *awesomeServiceClient) Readiness(ctx context.Context, req *connect.Request[myawesomelistv1.ReadinessRequest]) (*connect.Response[myawesomelistv1.ReadinessResponse], error) {
 	return c.readiness.CallUnary(ctx, req)
 }
 
-// ListCollections calls myawesomelist.v1.AwesomeService.ListCollections.
-func (c *awesomeServiceClient) ListCollections(ctx context.Context, req *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error) {
+// ListCollections calls myawesomelist.myawesomelistv1.AwesomeService.ListCollections.
+func (c *awesomeServiceClient) ListCollections(ctx context.Context, req *connect.Request[myawesomelistv1.ListCollectionsRequest]) (*connect.Response[myawesomelistv1.ListCollectionsResponse], error) {
 	return c.listCollections.CallUnary(ctx, req)
 }
 
-// GetCollection calls myawesomelist.v1.AwesomeService.GetCollection.
-func (c *awesomeServiceClient) GetCollection(ctx context.Context, req *connect.Request[v1.GetCollectionRequest]) (*connect.Response[v1.GetCollectionResponse], error) {
+// GetCollection calls myawesomelist.myawesomelistv1.AwesomeService.GetCollection.
+func (c *awesomeServiceClient) GetCollection(ctx context.Context, req *connect.Request[myawesomelistv1.GetCollectionRequest]) (*connect.Response[myawesomelistv1.GetCollectionResponse], error) {
 	return c.getCollection.CallUnary(ctx, req)
 }
 
-// ListCategories calls myawesomelist.v1.AwesomeService.ListCategories.
-func (c *awesomeServiceClient) ListCategories(ctx context.Context, req *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error) {
+// ListCategories calls myawesomelist.myawesomelistv1.AwesomeService.ListCategories.
+func (c *awesomeServiceClient) ListCategories(ctx context.Context, req *connect.Request[myawesomelistv1.ListCategoriesRequest]) (*connect.Response[myawesomelistv1.ListCategoriesResponse], error) {
 	return c.listCategories.CallUnary(ctx, req)
 }
 
-// ListProjects calls myawesomelist.v1.AwesomeService.ListProjects.
-func (c *awesomeServiceClient) ListProjects(ctx context.Context, req *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error) {
+// ListProjects calls myawesomelist.myawesomelistv1.AwesomeService.ListProjects.
+func (c *awesomeServiceClient) ListProjects(ctx context.Context, req *connect.Request[myawesomelistv1.ListProjectsRequest]) (*connect.Response[myawesomelistv1.ListProjectsResponse], error) {
 	return c.listProjects.CallUnary(ctx, req)
 }
 
-// SearchProjects calls myawesomelist.v1.AwesomeService.SearchProjects.
-func (c *awesomeServiceClient) SearchProjects(ctx context.Context, req *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error) {
+// SearchProjects calls myawesomelist.myawesomelistv1.AwesomeService.SearchProjects.
+func (c *awesomeServiceClient) SearchProjects(ctx context.Context, req *connect.Request[myawesomelistv1.SearchProjectsRequest]) (*connect.Response[myawesomelistv1.SearchProjectsResponse], error) {
 	return c.searchProjects.CallUnary(ctx, req)
 }
 
-// AwesomeServiceHandler is an implementation of the myawesomelist.v1.AwesomeService service.
+// AwesomeServiceHandler is an implementation of the myawesomelist.myawesomelistv1.AwesomeService service.
 type AwesomeServiceHandler interface {
-	Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error)
-	Readiness(context.Context, *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error)
-	ListCollections(context.Context, *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error)
-	GetCollection(context.Context, *connect.Request[v1.GetCollectionRequest]) (*connect.Response[v1.GetCollectionResponse], error)
-	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
-	ListProjects(context.Context, *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error)
-	SearchProjects(context.Context, *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error)
+	Liveness(context.Context, *connect.Request[myawesomelistv1.LivenessRequest]) (*connect.Response[myawesomelistv1.LivenessResponse], error)
+	Readiness(context.Context, *connect.Request[myawesomelistv1.ReadinessRequest]) (*connect.Response[myawesomelistv1.ReadinessResponse], error)
+	ListCollections(context.Context, *connect.Request[myawesomelistv1.ListCollectionsRequest]) (*connect.Response[myawesomelistv1.ListCollectionsResponse], error)
+	GetCollection(context.Context, *connect.Request[myawesomelistv1.GetCollectionRequest]) (*connect.Response[myawesomelistv1.GetCollectionResponse], error)
+	ListCategories(context.Context, *connect.Request[myawesomelistv1.ListCategoriesRequest]) (*connect.Response[myawesomelistv1.ListCategoriesResponse], error)
+	ListProjects(context.Context, *connect.Request[myawesomelistv1.ListProjectsRequest]) (*connect.Response[myawesomelistv1.ListProjectsResponse], error)
+	SearchProjects(context.Context, *connect.Request[myawesomelistv1.SearchProjectsRequest]) (*connect.Response[myawesomelistv1.SearchProjectsResponse], error)
 }
 
 // NewAwesomeServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -185,7 +186,7 @@ type AwesomeServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	awesomeServiceMethods := v1.File_myawesomelist_v1_myawesomelist_proto.Services().ByName("AwesomeService").Methods()
+	awesomeServiceMethods := myawesomelistv1.File_myawesomelist_v1_myawesomelist_proto.Services().ByName("AwesomeService").Methods()
 	awesomeServiceLivenessHandler := connect.NewUnaryHandler(
 		AwesomeServiceLivenessProcedure,
 		svc.Liveness,
@@ -228,7 +229,7 @@ func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.Handler
 		connect.WithSchema(awesomeServiceMethods.ByName("SearchProjects")),
 		connect.WithHandlerOptions(opts...),
 	)
-	return "/myawesomelist.v1.AwesomeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return "/myawesomelist.myawesomelistv1.AwesomeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AwesomeServiceLivenessProcedure:
 			awesomeServiceLivenessHandler.ServeHTTP(w, r)
@@ -253,30 +254,30 @@ func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.Handler
 // UnimplementedAwesomeServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedAwesomeServiceHandler struct{}
 
-func (UnimplementedAwesomeServiceHandler) Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.Liveness is not implemented"))
+func (UnimplementedAwesomeServiceHandler) Liveness(context.Context, *connect.Request[myawesomelistv1.LivenessRequest]) (*connect.Response[myawesomelistv1.LivenessResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.Liveness is not implemented"))
 }
 
-func (UnimplementedAwesomeServiceHandler) Readiness(context.Context, *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.Readiness is not implemented"))
+func (UnimplementedAwesomeServiceHandler) Readiness(context.Context, *connect.Request[myawesomelistv1.ReadinessRequest]) (*connect.Response[myawesomelistv1.ReadinessResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.Readiness is not implemented"))
 }
 
-func (UnimplementedAwesomeServiceHandler) ListCollections(context.Context, *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.ListCollections is not implemented"))
+func (UnimplementedAwesomeServiceHandler) ListCollections(context.Context, *connect.Request[myawesomelistv1.ListCollectionsRequest]) (*connect.Response[myawesomelistv1.ListCollectionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.ListCollections is not implemented"))
 }
 
-func (UnimplementedAwesomeServiceHandler) GetCollection(context.Context, *connect.Request[v1.GetCollectionRequest]) (*connect.Response[v1.GetCollectionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.GetCollection is not implemented"))
+func (UnimplementedAwesomeServiceHandler) GetCollection(context.Context, *connect.Request[myawesomelistv1.GetCollectionRequest]) (*connect.Response[myawesomelistv1.GetCollectionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.GetCollection is not implemented"))
 }
 
-func (UnimplementedAwesomeServiceHandler) ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.ListCategories is not implemented"))
+func (UnimplementedAwesomeServiceHandler) ListCategories(context.Context, *connect.Request[myawesomelistv1.ListCategoriesRequest]) (*connect.Response[myawesomelistv1.ListCategoriesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.ListCategories is not implemented"))
 }
 
-func (UnimplementedAwesomeServiceHandler) ListProjects(context.Context, *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.ListProjects is not implemented"))
+func (UnimplementedAwesomeServiceHandler) ListProjects(context.Context, *connect.Request[myawesomelistv1.ListProjectsRequest]) (*connect.Response[myawesomelistv1.ListProjectsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.ListProjects is not implemented"))
 }
 
-func (UnimplementedAwesomeServiceHandler) SearchProjects(context.Context, *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.SearchProjects is not implemented"))
+func (UnimplementedAwesomeServiceHandler) SearchProjects(context.Context, *connect.Request[myawesomelistv1.SearchProjectsRequest]) (*connect.Response[myawesomelistv1.SearchProjectsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.myawesomelistv1.AwesomeService.SearchProjects is not implemented"))
 }
