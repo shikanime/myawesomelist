@@ -36,7 +36,10 @@ func (ds *DataStore) Ping(ctx context.Context) error {
 }
 
 // GetCollection retrieves a collection from the database
-func (ds *DataStore) GetCollection(ctx context.Context, repo *myawesomelistv1.Repository) (*myawesomelistv1.Collection, error) {
+func (ds *DataStore) GetCollection(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+) (*myawesomelistv1.Collection, error) {
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
@@ -72,7 +75,10 @@ func (ds *DataStore) GetCollection(ctx context.Context, repo *myawesomelistv1.Re
 }
 
 // PrepareGetCollection renders and prepares the SQL statement to fetch a collection.
-func (ds *DataStore) PrepareGetCollection(ctx context.Context, repo *myawesomelistv1.Repository) (*sql.Stmt, []any, error) {
+func (ds *DataStore) PrepareGetCollection(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.GetCollectionQuery(repo)
 	if err != nil {
 		return nil, nil, err
@@ -85,7 +91,11 @@ func (ds *DataStore) PrepareGetCollection(ctx context.Context, repo *myawesomeli
 }
 
 // UpSertCollection stores a collection in the database
-func (ds *DataStore) UpSertCollection(ctx context.Context, repo *myawesomelistv1.Repository, col *myawesomelistv1.Collection) error {
+func (ds *DataStore) UpSertCollection(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+	col *myawesomelistv1.Collection,
+) error {
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
@@ -110,7 +120,11 @@ func (ds *DataStore) UpSertCollection(ctx context.Context, repo *myawesomelistv1
 }
 
 // PrepareUpsertCollection renders and prepares the SQL statement to upsert a collection.
-func (ds *DataStore) PrepareUpsertCollection(ctx context.Context, repo *myawesomelistv1.Repository, col *myawesomelistv1.Collection) (*sql.Stmt, []any, error) {
+func (ds *DataStore) PrepareUpsertCollection(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+	col *myawesomelistv1.Collection,
+) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.UpsertCollectionQuery(repo, col)
 	if err != nil {
 		return nil, nil, err
@@ -123,7 +137,12 @@ func (ds *DataStore) PrepareUpsertCollection(ctx context.Context, repo *myawesom
 }
 
 // SearchProjects executes a datastore-backed search across repositories.
-func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit uint32, repos []*myawesomelistv1.Repository) ([]*myawesomelistv1.Project, error) {
+func (ds *DataStore) SearchProjects(
+	ctx context.Context,
+	q string,
+	limit uint32,
+	repos []*myawesomelistv1.Repository,
+) ([]*myawesomelistv1.Project, error) {
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
@@ -155,7 +174,12 @@ func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit uint32,
 }
 
 // PrepareSearchProjects renders and prepares the SQL statement for project search.
-func (ds *DataStore) PrepareSearchProjects(ctx context.Context, q string, repos []*myawesomelistv1.Repository, limit uint32) (*sql.Stmt, []any, error) {
+func (ds *DataStore) PrepareSearchProjects(
+	ctx context.Context,
+	q string,
+	repos []*myawesomelistv1.Repository,
+	limit uint32,
+) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.SearchProjectsQuery(q, repos, limit)
 	if err != nil {
 		return nil, nil, err
@@ -176,7 +200,10 @@ func (ds *DataStore) Close() error {
 }
 
 // GetProjectStats retrieves project stats from the datastore
-func (ds *DataStore) GetProjectStats(ctx context.Context, repo *myawesomelistv1.Repository) (*myawesomelistv1.ProjectsStats, error) {
+func (ds *DataStore) GetProjectStats(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+) (*myawesomelistv1.ProjectsStats, error) {
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
@@ -210,7 +237,11 @@ func (ds *DataStore) GetProjectStats(ctx context.Context, repo *myawesomelistv1.
 }
 
 // UpsertProjectStats stores project stats in the datastore
-func (ds *DataStore) UpsertProjectStats(ctx context.Context, repo *myawesomelistv1.Repository, stats *myawesomelistv1.ProjectsStats) error {
+func (ds *DataStore) UpsertProjectStats(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+	stats *myawesomelistv1.ProjectsStats,
+) error {
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
@@ -236,7 +267,10 @@ func (ds *DataStore) UpsertProjectStats(ctx context.Context, repo *myawesomelist
 }
 
 // PrepareGetProjectStats renders and prepares the SQL statement to fetch project stats.
-func (ds *DataStore) PrepareGetProjectStats(ctx context.Context, repo *myawesomelistv1.Repository) (*sql.Stmt, []any, error) {
+func (ds *DataStore) PrepareGetProjectStats(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.GetProjectStatsQuery(repo)
 	if err != nil {
 		return nil, nil, err
@@ -249,7 +283,11 @@ func (ds *DataStore) PrepareGetProjectStats(ctx context.Context, repo *myawesome
 }
 
 // PrepareUpsertProjectStats renders and prepares the SQL statement to upsert project stats.
-func (ds *DataStore) PrepareUpsertProjectStats(ctx context.Context, repo *myawesomelistv1.Repository, stats *myawesomelistv1.ProjectsStats) (*sql.Stmt, []any, error) {
+func (ds *DataStore) PrepareUpsertProjectStats(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+	stats *myawesomelistv1.ProjectsStats,
+) (*sql.Stmt, []any, error) {
 	query, args, err := sqlx.UpsertProjectStatsQuery(repo, stats)
 	if err != nil {
 		return nil, nil, err

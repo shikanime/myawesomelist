@@ -18,7 +18,10 @@ func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, []any, error)
 	return query, []any{repo.Hostname, repo.Owner, repo.Repo}, nil
 }
 
-func UpsertCollectionQuery(repo *myawesomelistv1.Repository, col *myawesomelistv1.Collection) (string, []any, error) {
+func UpsertCollectionQuery(
+	repo *myawesomelistv1.Repository,
+	col *myawesomelistv1.Collection,
+) (string, []any, error) {
 	data, err := json.Marshal(col)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to marshal collection: %w", err)
@@ -78,7 +81,11 @@ func SearchProjectsArgs(q string, repos []*myawesomelistv1.Repository, limit uin
 }
 
 // SearchProjectsQuery builds the SQL query for project search.
-func SearchProjectsQuery(q string, repos []*myawesomelistv1.Repository, limit uint32) (string, []any, error) {
+func SearchProjectsQuery(
+	q string,
+	repos []*myawesomelistv1.Repository,
+	limit uint32,
+) (string, []any, error) {
 	repoPositions := make([]SearchRepoPos, 0, len(repos))
 	for i := range repos {
 		hostnamePos := i*3 + 1
@@ -113,7 +120,10 @@ func GetProjectStatsQuery(repo *myawesomelistv1.Repository) (string, []any, erro
 	return query, []any{repo.Hostname, repo.Owner, repo.Repo}, nil
 }
 
-func UpsertProjectStatsQuery(repo *myawesomelistv1.Repository, stats *myawesomelistv1.ProjectsStats) (string, []any, error) {
+func UpsertProjectStatsQuery(
+	repo *myawesomelistv1.Repository,
+	stats *myawesomelistv1.ProjectsStats,
+) (string, []any, error) {
 	query := `
         INSERT INTO project_stats (hostname, owner, repo, stargazers_count, open_issue_count)
         VALUES ($1, $2, $3, $4, $5)
@@ -122,5 +132,11 @@ func UpsertProjectStatsQuery(repo *myawesomelistv1.Repository, stats *myawesomel
             stargazers_count = EXCLUDED.stargazers_count,
             open_issue_count = EXCLUDED.open_issue_count
     `
-	return query, []any{repo.Hostname, repo.Owner, repo.Repo, stats.StargazersCount, stats.OpenIssueCount}, nil
+	return query, []any{
+		repo.Hostname,
+		repo.Owner,
+		repo.Repo,
+		stats.StargazersCount,
+		stats.OpenIssueCount,
+	}, nil
 }

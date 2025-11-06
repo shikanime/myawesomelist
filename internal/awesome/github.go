@@ -44,7 +44,8 @@ type GitHubClient struct {
 
 // GitHubClientOptions holds configuration for initializing a GitHubClient.
 type GitHubClientOptions struct {
-	token string
+	token   string
+	limiter *rate.Limiter
 }
 
 // GitHubClientOption applies a configuration to GitHubClientOptions.
@@ -53,6 +54,11 @@ type GitHubClientOption func(*GitHubClientOptions)
 // WithToken sets the OAuth token used for authenticated GitHub requests.
 func WithToken(token string) GitHubClientOption {
 	return func(o *GitHubClientOptions) { o.token = token }
+}
+
+// WithLimiter sets a custom rate limiter for the GitHub client.
+func WithLimiter(l *rate.Limiter) GitHubClientOption {
+	return func(o *GitHubClientOptions) { o.limiter = l }
 }
 
 // NewGitHubClient creates a new GitHub client with optional authentication
@@ -66,7 +72,7 @@ func NewGitHubClient(ds *DataStore, opts ...GitHubClientOption) *GitHubClient {
 		slog.Info("Using authenticated GitHub client")
 		return &GitHubClient{
 			c: github.NewClient(nil).WithAuthToken(o.token),
-			l: NewGitHubLimiter(true),
+			l: o.limiter,
 			d: ds,
 		}
 	}
@@ -74,7 +80,7 @@ func NewGitHubClient(ds *DataStore, opts ...GitHubClientOption) *GitHubClient {
 	slog.Warn("Using unauthenticated GitHub client (rate limited)")
 	return &GitHubClient{
 		c: github.NewClient(nil),
-		l: NewGitHubLimiter(false),
+		l: o.limiter,
 		d: ds,
 	}
 }
@@ -98,7 +104,11 @@ func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string)
 }
 
 // GetCollection fetches a project collection from a single awesome repository
-func (c *GitHubClient) GetCollection(ctx context.Context, repo *myawesomelistv1.Repository, opts ...Option) (*myawesomelistv1.Collection, error) {
+func (c *GitHubClient) GetCollection(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+	opts ...Option,
+) (*myawesomelistv1.Collection, error) {
 	options := &Options{}
 	for _, opt := range opts {
 		opt(options)
@@ -134,7 +144,12 @@ func (c *GitHubClient) GetCollection(ctx context.Context, repo *myawesomelistv1.
 	// Parse using encoding package with embedded options
 	encColl, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse collection for %s/%s: %v", repo.Owner, repo.Repo, err)
+		return nil, fmt.Errorf(
+			"failed to parse collection for %s/%s: %v",
+			repo.Owner,
+			repo.Repo,
+			err,
+		)
 	}
 
 	categories := make([]*myawesomelistv1.Category, len(encColl.Categories))
@@ -170,7 +185,10 @@ func (c *GitHubClient) GetCollection(ctx context.Context, repo *myawesomelistv1.
 }
 
 // GetProjectStats retrieves cached stats or fetches from GitHub and persists them
-func (c *GitHubClient) GetProjectStats(ctx context.Context, repo *myawesomelistv1.Repository) (*myawesomelistv1.ProjectsStats, error) {
+func (c *GitHubClient) GetProjectStats(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+) (*myawesomelistv1.ProjectsStats, error) {
 	stats, err := c.d.GetProjectStats(ctx, repo)
 	if err != nil {
 		slog.Warn("Failed to query project stats from datastore",

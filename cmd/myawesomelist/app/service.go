@@ -61,7 +61,9 @@ func (s *AwesomeService) ListCollections(
 		}
 		collections = append(collections, coll)
 	}
-	return connect.NewResponse(&myawesomelistv1.ListCollectionsResponse{Collections: collections}), nil
+	return connect.NewResponse(
+		&myawesomelistv1.ListCollectionsResponse{Collections: collections},
+	), nil
 }
 
 func (s *AwesomeService) GetCollection(
@@ -115,7 +117,9 @@ func (s *AwesomeService) ListCategories(
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
-		return connect.NewResponse(&myawesomelistv1.ListCategoriesResponse{Categories: coll.Categories}), nil
+		return connect.NewResponse(
+			&myawesomelistv1.ListCategoriesResponse{Categories: coll.Categories},
+		), nil
 	default:
 		return nil, connect.NewError(
 			connect.CodeInvalidArgument,

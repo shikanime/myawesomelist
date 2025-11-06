@@ -54,8 +54,10 @@ var (
 )
 
 func init() {
-	serveCmd.Flags().StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
-	rootCmd.PersistentFlags().StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
+	serveCmd.Flags().
+		StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
+	rootCmd.PersistentFlags().
+		StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
 	migrateCmd.AddCommand(upCmd, downCmd)
 	rootCmd.AddCommand(serveCmd, migrateCmd)
 }
@@ -137,7 +139,13 @@ func runMigrateDown(cmd *cobra.Command, args []string) error {
 func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
 	var opts []awesome.ClientSetOption
 	if token := awesome.GetGitHubToken(); token != "" {
-		opts = append(opts, awesome.WithGitHubOptions(awesome.WithToken(token)))
+		opts = append(
+			opts,
+			awesome.WithGitHubOptions(
+				awesome.WithToken(token),
+				awesome.WithLimiter(awesome.NewGitHubLimiter(true)),
+			),
+		)
 	}
 	return app.NewServer(ds, opts...), nil
 }
