@@ -11,6 +11,8 @@ import (
 	myawesomelistv1connect "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1/myawesomelistv1connect"
 )
 
+var _ myawesomelistv1connect.AwesomeServiceHandler = (*AwesomeService)(nil)
+
 type AwesomeService struct {
 	cs *awesome.ClientSet
 }
@@ -18,8 +20,6 @@ type AwesomeService struct {
 func NewAwesomeService(clients *awesome.ClientSet) *AwesomeService {
 	return &AwesomeService{cs: clients}
 }
-
-var _ myawesomelistv1connect.AwesomeServiceHandler = (*AwesomeService)(nil)
 
 func (s *AwesomeService) Liveness(
 	ctx context.Context,
