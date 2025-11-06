@@ -1,7 +1,13 @@
 import { useLoaderData } from "react-router";
 import type { Route } from "./+types/lists";
 import { awesomeClient } from "../api/client";
-import type { Category } from "../proto/myawesomelist/v1/myawesomelist_pb";
+import type {
+  Category,
+  Project,
+  ProjectsStats,
+} from "../proto/myawesomelist/v1/myawesomelist_pb";
+import { useRef, useState, useEffect } from "react";
+import { useIntersectionObserver } from "../hooks/intersectionObserver";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -48,45 +54,7 @@ export default function Lists() {
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(category.projects ?? []).map((p) => (
-                  <div
-                    key={`${p.name}-${p.url}`}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                          {p.name}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300 mb-4">
-                          {p.description}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <a
-                          href={p.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
-                        >
-                          Visit
-                        </a>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                      {p.stats?.stargazersCount ? (
-                        <span>
-                          ⭐ {p.stats.stargazersCount.toLocaleString()} stars
-                        </span>
-                      ) : (
-                        <span>⭐ —</span>
-                      )}
-                      {p.stats?.openIssueCount ? (
-                        <span>{p.stats.openIssueCount} open issues</span>
-                      ) : (
-                        <span>Issues —</span>
-                      )}
-                    </div>
-                  </div>
+                  <ProjectCard key={`${p.name}-${p.url}`} project={p} />
                 ))}
               </div>
             </section>
@@ -95,4 +63,98 @@ export default function Lists() {
       </div>
     </div>
   );
+}
+
+// Fetch stats when visible
+function ProjectCard({ project }: { project: Project }) {
+  const [stats, setStats] = useState<ProjectsStats | undefined>(project.stats);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!errorToast) return;
+    const id = setTimeout(() => setErrorToast(null), 4000);
+    return () => clearTimeout(id);
+  }, [errorToast]);
+
+  useIntersectionObserver(
+    cardRef,
+    () => {
+      const { owner, repo } = parseGitHubOwnerRepoFromUrl(project.url ?? "");
+      if (!owner || !repo) return;
+      awesomeClient
+        .getProjectStats({ repo: { owner, repo } })
+        .then((res) => setStats(res.stats))
+        .catch(() => {
+          setErrorToast(`Failed to load stats for ${owner}/${repo}`);
+        });
+    },
+    { threshold: 0.2 },
+  );
+
+  return (
+    <>
+      {errorToast && (
+        <div className="toast toast-top toast-end">
+          <div className="alert alert-error" role="alert">
+            <span>{errorToast}</span>
+          </div>
+        </div>
+      )}
+      <div
+        ref={cardRef}
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+      >
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              {project.name}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              {project.description}
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200"
+            >
+              Visit
+            </a>
+          </div>
+        </div>
+        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+          {stats?.stargazersCount ? (
+            <span>⭐ {stats.stargazersCount.toLocaleString()} stars</span>
+          ) : (
+            <span>⭐ —</span>
+          )}
+          {stats?.openIssueCount ? (
+            <span>{stats.openIssueCount} open issues</span>
+          ) : (
+            <span>Issues —</span>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function parseGitHubOwnerRepoFromUrl(url: string): {
+  owner?: string;
+  repo?: string;
+} {
+  try {
+    const u = new URL(url);
+    if (u.hostname !== "github.com") return {};
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (parts.length >= 2) {
+      return { owner: parts[0], repo: parts[1] };
+    }
+  } catch {
+    // ignore invalid URLs
+  }
+  return {};
 }

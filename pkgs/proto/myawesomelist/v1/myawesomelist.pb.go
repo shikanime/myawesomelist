@@ -901,6 +901,94 @@ func (*ReadinessResponse) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{18}
 }
 
+type GetProjectStatsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repo          *Repository            `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProjectStatsRequest) Reset() {
+	*x = GetProjectStatsRequest{}
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProjectStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectStatsRequest) ProtoMessage() {}
+
+func (x *GetProjectStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectStatsRequest.ProtoReflect.Descriptor instead.
+func (*GetProjectStatsRequest) Descriptor() ([]byte, []int) {
+	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GetProjectStatsRequest) GetRepo() *Repository {
+	if x != nil {
+		return x.Repo
+	}
+	return nil
+}
+
+type GetProjectStatsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Stats         *ProjectsStats         `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProjectStatsResponse) Reset() {
+	*x = GetProjectStatsResponse{}
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProjectStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectStatsResponse) ProtoMessage() {}
+
+func (x *GetProjectStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectStatsResponse.ProtoReflect.Descriptor instead.
+func (*GetProjectStatsResponse) Descriptor() ([]byte, []int) {
+	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetProjectStatsResponse) GetStats() *ProjectsStats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
 var File_myawesomelist_v1_myawesomelist_proto protoreflect.FileDescriptor
 
 const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
@@ -958,7 +1046,11 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\x0fLivenessRequest\"\x12\n" +
 	"\x10LivenessResponse\"\x12\n" +
 	"\x10ReadinessRequest\"\x13\n" +
-	"\x11ReadinessResponse2\xac\x05\n" +
+	"\x11ReadinessResponse\"J\n" +
+	"\x16GetProjectStatsRequest\x120\n" +
+	"\x04repo\x18\x01 \x01(\v2\x1c.myawesomelist.v1.RepositoryR\x04repo\"P\n" +
+	"\x17GetProjectStatsResponse\x125\n" +
+	"\x05stats\x18\x01 \x01(\v2\x1f.myawesomelist.v1.ProjectsStatsR\x05stats2\x94\x06\n" +
 	"\x0eAwesomeService\x12Q\n" +
 	"\bLiveness\x12!.myawesomelist.v1.LivenessRequest\x1a\".myawesomelist.v1.LivenessResponse\x12T\n" +
 	"\tReadiness\x12\".myawesomelist.v1.ReadinessRequest\x1a#.myawesomelist.v1.ReadinessResponse\x12f\n" +
@@ -966,7 +1058,8 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\rGetCollection\x12&.myawesomelist.v1.GetCollectionRequest\x1a'.myawesomelist.v1.GetCollectionResponse\x12c\n" +
 	"\x0eListCategories\x12'.myawesomelist.v1.ListCategoriesRequest\x1a(.myawesomelist.v1.ListCategoriesResponse\x12]\n" +
 	"\fListProjects\x12%.myawesomelist.v1.ListProjectsRequest\x1a&.myawesomelist.v1.ListProjectsResponse\x12c\n" +
-	"\x0eSearchProjects\x12'.myawesomelist.v1.SearchProjectsRequest\x1a(.myawesomelist.v1.SearchProjectsResponseBLZJmyawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1;myawesomelistv1b\x06proto3"
+	"\x0eSearchProjects\x12'.myawesomelist.v1.SearchProjectsRequest\x1a(.myawesomelist.v1.SearchProjectsResponse\x12f\n" +
+	"\x0fGetProjectStats\x12(.myawesomelist.v1.GetProjectStatsRequest\x1a).myawesomelist.v1.GetProjectStatsResponseBLZJmyawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1;myawesomelistv1b\x06proto3"
 
 var (
 	file_myawesomelist_v1_myawesomelist_proto_rawDescOnce sync.Once
@@ -980,7 +1073,7 @@ func file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP() []byte {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescData
 }
 
-var file_myawesomelist_v1_myawesomelist_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_myawesomelist_v1_myawesomelist_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*ProjectsStats)(nil),           // 0: myawesomelist.v1.ProjectsStats
 	(*Project)(nil),                 // 1: myawesomelist.v1.Project
@@ -1001,6 +1094,8 @@ var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*LivenessResponse)(nil),        // 16: myawesomelist.v1.LivenessResponse
 	(*ReadinessRequest)(nil),        // 17: myawesomelist.v1.ReadinessRequest
 	(*ReadinessResponse)(nil),       // 18: myawesomelist.v1.ReadinessResponse
+	(*GetProjectStatsRequest)(nil),  // 19: myawesomelist.v1.GetProjectStatsRequest
+	(*GetProjectStatsResponse)(nil), // 20: myawesomelist.v1.GetProjectStatsResponse
 }
 var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	0,  // 0: myawesomelist.v1.Project.stats:type_name -> myawesomelist.v1.ProjectsStats
@@ -1015,25 +1110,29 @@ var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	1,  // 9: myawesomelist.v1.ListProjectsResponse.projects:type_name -> myawesomelist.v1.Project
 	4,  // 10: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.Repository
 	1,  // 11: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
-	15, // 12: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
-	17, // 13: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest
-	5,  // 14: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
-	7,  // 15: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
-	9,  // 16: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
-	11, // 17: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
-	13, // 18: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
-	16, // 19: myawesomelist.v1.AwesomeService.Liveness:output_type -> myawesomelist.v1.LivenessResponse
-	18, // 20: myawesomelist.v1.AwesomeService.Readiness:output_type -> myawesomelist.v1.ReadinessResponse
-	6,  // 21: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
-	8,  // 22: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
-	10, // 23: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
-	12, // 24: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
-	14, // 25: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
-	19, // [19:26] is the sub-list for method output_type
-	12, // [12:19] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	4,  // 12: myawesomelist.v1.GetProjectStatsRequest.repo:type_name -> myawesomelist.v1.Repository
+	0,  // 13: myawesomelist.v1.GetProjectStatsResponse.stats:type_name -> myawesomelist.v1.ProjectsStats
+	15, // 14: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
+	17, // 15: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest
+	5,  // 16: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
+	7,  // 17: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
+	9,  // 18: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
+	11, // 19: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
+	13, // 20: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
+	19, // 21: myawesomelist.v1.AwesomeService.GetProjectStats:input_type -> myawesomelist.v1.GetProjectStatsRequest
+	16, // 22: myawesomelist.v1.AwesomeService.Liveness:output_type -> myawesomelist.v1.LivenessResponse
+	18, // 23: myawesomelist.v1.AwesomeService.Readiness:output_type -> myawesomelist.v1.ReadinessResponse
+	6,  // 24: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
+	8,  // 25: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
+	10, // 26: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
+	12, // 27: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
+	14, // 28: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
+	20, // 29: myawesomelist.v1.AwesomeService.GetProjectStats:output_type -> myawesomelist.v1.GetProjectStatsResponse
+	22, // [22:30] is the sub-list for method output_type
+	14, // [14:22] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_myawesomelist_v1_myawesomelist_proto_init() }
@@ -1048,7 +1147,7 @@ func file_myawesomelist_v1_myawesomelist_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_myawesomelist_v1_myawesomelist_proto_rawDesc), len(file_myawesomelist_v1_myawesomelist_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

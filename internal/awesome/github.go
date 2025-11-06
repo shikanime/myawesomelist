@@ -5,11 +5,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/google/go-github/v75/github"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 	"myawesomelist.shikanime.studio/internal/encoding"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
@@ -116,17 +114,6 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 			"owner", owner,
 			"repo", repo,
 			"categories", len(cachedCollection.Categories))
-
-		// If we need repo info and it's not already enriched, enrich it
-		if options.includeRepoInfo {
-			if err := c.EnrichCollectionWithRepoInfo(ctx, cachedCollection, opts...); err != nil {
-				slog.Warn("Encountered errors during enrichment of cached collection",
-					"owner", owner,
-					"repo", repo,
-					"error", err)
-			}
-		}
-
 		return cachedCollection, nil
 	}
 
@@ -162,116 +149,60 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 		}
 	}
 
-	enrichedCollection := &myawesomelistv1.Collection{
+	collection := &myawesomelistv1.Collection{
 		Language:   encColl.Language,
 		Categories: categories,
 	}
 
-	// Enrich with repo info if requested
-	if err := c.EnrichCollectionWithRepoInfo(ctx, enrichedCollection, opts...); err != nil {
-		slog.Warn("Encountered errors during enrichment",
+	if err := c.d.UpSertCollection(ctx, owner, repo, collection); err != nil {
+		slog.Warn("Failed to upsert collection",
 			"owner", owner,
 			"repo", repo,
 			"error", err)
 	}
 
-	// Store the collection in the datastore for future use
-	if err := c.d.UpSertCollection(ctx, owner, repo, enrichedCollection); err != nil {
-		slog.Warn("Failed to store collection in datastore",
+	return collection, nil
+}
+
+// GetProjectStats retrieves cached stats or fetches from GitHub and persists them
+func (c *GitHubClient) GetProjectStats(ctx context.Context, owner, repo string) (*myawesomelistv1.ProjectsStats, error) {
+	stats, err := c.d.GetProjectStats(ctx, owner, repo)
+	if err != nil {
+		slog.Warn("Failed to query project stats from datastore",
 			"owner", owner,
 			"repo", repo,
 			"error", err)
-		// Don't return error here, as the main operation succeeded
+	}
+	if stats != nil {
+		return stats, nil
 	}
 
-	return enrichedCollection, nil
-}
-
-// EnrichProjectWithRepoInfo enriches a single project with GitHub repository information
-func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *myawesomelistv1.Project, opts ...Option) error {
-	options := &Options{}
-	for _, opt := range opts {
-		opt(options)
+	// Fetch from GitHub
+	if err = c.l.Wait(ctx); err != nil {
+		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
+	}
+	repository, _, err := c.c.Repositories.Get(ctx, owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", owner, repo, err)
 	}
 
-	if options.includeRepoInfo && strings.Contains(project.Url, "github.com") {
-		slog.Debug("Enriching project with GitHub repo info",
-			"project", project.Name,
-			"url", project.Url)
+	stats = &myawesomelistv1.ProjectsStats{}
+	if repository.StargazersCount != nil {
+		v := int64(*repository.StargazersCount)
+		stats.StargazersCount = &v
+	}
+	if repository.OpenIssuesCount != nil {
+		v := int64(*repository.OpenIssuesCount)
+		stats.OpenIssueCount = &v
+	}
 
-		owner, repo, err := ExtractGitHubRepoFromURL(project.Url)
-		if err != nil {
-			slog.Error("Failed to extract repo info for project",
-				"project", project.Name,
-				"error", err)
-			return fmt.Errorf("failed to extract repo info for project %s: %w", project.Name, err)
-		}
-
-		slog.Debug("Fetching GitHub data",
+	// Persist stats
+	if err := c.d.UpsertProjectStats(ctx, owner, repo, stats); err != nil {
+		slog.Warn("Failed to upsert project stats",
 			"owner", owner,
 			"repo", repo,
-			"project", project.Name)
-
-		// Get repository information (includes stargazer count and open issues)
-		if err = c.l.Wait(ctx); err != nil {
-			return fmt.Errorf("rate limiter wait failed: %w", err)
-		}
-		repository, _, err := c.c.Repositories.Get(ctx, owner, repo)
-		if err != nil {
-			slog.Error("Failed to get repo info from GitHub API",
-				"project", project.Name,
-				"owner", owner,
-				"repo", repo,
-				"error", err)
-			return fmt.Errorf("failed to get repo info for project %s: %w", project.Name, err)
-		}
-
-		if project.Stats == nil {
-			project.Stats = &myawesomelistv1.ProjectsStats{}
-		}
-		if repository.StargazersCount != nil {
-			v := int64(*repository.StargazersCount)
-			project.Stats.StargazersCount = &v
-		}
-		if repository.OpenIssuesCount != nil {
-			v := int64(*repository.OpenIssuesCount)
-			project.Stats.OpenIssueCount = &v
-		}
-	} else {
-		slog.Debug("Skipping enrichment for project",
-			"project", project.Name,
-			"include_github_repo_info", options.includeRepoInfo,
-			"is_github", strings.Contains(project.Url, "github.com"))
+			"error", err)
 	}
 
-	return nil
-}
-
-// EnrichCollectionWithRepoInfo enriches all projects in a collection with GitHub information using parallel processing
-func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collection *myawesomelistv1.Collection, opts ...Option) error {
-	g, ctx := errgroup.WithContext(ctx)
-	for _, category := range collection.Categories {
-		cat := category // capture loop variable
-		g.Go(func() error {
-			slog.Debug("Processing category",
-				"category", cat.Name,
-				"projects", len(cat.Projects))
-
-			pg, pctx := errgroup.WithContext(ctx)
-			for _, project := range cat.Projects {
-				proj := project // capture loop variable
-				pg.Go(func() error {
-					if err := c.EnrichProjectWithRepoInfo(pctx, proj, opts...); err != nil {
-						slog.Warn("Error processing project",
-							"project", proj.Name,
-							"category", cat.Name,
-							"error", err)
-					}
-					return nil
-				})
-			}
-			return pg.Wait()
-		})
-	}
-	return g.Wait()
+	return stats, nil
 }

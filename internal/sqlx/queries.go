@@ -94,3 +94,24 @@ func SearchProjectsQuery(q string, repos []*myawesomelistv1.Repository, limit in
 
 	return buf.String(), SearchProjectsArgs(q, repos, limit), nil
 }
+
+func GetProjectStatsQuery(owner, repo string) (string, []any, error) {
+	query := `
+        SELECT stargazers_count, open_issue_count, updated_at
+        FROM project_stats
+        WHERE owner = $1 AND repo = $2
+    `
+	return query, []any{owner, repo}, nil
+}
+
+func UpsertProjectStatsQuery(owner, repo string, stargazersCount, openIssueCount int64) (string, []any, error) {
+	query := `
+        INSERT INTO project_stats (owner, repo, stargazers_count, open_issue_count)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (owner, repo)
+        DO UPDATE SET
+            stargazers_count = EXCLUDED.stargazers_count,
+            open_issue_count = EXCLUDED.open_issue_count
+    `
+	return query, []any{owner, repo, stargazersCount, openIssueCount}, nil
+}

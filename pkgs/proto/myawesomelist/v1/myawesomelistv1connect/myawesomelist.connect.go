@@ -53,6 +53,9 @@ const (
 	// AwesomeServiceSearchProjectsProcedure is the fully-qualified name of the AwesomeService's
 	// SearchProjects RPC.
 	AwesomeServiceSearchProjectsProcedure = "/myawesomelist.v1.AwesomeService/SearchProjects"
+	// AwesomeServiceGetProjectStatsProcedure is the fully-qualified name of the AwesomeService's
+	// GetProjectStats RPC.
+	AwesomeServiceGetProjectStatsProcedure = "/myawesomelist.v1.AwesomeService/GetProjectStats"
 )
 
 // AwesomeServiceClient is a client for the myawesomelist.v1.AwesomeService service.
@@ -64,6 +67,7 @@ type AwesomeServiceClient interface {
 	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
 	ListProjects(context.Context, *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error)
 	SearchProjects(context.Context, *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error)
+	GetProjectStats(context.Context, *connect.Request[v1.GetProjectStatsRequest]) (*connect.Response[v1.GetProjectStatsResponse], error)
 }
 
 // NewAwesomeServiceClient constructs a client for the myawesomelist.v1.AwesomeService service. By
@@ -119,6 +123,12 @@ func NewAwesomeServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(awesomeServiceMethods.ByName("SearchProjects")),
 			connect.WithClientOptions(opts...),
 		),
+		getProjectStats: connect.NewClient[v1.GetProjectStatsRequest, v1.GetProjectStatsResponse](
+			httpClient,
+			baseURL+AwesomeServiceGetProjectStatsProcedure,
+			connect.WithSchema(awesomeServiceMethods.ByName("GetProjectStats")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -131,6 +141,7 @@ type awesomeServiceClient struct {
 	listCategories  *connect.Client[v1.ListCategoriesRequest, v1.ListCategoriesResponse]
 	listProjects    *connect.Client[v1.ListProjectsRequest, v1.ListProjectsResponse]
 	searchProjects  *connect.Client[v1.SearchProjectsRequest, v1.SearchProjectsResponse]
+	getProjectStats *connect.Client[v1.GetProjectStatsRequest, v1.GetProjectStatsResponse]
 }
 
 // Liveness calls myawesomelist.v1.AwesomeService.Liveness.
@@ -168,6 +179,11 @@ func (c *awesomeServiceClient) SearchProjects(ctx context.Context, req *connect.
 	return c.searchProjects.CallUnary(ctx, req)
 }
 
+// GetProjectStats calls myawesomelist.v1.AwesomeService.GetProjectStats.
+func (c *awesomeServiceClient) GetProjectStats(ctx context.Context, req *connect.Request[v1.GetProjectStatsRequest]) (*connect.Response[v1.GetProjectStatsResponse], error) {
+	return c.getProjectStats.CallUnary(ctx, req)
+}
+
 // AwesomeServiceHandler is an implementation of the myawesomelist.v1.AwesomeService service.
 type AwesomeServiceHandler interface {
 	Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error)
@@ -177,6 +193,7 @@ type AwesomeServiceHandler interface {
 	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
 	ListProjects(context.Context, *connect.Request[v1.ListProjectsRequest]) (*connect.Response[v1.ListProjectsResponse], error)
 	SearchProjects(context.Context, *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error)
+	GetProjectStats(context.Context, *connect.Request[v1.GetProjectStatsRequest]) (*connect.Response[v1.GetProjectStatsResponse], error)
 }
 
 // NewAwesomeServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -228,6 +245,12 @@ func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.Handler
 		connect.WithSchema(awesomeServiceMethods.ByName("SearchProjects")),
 		connect.WithHandlerOptions(opts...),
 	)
+	awesomeServiceGetProjectStatsHandler := connect.NewUnaryHandler(
+		AwesomeServiceGetProjectStatsProcedure,
+		svc.GetProjectStats,
+		connect.WithSchema(awesomeServiceMethods.ByName("GetProjectStats")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/myawesomelist.v1.AwesomeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AwesomeServiceLivenessProcedure:
@@ -244,6 +267,8 @@ func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.Handler
 			awesomeServiceListProjectsHandler.ServeHTTP(w, r)
 		case AwesomeServiceSearchProjectsProcedure:
 			awesomeServiceSearchProjectsHandler.ServeHTTP(w, r)
+		case AwesomeServiceGetProjectStatsProcedure:
+			awesomeServiceGetProjectStatsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -279,4 +304,8 @@ func (UnimplementedAwesomeServiceHandler) ListProjects(context.Context, *connect
 
 func (UnimplementedAwesomeServiceHandler) SearchProjects(context.Context, *connect.Request[v1.SearchProjectsRequest]) (*connect.Response[v1.SearchProjectsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.SearchProjects is not implemented"))
+}
+
+func (UnimplementedAwesomeServiceHandler) GetProjectStats(context.Context, *connect.Request[v1.GetProjectStatsRequest]) (*connect.Response[v1.GetProjectStatsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.GetProjectStats is not implemented"))
 }

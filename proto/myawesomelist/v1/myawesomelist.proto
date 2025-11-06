@@ -84,6 +84,14 @@ message LivenessResponse {}
 message ReadinessRequest {}
 message ReadinessResponse {}
 
+message GetProjectStatsRequest {
+  Repository repo = 1;
+}
+
+message GetProjectStatsResponse {
+  ProjectsStats stats = 1;
+}
+
 // Service
 
 service AwesomeService {
@@ -97,4 +105,6 @@ service AwesomeService {
   rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
 
   rpc SearchProjects(SearchProjectsRequest) returns (SearchProjectsResponse);
+
+  rpc GetProjectStats(GetProjectStatsRequest) returns (GetProjectStatsResponse);
 }
