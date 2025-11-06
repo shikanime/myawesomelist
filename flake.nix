@@ -66,6 +66,10 @@
               };
               containers = pkgs.lib.mkForce { };
               github.enable = true;
+              gitignore = {
+                enable = true;
+                enableDefaultTemplates = true;
+              };
               languages = {
                 go.enable = true;
                 javascript.enable = true;
