@@ -82,15 +82,18 @@ message SearchProjectsResponse {
   repeated Project projects = 1;
 }
 
-message HealthCheckRequest {}
-message HealthCheckResponse {
-  string status = 1; // "ok"
-}
+// Replace health with liveness and readiness
+message LivenessRequest {}
+message LivenessResponse {}
+
+message ReadinessRequest {}
+message ReadinessResponse {}
 
 // Service
 
 service AwesomeService {
-  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc Liveness(LivenessRequest) returns (LivenessResponse);
+  rpc Readiness(ReadinessRequest) returns (ReadinessResponse);
 
   rpc ListCollections(ListCollectionsRequest) returns (ListCollectionsResponse);
   rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);

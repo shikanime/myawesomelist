@@ -54,12 +54,6 @@ func WithToken(token string) GitHubClientOption {
 
 // NewGitHubClient creates a new GitHub client with optional authentication
 func NewGitHubClient(ds *DataStore, opts ...GitHubClientOption) *GitHubClient {
-	// Use provided datastore as-is; main is responsible for ds.Connect()
-	if ds == nil || ds.db == nil {
-		slog.Warn("Datastore not configured; disabled")
-		ds = &DataStore{db: nil}
-	}
-
 	var o GitHubClientOptions
 	for _, opt := range opts {
 		opt(&o)
@@ -278,4 +272,12 @@ func (c *GitHubClient) Close() error {
 		return c.d.Close()
 	}
 	return nil
+}
+
+// Add a readiness check that verifies the datastore is reachable
+func (c *GitHubClient) Ping(ctx context.Context) error {
+	if c.d == nil {
+		return fmt.Errorf("datastore not configured")
+	}
+	return c.d.Ping(ctx)
 }

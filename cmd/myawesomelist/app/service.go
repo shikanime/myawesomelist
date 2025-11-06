@@ -22,14 +22,30 @@ func NewAwesomeService(clients *awesome.ClientSet) *AwesomeService {
 
 var _ myawesomelistv1connect.AwesomeServiceHandler = (*AwesomeService)(nil)
 
-func (s *AwesomeService) HealthCheck(
+func (s *AwesomeService) Liveness(
 	ctx context.Context,
-	_ *connect.Request[v1.HealthCheckRequest],
+	_ *connect.Request[v1.LivenessRequest],
 ) (
-	*connect.Response[v1.HealthCheckResponse],
+	*connect.Response[v1.LivenessResponse],
 	error,
 ) {
-	return connect.NewResponse(&v1.HealthCheckResponse{Status: "ok"}), nil
+	if err := s.cs.Ping(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
+	return connect.NewResponse(&v1.LivenessResponse{}), nil
+}
+
+func (s *AwesomeService) Readiness(
+	ctx context.Context,
+	_ *connect.Request[v1.ReadinessRequest],
+) (
+	*connect.Response[v1.ReadinessResponse],
+	error,
+) {
+	if err := s.cs.Ping(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
+	return connect.NewResponse(&v1.ReadinessResponse{}), nil
 }
 
 func (s *AwesomeService) ListCollections(
@@ -39,39 +55,13 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[v1.ListCollectionsResponse],
 	error,
 ) {
-	repos := req.Msg.GetRepos()
 	includeRepo := req.Msg.GetIncludeRepoInfo()
-
-	// Use default repos when none provided
-	if len(repos) == 0 {
-		collections := make([]*v1.Collection, 0, len(awesome.DefaultGitHubRepos))
-		for _, rr := range awesome.DefaultGitHubRepos {
-			coll, err := s.cs.GitHub.GetCollection(
-				ctx,
-				rr.Owner,
-				rr.Repo,
-				optionsFromInclude(includeRepo)...,
-			)
-			if err != nil {
-				return nil, connect.NewError(connect.CodeInternal, err)
-			}
-			collections = append(collections, toProtoCollection(coll))
-		}
-		return connect.NewResponse(
-			&v1.ListCollectionsResponse{Collections: collections},
-		), nil
-	}
-
-	// Use provided repos
-	collections := make([]*v1.Collection, 0, len(repos))
-	for _, r := range repos {
-		if r == nil {
-			continue
-		}
+	collections := make([]*v1.Collection, 0, len(awesome.DefaultGitHubRepos))
+	for _, rr := range awesome.DefaultGitHubRepos {
 		coll, err := s.cs.GitHub.GetCollection(
 			ctx,
-			r.GetOwner(),
-			r.GetRepo(),
+			rr.Owner,
+			rr.Repo,
 			optionsFromInclude(includeRepo)...,
 		)
 		if err != nil {

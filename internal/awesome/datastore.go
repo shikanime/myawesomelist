@@ -30,12 +30,12 @@ func NewDataStore(db *sql.DB) *DataStore {
 	}
 }
 
-// Connect verifies the provided database connection is available
-func (ds *DataStore) Connect() error {
+// Ping verifies the provided database connection is available
+func (ds *DataStore) Ping(ctx context.Context) error {
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
-	if err := ds.db.Ping(); err != nil {
+	if err := ds.db.PingContext(ctx); err != nil {
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 	return nil

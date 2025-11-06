@@ -23,13 +23,12 @@ const (
 
 // Project represents a single project from an awesome list
 type Project struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Description string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Url         string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
-	// Presence-aware optional fields (supported in modern proto3)
-	StargazersCount *int64 `protobuf:"varint,4,opt,name=stargazers_count,json=stargazersCount,proto3,oneof" json:"stargazers_count,omitempty"`
-	OpenIssueCount  *int64 `protobuf:"varint,5,opt,name=open_issue_count,json=openIssueCount,proto3,oneof" json:"open_issue_count,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Name            string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description     string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Url             string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	StargazersCount *int64                 `protobuf:"varint,4,opt,name=stargazers_count,json=stargazersCount,proto3,oneof" json:"stargazers_count,omitempty"`
+	OpenIssueCount  *int64                 `protobuf:"varint,5,opt,name=open_issue_count,json=openIssueCount,proto3,oneof" json:"open_issue_count,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -259,13 +258,10 @@ func (x *RepoRef) GetRepo() string {
 }
 
 type ListCollectionsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// When true, backend enriches projects with GitHub repo info
-	IncludeRepoInfo bool `protobuf:"varint,1,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
-	// If empty, server uses its DefaultGitHubRepos; otherwise overrides
-	Repos         []*RepoRef `protobuf:"bytes,2,rep,name=repos,proto3" json:"repos,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	IncludeRepoInfo bool                   `protobuf:"varint,1,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ListCollectionsRequest) Reset() {
@@ -303,13 +299,6 @@ func (x *ListCollectionsRequest) GetIncludeRepoInfo() bool {
 		return x.IncludeRepoInfo
 	}
 	return false
-}
-
-func (x *ListCollectionsRequest) GetRepos() []*RepoRef {
-	if x != nil {
-		return x.Repos
-	}
-	return nil
 }
 
 type ListCollectionsResponse struct {
@@ -766,26 +755,27 @@ func (x *SearchProjectsResponse) GetProjects() []*Project {
 	return nil
 }
 
-type HealthCheckRequest struct {
+// Replace health with liveness and readiness
+type LivenessRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HealthCheckRequest) Reset() {
-	*x = HealthCheckRequest{}
+func (x *LivenessRequest) Reset() {
+	*x = LivenessRequest{}
 	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HealthCheckRequest) String() string {
+func (x *LivenessRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HealthCheckRequest) ProtoMessage() {}
+func (*LivenessRequest) ProtoMessage() {}
 
-func (x *HealthCheckRequest) ProtoReflect() protoreflect.Message {
+func (x *LivenessRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -797,32 +787,31 @@ func (x *HealthCheckRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HealthCheckRequest.ProtoReflect.Descriptor instead.
-func (*HealthCheckRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use LivenessRequest.ProtoReflect.Descriptor instead.
+func (*LivenessRequest) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{14}
 }
 
-type HealthCheckResponse struct {
+type LivenessResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"` // "ok"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HealthCheckResponse) Reset() {
-	*x = HealthCheckResponse{}
+func (x *LivenessResponse) Reset() {
+	*x = LivenessResponse{}
 	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HealthCheckResponse) String() string {
+func (x *LivenessResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HealthCheckResponse) ProtoMessage() {}
+func (*LivenessResponse) ProtoMessage() {}
 
-func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message {
+func (x *LivenessResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -834,16 +823,81 @@ func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HealthCheckResponse.ProtoReflect.Descriptor instead.
-func (*HealthCheckResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use LivenessResponse.ProtoReflect.Descriptor instead.
+func (*LivenessResponse) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *HealthCheckResponse) GetStatus() string {
+type ReadinessRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReadinessRequest) Reset() {
+	*x = ReadinessRequest{}
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReadinessRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadinessRequest) ProtoMessage() {}
+
+func (x *ReadinessRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[16]
 	if x != nil {
-		return x.Status
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
 	}
-	return ""
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadinessRequest.ProtoReflect.Descriptor instead.
+func (*ReadinessRequest) Descriptor() ([]byte, []int) {
+	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{16}
+}
+
+type ReadinessResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReadinessResponse) Reset() {
+	*x = ReadinessResponse{}
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReadinessResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadinessResponse) ProtoMessage() {}
+
+func (x *ReadinessResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadinessResponse.ProtoReflect.Descriptor instead.
+func (*ReadinessResponse) Descriptor() ([]byte, []int) {
+	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{17}
 }
 
 var File_myawesomelist_v1_myawesomelist_proto protoreflect.FileDescriptor
@@ -870,10 +924,9 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"categories\"3\n" +
 	"\aRepoRef\x12\x14\n" +
 	"\x05owner\x18\x01 \x01(\tR\x05owner\x12\x12\n" +
-	"\x04repo\x18\x02 \x01(\tR\x04repo\"u\n" +
+	"\x04repo\x18\x02 \x01(\tR\x04repo\"D\n" +
 	"\x16ListCollectionsRequest\x12*\n" +
-	"\x11include_repo_info\x18\x01 \x01(\bR\x0fincludeRepoInfo\x12/\n" +
-	"\x05repos\x18\x02 \x03(\v2\x19.myawesomelist.v1.RepoRefR\x05repos\"Y\n" +
+	"\x11include_repo_info\x18\x01 \x01(\bR\x0fincludeRepoInfo\"Y\n" +
 	"\x17ListCollectionsResponse\x12>\n" +
 	"\vcollections\x18\x01 \x03(\v2\x1c.myawesomelist.v1.CollectionR\vcollections\"q\n" +
 	"\x14GetCollectionRequest\x12-\n" +
@@ -902,12 +955,14 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\x05repos\x18\x03 \x03(\v2\x19.myawesomelist.v1.RepoRefR\x05repos\x12*\n" +
 	"\x11include_repo_info\x18\x04 \x01(\bR\x0fincludeRepoInfo\"O\n" +
 	"\x16SearchProjectsResponse\x125\n" +
-	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"\x14\n" +
-	"\x12HealthCheckRequest\"-\n" +
-	"\x13HealthCheckResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status2\xdf\x04\n" +
-	"\x0eAwesomeService\x12Z\n" +
-	"\vHealthCheck\x12$.myawesomelist.v1.HealthCheckRequest\x1a%.myawesomelist.v1.HealthCheckResponse\x12f\n" +
+	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"\x11\n" +
+	"\x0fLivenessRequest\"\x12\n" +
+	"\x10LivenessResponse\"\x12\n" +
+	"\x10ReadinessRequest\"\x13\n" +
+	"\x11ReadinessResponse2\xac\x05\n" +
+	"\x0eAwesomeService\x12Q\n" +
+	"\bLiveness\x12!.myawesomelist.v1.LivenessRequest\x1a\".myawesomelist.v1.LivenessResponse\x12T\n" +
+	"\tReadiness\x12\".myawesomelist.v1.ReadinessRequest\x1a#.myawesomelist.v1.ReadinessResponse\x12f\n" +
 	"\x0fListCollections\x12(.myawesomelist.v1.ListCollectionsRequest\x1a).myawesomelist.v1.ListCollectionsResponse\x12`\n" +
 	"\rGetCollection\x12&.myawesomelist.v1.GetCollectionRequest\x1a'.myawesomelist.v1.GetCollectionResponse\x12c\n" +
 	"\x0eListCategories\x12'.myawesomelist.v1.ListCategoriesRequest\x1a(.myawesomelist.v1.ListCategoriesResponse\x12]\n" +
@@ -926,7 +981,7 @@ func file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP() []byte {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescData
 }
 
-var file_myawesomelist_v1_myawesomelist_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_myawesomelist_v1_myawesomelist_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*Project)(nil),                 // 0: myawesomelist.v1.Project
 	(*Category)(nil),                // 1: myawesomelist.v1.Category
@@ -942,39 +997,42 @@ var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*ListProjectsResponse)(nil),    // 11: myawesomelist.v1.ListProjectsResponse
 	(*SearchProjectsRequest)(nil),   // 12: myawesomelist.v1.SearchProjectsRequest
 	(*SearchProjectsResponse)(nil),  // 13: myawesomelist.v1.SearchProjectsResponse
-	(*HealthCheckRequest)(nil),      // 14: myawesomelist.v1.HealthCheckRequest
-	(*HealthCheckResponse)(nil),     // 15: myawesomelist.v1.HealthCheckResponse
+	(*LivenessRequest)(nil),         // 14: myawesomelist.v1.LivenessRequest
+	(*LivenessResponse)(nil),        // 15: myawesomelist.v1.LivenessResponse
+	(*ReadinessRequest)(nil),        // 16: myawesomelist.v1.ReadinessRequest
+	(*ReadinessResponse)(nil),       // 17: myawesomelist.v1.ReadinessResponse
 }
 var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	0,  // 0: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
 	1,  // 1: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
-	3,  // 2: myawesomelist.v1.ListCollectionsRequest.repos:type_name -> myawesomelist.v1.RepoRef
-	2,  // 3: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
-	3,  // 4: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.RepoRef
-	2,  // 5: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
-	3,  // 6: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.RepoRef
-	1,  // 7: myawesomelist.v1.ListCategoriesResponse.categories:type_name -> myawesomelist.v1.Category
-	3,  // 8: myawesomelist.v1.ListProjectsRequest.repo:type_name -> myawesomelist.v1.RepoRef
-	0,  // 9: myawesomelist.v1.ListProjectsResponse.projects:type_name -> myawesomelist.v1.Project
-	3,  // 10: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.RepoRef
-	0,  // 11: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
-	14, // 12: myawesomelist.v1.AwesomeService.HealthCheck:input_type -> myawesomelist.v1.HealthCheckRequest
+	2,  // 2: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
+	3,  // 3: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.RepoRef
+	2,  // 4: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
+	3,  // 5: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.RepoRef
+	1,  // 6: myawesomelist.v1.ListCategoriesResponse.categories:type_name -> myawesomelist.v1.Category
+	3,  // 7: myawesomelist.v1.ListProjectsRequest.repo:type_name -> myawesomelist.v1.RepoRef
+	0,  // 8: myawesomelist.v1.ListProjectsResponse.projects:type_name -> myawesomelist.v1.Project
+	3,  // 9: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.RepoRef
+	0,  // 10: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
+	14, // 11: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
+	16, // 12: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest
 	4,  // 13: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
 	6,  // 14: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
 	8,  // 15: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
 	10, // 16: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
 	12, // 17: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
-	15, // 18: myawesomelist.v1.AwesomeService.HealthCheck:output_type -> myawesomelist.v1.HealthCheckResponse
-	5,  // 19: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
-	7,  // 20: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
-	9,  // 21: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
-	11, // 22: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
-	13, // 23: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	15, // 18: myawesomelist.v1.AwesomeService.Liveness:output_type -> myawesomelist.v1.LivenessResponse
+	17, // 19: myawesomelist.v1.AwesomeService.Readiness:output_type -> myawesomelist.v1.ReadinessResponse
+	5,  // 20: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
+	7,  // 21: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
+	9,  // 22: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
+	11, // 23: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
+	13, // 24: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
+	18, // [18:25] is the sub-list for method output_type
+	11, // [11:18] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_myawesomelist_v1_myawesomelist_proto_init() }
@@ -989,7 +1047,7 @@ func file_myawesomelist_v1_myawesomelist_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_myawesomelist_v1_myawesomelist_proto_rawDesc), len(file_myawesomelist_v1_myawesomelist_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
