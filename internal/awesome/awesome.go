@@ -1,27 +1,8 @@
 package awesome
 
-import "myawesomelist.shikanime.studio/internal/encoding"
-
-// Project represents a project with GitHub information
-type Project struct {
-	Name            string
-	Description     string
-	URL             string
-	StargazersCount *int
-	OpenIssueCount  *int
-}
-
-// Category represents a category of projects
-type Category struct {
-	Name     string
-	Projects []Project
-}
-
-// Collection represents a collection of projects grouped by language
-type Collection struct {
-	Language   string
-	Categories []Category
-}
+import (
+	"myawesomelist.shikanime.studio/internal/encoding"
+)
 
 // Options represents configuration options for fetching data
 type Options struct {
@@ -50,5 +31,12 @@ func WithStartSection(section string) Option {
 func WithEndSection(section string) Option {
 	return func(o *Options) {
 		o.eopts = append(o.eopts, encoding.WithEndSection(section))
+	}
+}
+
+// New: enable H3 subsections as separate categories
+func WithSubsectionAsCategory() Option {
+	return func(o *Options) {
+		o.eopts = append(o.eopts, encoding.WithSubsectionAsCategory())
 	}
 }

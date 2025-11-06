@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file myawesomelist/v1/myawesomelist.proto.
  */
 export const file_myawesomelist_v1_myawesomelist: GenFile = /*@__PURE__*/
-  fileDesc("CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEioQEKB1Byb2plY3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRILCgN1cmwYAyABKAkSHQoQc3RhcmdhemVyc19jb3VudBgEIAEoA0gAiAEBEh0KEG9wZW5faXNzdWVfY291bnQYBSABKANIAYgBAUITChFfc3RhcmdhemVyc19jb3VudEITChFfb3Blbl9pc3N1ZV9jb3VudCJFCghDYXRlZ29yeRIMCgRuYW1lGAEgASgJEisKCHByb2plY3RzGAIgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0Ik4KCkNvbGxlY3Rpb24SEAoIbGFuZ3VhZ2UYASABKAkSLgoKY2F0ZWdvcmllcxgCIAMoCzIaLm15YXdlc29tZWxpc3QudjEuQ2F0ZWdvcnkiJgoHUmVwb1JlZhINCgVvd25lchgBIAEoCRIMCgRyZXBvGAIgASgJIjMKFkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QSGQoRaW5jbHVkZV9yZXBvX2luZm8YASABKAgiTAoXTGlzdENvbGxlY3Rpb25zUmVzcG9uc2USMQoLY29sbGVjdGlvbnMYASADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iWgoUR2V0Q29sbGVjdGlvblJlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgCIAEoCCJJChVHZXRDb2xsZWN0aW9uUmVzcG9uc2USMAoKY29sbGVjdGlvbhgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuQ29sbGVjdGlvbiJbChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgCIAEoCCJIChZMaXN0Q2F0ZWdvcmllc1Jlc3BvbnNlEi4KCmNhdGVnb3JpZXMYASADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5InAKE0xpc3RQcm9qZWN0c1JlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIVCg1jYXRlZ29yeV9uYW1lGAIgASgJEhkKEWluY2x1ZGVfcmVwb19pbmZvGAMgASgIIkMKFExpc3RQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0InoKFVNlYXJjaFByb2plY3RzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBRIoCgVyZXBvcxgDIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgEIAEoCCJFChZTZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0IhEKD0xpdmVuZXNzUmVxdWVzdCISChBMaXZlbmVzc1Jlc3BvbnNlIhIKEFJlYWRpbmVzc1JlcXVlc3QiEwoRUmVhZGluZXNzUmVzcG9uc2UyrAUKDkF3ZXNvbWVTZXJ2aWNlElEKCExpdmVuZXNzEiEubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1JlcXVlc3QaIi5teWF3ZXNvbWVsaXN0LnYxLkxpdmVuZXNzUmVzcG9uc2USVAoJUmVhZGluZXNzEiIubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXF1ZXN0GiMubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXNwb25zZRJmCg9MaXN0Q29sbGVjdGlvbnMSKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QaKS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEmAKDUdldENvbGxlY3Rpb24SJi5teWF3ZXNvbWVsaXN0LnYxLkdldENvbGxlY3Rpb25SZXF1ZXN0GicubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVzcG9uc2USYwoOTGlzdENhdGVnb3JpZXMSJy5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBooLm15YXdlc29tZWxpc3QudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJdCgxMaXN0UHJvamVjdHMSJS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1JlcXVlc3QaJi5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1Jlc3BvbnNlEmMKDlNlYXJjaFByb2plY3RzEicubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLlNlYXJjaFByb2plY3RzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw");
+  fileDesc("CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEioQEKB1Byb2plY3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRILCgN1cmwYAyABKAkSHQoQc3RhcmdhemVyc19jb3VudBgEIAEoA0gAiAEBEh0KEG9wZW5faXNzdWVfY291bnQYBSABKANIAYgBAUITChFfc3RhcmdhemVyc19jb3VudEITChFfb3Blbl9pc3N1ZV9jb3VudCJFCghDYXRlZ29yeRIMCgRuYW1lGAEgASgJEisKCHByb2plY3RzGAIgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0Ik4KCkNvbGxlY3Rpb24SEAoIbGFuZ3VhZ2UYASABKAkSLgoKY2F0ZWdvcmllcxgCIAMoCzIaLm15YXdlc29tZWxpc3QudjEuQ2F0ZWdvcnkiKQoKUmVwb3NpdG9yeRINCgVvd25lchgBIAEoCRIMCgRyZXBvGAIgASgJIhgKFkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QiTAoXTGlzdENvbGxlY3Rpb25zUmVzcG9uc2USMQoLY29sbGVjdGlvbnMYASADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iQgoUR2V0Q29sbGVjdGlvblJlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJJChVHZXRDb2xsZWN0aW9uUmVzcG9uc2USMAoKY29sbGVjdGlvbhgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuQ29sbGVjdGlvbiJDChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJIChZMaXN0Q2F0ZWdvcmllc1Jlc3BvbnNlEi4KCmNhdGVnb3JpZXMYASADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5IlgKE0xpc3RQcm9qZWN0c1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeRIVCg1jYXRlZ29yeV9uYW1lGAIgASgJIkMKFExpc3RQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0ImIKFVNlYXJjaFByb2plY3RzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBRIrCgVyZXBvcxgDIAMoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJFChZTZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0IhEKD0xpdmVuZXNzUmVxdWVzdCISChBMaXZlbmVzc1Jlc3BvbnNlIhIKEFJlYWRpbmVzc1JlcXVlc3QiEwoRUmVhZGluZXNzUmVzcG9uc2UyrAUKDkF3ZXNvbWVTZXJ2aWNlElEKCExpdmVuZXNzEiEubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1JlcXVlc3QaIi5teWF3ZXNvbWVsaXN0LnYxLkxpdmVuZXNzUmVzcG9uc2USVAoJUmVhZGluZXNzEiIubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXF1ZXN0GiMubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXNwb25zZRJmCg9MaXN0Q29sbGVjdGlvbnMSKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QaKS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEmAKDUdldENvbGxlY3Rpb24SJi5teWF3ZXNvbWVsaXN0LnYxLkdldENvbGxlY3Rpb25SZXF1ZXN0GicubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVzcG9uc2USYwoOTGlzdENhdGVnb3JpZXMSJy5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBooLm15YXdlc29tZWxpc3QudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJdCgxMaXN0UHJvamVjdHMSJS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1JlcXVlc3QaJi5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1Jlc3BvbnNlEmMKDlNlYXJjaFByb2plY3RzEicubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLlNlYXJjaFByb2plY3RzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw");
 
 /**
  * Project represents a single project from an awesome list
@@ -102,9 +102,9 @@ export const CollectionSchema: GenMessage<Collection> = /*@__PURE__*/
 /**
  * Identify a source awesome repository (owner/repo)
  *
- * @generated from message myawesomelist.v1.RepoRef
+ * @generated from message myawesomelist.v1.Repository
  */
-export type RepoRef = Message<"myawesomelist.v1.RepoRef"> & {
+export type Repository = Message<"myawesomelist.v1.Repository"> & {
   /**
    * @generated from field: string owner = 1;
    */
@@ -117,20 +117,16 @@ export type RepoRef = Message<"myawesomelist.v1.RepoRef"> & {
 };
 
 /**
- * Describes the message myawesomelist.v1.RepoRef.
- * Use `create(RepoRefSchema)` to create a new message.
+ * Describes the message myawesomelist.v1.Repository.
+ * Use `create(RepositorySchema)` to create a new message.
  */
-export const RepoRefSchema: GenMessage<RepoRef> = /*@__PURE__*/
+export const RepositorySchema: GenMessage<Repository> = /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 3);
 
 /**
  * @generated from message myawesomelist.v1.ListCollectionsRequest
  */
 export type ListCollectionsRequest = Message<"myawesomelist.v1.ListCollectionsRequest"> & {
-  /**
-   * @generated from field: bool include_repo_info = 1;
-   */
-  includeRepoInfo: boolean;
 };
 
 /**
@@ -162,14 +158,9 @@ export const ListCollectionsResponseSchema: GenMessage<ListCollectionsResponse> 
  */
 export type GetCollectionRequest = Message<"myawesomelist.v1.GetCollectionRequest"> & {
   /**
-   * @generated from field: myawesomelist.v1.RepoRef repo = 1;
+   * @generated from field: myawesomelist.v1.Repository repo = 1;
    */
-  repo?: RepoRef;
-
-  /**
-   * @generated from field: bool include_repo_info = 2;
-   */
-  includeRepoInfo: boolean;
+  repo?: Repository;
 };
 
 /**
@@ -201,14 +192,9 @@ export const GetCollectionResponseSchema: GenMessage<GetCollectionResponse> = /*
  */
 export type ListCategoriesRequest = Message<"myawesomelist.v1.ListCategoriesRequest"> & {
   /**
-   * @generated from field: myawesomelist.v1.RepoRef repo = 1;
+   * @generated from field: myawesomelist.v1.Repository repo = 1;
    */
-  repo?: RepoRef;
-
-  /**
-   * @generated from field: bool include_repo_info = 2;
-   */
-  includeRepoInfo: boolean;
+  repo?: Repository;
 };
 
 /**
@@ -240,21 +226,14 @@ export const ListCategoriesResponseSchema: GenMessage<ListCategoriesResponse> = 
  */
 export type ListProjectsRequest = Message<"myawesomelist.v1.ListProjectsRequest"> & {
   /**
-   * @generated from field: myawesomelist.v1.RepoRef repo = 1;
+   * @generated from field: myawesomelist.v1.Repository repo = 1;
    */
-  repo?: RepoRef;
+  repo?: Repository;
 
   /**
-   * Exact category name as parsed from README
-   *
    * @generated from field: string category_name = 2;
    */
   categoryName: string;
-
-  /**
-   * @generated from field: bool include_repo_info = 3;
-   */
-  includeRepoInfo: boolean;
 };
 
 /**
@@ -296,16 +275,9 @@ export type SearchProjectsRequest = Message<"myawesomelist.v1.SearchProjectsRequ
   limit: number;
 
   /**
-   * Optional filter: restrict search to specific repos
-   *
-   * @generated from field: repeated myawesomelist.v1.RepoRef repos = 3;
+   * @generated from field: repeated myawesomelist.v1.Repository repos = 3;
    */
-  repos: RepoRef[];
-
-  /**
-   * @generated from field: bool include_repo_info = 4;
-   */
-  includeRepoInfo: boolean;
+  repos: Repository[];
 };
 
 /**
@@ -333,8 +305,6 @@ export const SearchProjectsResponseSchema: GenMessage<SearchProjectsResponse> = 
   messageDesc(file_myawesomelist_v1_myawesomelist, 13);
 
 /**
- * Replace health with liveness and readiness
- *
  * @generated from message myawesomelist.v1.LivenessRequest
  */
 export type LivenessRequest = Message<"myawesomelist.v1.LivenessRequest"> & {

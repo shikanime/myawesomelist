@@ -6,19 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
-)
 
-// CollectionRecord represents a collection stored in the database
-type CollectionRecord struct {
-	ID        int       `json:"id"`
-	Owner     string    `json:"owner"`
-	Repo      string    `json:"repo"`
-	Language  string    `json:"language"`
-	Data      string    `json:"data"` // JSON-encoded Collection
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
+	v1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
+)
 
 type DataStore struct {
 	db *sql.DB
@@ -42,7 +34,7 @@ func (ds *DataStore) Ping(ctx context.Context) error {
 }
 
 // GetCollection retrieves a collection from the database
-func (ds *DataStore) GetCollection(ctx context.Context, owner, repo string) (*Collection, error) {
+func (ds *DataStore) GetCollection(ctx context.Context, owner, repo string) (*v1.Collection, error) {
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
@@ -64,7 +56,7 @@ func (ds *DataStore) GetCollection(ctx context.Context, owner, repo string) (*Co
 		return nil, fmt.Errorf("failed to query collection: %w", err)
 	}
 
-	var collection Collection
+	var collection v1.Collection
 	if err := json.Unmarshal([]byte(data), &collection); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal collection data: %w", err)
 	}
@@ -78,7 +70,7 @@ func (ds *DataStore) GetCollection(ctx context.Context, owner, repo string) (*Co
 }
 
 // UpSertCollection stores a collection in the database
-func (ds *DataStore) UpSertCollection(ctx context.Context, owner, repo string, collection Collection) error {
+func (ds *DataStore) UpSertCollection(ctx context.Context, owner, repo string, collection *v1.Collection) error {
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
@@ -116,4 +108,85 @@ func (ds *DataStore) Close() error {
 		return ds.db.Close()
 	}
 	return nil
+}
+
+// SearchProjects queries stored collections for projects matching the query.
+// Matches against project name, description, or URL, optionally restricted to repos.
+func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit int32, repos []v1.Repository) ([]*v1.Project, error) {
+	if ds.db == nil {
+		return nil, fmt.Errorf("database connection not available")
+	}
+
+	if limit <= 0 {
+		limit = 50
+	}
+
+	// Case-insensitive pattern
+	pattern := "%" + strings.ToLower(q) + "%"
+
+	// Build SQL with protobuf JSON field names
+	query := `
+		SELECT
+			p->>'name' AS name,
+			p->>'description' AS description,
+			p->>'url' AS url,
+			NULLIF(p->>'stargazers_count','')::int AS stargazers,
+			NULLIF(p->>'open_issue_count','')::int AS open_issues
+		FROM collections c
+		JOIN LATERAL jsonb_array_elements((c.data::jsonb)->'categories') cat ON TRUE
+		JOIN LATERAL jsonb_array_elements(cat->'projects') p ON TRUE
+		WHERE
+			(LOWER(p->>'name') LIKE $1 OR LOWER(p->>'description') LIKE $1 OR LOWER(p->>'url') LIKE $1)
+	`
+	args := []any{pattern}
+
+	if len(repos) > 0 {
+		query += " AND ("
+		for i, r := range repos {
+			if i > 0 {
+				query += " OR "
+			}
+			query += fmt.Sprintf("(c.owner = $%d AND c.repo = $%d)", len(args)+1, len(args)+2)
+			args = append(args, r.Owner, r.Repo)
+		}
+		query += ")"
+	}
+
+	query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
+	args = append(args, limit)
+
+	rows, err := ds.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute search query: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*v1.Project
+	for rows.Next() {
+		var name, description, url string
+		var stargazers, openIssues sql.NullInt64
+		if err := rows.Scan(&name, &description, &url, &stargazers, &openIssues); err != nil {
+			return nil, fmt.Errorf("failed to scan search result: %w", err)
+		}
+		p := &v1.Project{
+			Name:        name,
+			Description: description,
+			Url:         url,
+		}
+		if stargazers.Valid {
+			v := int64(stargazers.Int64)
+			p.StargazersCount = &v
+		}
+		if openIssues.Valid {
+			v := int64(openIssues.Int64)
+			p.OpenIssueCount = &v
+		}
+		results = append(results, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("search rows error: %w", err)
+	}
+
+	slog.Debug("Search results", "query", q, "repos", len(repos), "count", len(results))
+	return results, nil
 }

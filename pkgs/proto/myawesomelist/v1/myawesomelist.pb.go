@@ -205,7 +205,7 @@ func (x *Collection) GetCategories() []*Category {
 }
 
 // Identify a source awesome repository (owner/repo)
-type RepoRef struct {
+type Repository struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Owner         string                 `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	Repo          string                 `protobuf:"bytes,2,opt,name=repo,proto3" json:"repo,omitempty"`
@@ -213,20 +213,20 @@ type RepoRef struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RepoRef) Reset() {
-	*x = RepoRef{}
+func (x *Repository) Reset() {
+	*x = Repository{}
 	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RepoRef) String() string {
+func (x *Repository) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RepoRef) ProtoMessage() {}
+func (*Repository) ProtoMessage() {}
 
-func (x *RepoRef) ProtoReflect() protoreflect.Message {
+func (x *Repository) ProtoReflect() protoreflect.Message {
 	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -238,19 +238,19 @@ func (x *RepoRef) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RepoRef.ProtoReflect.Descriptor instead.
-func (*RepoRef) Descriptor() ([]byte, []int) {
+// Deprecated: Use Repository.ProtoReflect.Descriptor instead.
+func (*Repository) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *RepoRef) GetOwner() string {
+func (x *Repository) GetOwner() string {
 	if x != nil {
 		return x.Owner
 	}
 	return ""
 }
 
-func (x *RepoRef) GetRepo() string {
+func (x *Repository) GetRepo() string {
 	if x != nil {
 		return x.Repo
 	}
@@ -258,10 +258,9 @@ func (x *RepoRef) GetRepo() string {
 }
 
 type ListCollectionsRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	IncludeRepoInfo bool                   `protobuf:"varint,1,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListCollectionsRequest) Reset() {
@@ -292,13 +291,6 @@ func (x *ListCollectionsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListCollectionsRequest.ProtoReflect.Descriptor instead.
 func (*ListCollectionsRequest) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *ListCollectionsRequest) GetIncludeRepoInfo() bool {
-	if x != nil {
-		return x.IncludeRepoInfo
-	}
-	return false
 }
 
 type ListCollectionsResponse struct {
@@ -346,11 +338,10 @@ func (x *ListCollectionsResponse) GetCollections() []*Collection {
 }
 
 type GetCollectionRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Repo            *RepoRef               `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
-	IncludeRepoInfo bool                   `protobuf:"varint,2,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repo          *Repository            `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetCollectionRequest) Reset() {
@@ -383,18 +374,11 @@ func (*GetCollectionRequest) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetCollectionRequest) GetRepo() *RepoRef {
+func (x *GetCollectionRequest) GetRepo() *Repository {
 	if x != nil {
 		return x.Repo
 	}
 	return nil
-}
-
-func (x *GetCollectionRequest) GetIncludeRepoInfo() bool {
-	if x != nil {
-		return x.IncludeRepoInfo
-	}
-	return false
 }
 
 type GetCollectionResponse struct {
@@ -442,11 +426,10 @@ func (x *GetCollectionResponse) GetCollection() *Collection {
 }
 
 type ListCategoriesRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Repo            *RepoRef               `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
-	IncludeRepoInfo bool                   `protobuf:"varint,2,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repo          *Repository            `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListCategoriesRequest) Reset() {
@@ -479,18 +462,11 @@ func (*ListCategoriesRequest) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *ListCategoriesRequest) GetRepo() *RepoRef {
+func (x *ListCategoriesRequest) GetRepo() *Repository {
 	if x != nil {
 		return x.Repo
 	}
 	return nil
-}
-
-func (x *ListCategoriesRequest) GetIncludeRepoInfo() bool {
-	if x != nil {
-		return x.IncludeRepoInfo
-	}
-	return false
 }
 
 type ListCategoriesResponse struct {
@@ -538,13 +514,11 @@ func (x *ListCategoriesResponse) GetCategories() []*Category {
 }
 
 type ListProjectsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Repo  *RepoRef               `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
-	// Exact category name as parsed from README
-	CategoryName    string `protobuf:"bytes,2,opt,name=category_name,json=categoryName,proto3" json:"category_name,omitempty"`
-	IncludeRepoInfo bool   `protobuf:"varint,3,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repo          *Repository            `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
+	CategoryName  string                 `protobuf:"bytes,2,opt,name=category_name,json=categoryName,proto3" json:"category_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListProjectsRequest) Reset() {
@@ -577,7 +551,7 @@ func (*ListProjectsRequest) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *ListProjectsRequest) GetRepo() *RepoRef {
+func (x *ListProjectsRequest) GetRepo() *Repository {
 	if x != nil {
 		return x.Repo
 	}
@@ -589,13 +563,6 @@ func (x *ListProjectsRequest) GetCategoryName() string {
 		return x.CategoryName
 	}
 	return ""
-}
-
-func (x *ListProjectsRequest) GetIncludeRepoInfo() bool {
-	if x != nil {
-		return x.IncludeRepoInfo
-	}
-	return false
 }
 
 type ListProjectsResponse struct {
@@ -643,14 +610,12 @@ func (x *ListProjectsResponse) GetProjects() []*Project {
 }
 
 type SearchProjectsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Query string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	Limit int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	// Optional filter: restrict search to specific repos
-	Repos           []*RepoRef `protobuf:"bytes,3,rep,name=repos,proto3" json:"repos,omitempty"`
-	IncludeRepoInfo bool       `protobuf:"varint,4,opt,name=include_repo_info,json=includeRepoInfo,proto3" json:"include_repo_info,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Repos         []*Repository          `protobuf:"bytes,3,rep,name=repos,proto3" json:"repos,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SearchProjectsRequest) Reset() {
@@ -697,18 +662,11 @@ func (x *SearchProjectsRequest) GetLimit() int32 {
 	return 0
 }
 
-func (x *SearchProjectsRequest) GetRepos() []*RepoRef {
+func (x *SearchProjectsRequest) GetRepos() []*Repository {
 	if x != nil {
 		return x.Repos
 	}
 	return nil
-}
-
-func (x *SearchProjectsRequest) GetIncludeRepoInfo() bool {
-	if x != nil {
-		return x.IncludeRepoInfo
-	}
-	return false
 }
 
 type SearchProjectsResponse struct {
@@ -755,7 +713,6 @@ func (x *SearchProjectsResponse) GetProjects() []*Project {
 	return nil
 }
 
-// Replace health with liveness and readiness
 type LivenessRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -921,39 +878,35 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\blanguage\x18\x01 \x01(\tR\blanguage\x12:\n" +
 	"\n" +
 	"categories\x18\x02 \x03(\v2\x1a.myawesomelist.v1.CategoryR\n" +
-	"categories\"3\n" +
-	"\aRepoRef\x12\x14\n" +
+	"categories\"6\n" +
+	"\n" +
+	"Repository\x12\x14\n" +
 	"\x05owner\x18\x01 \x01(\tR\x05owner\x12\x12\n" +
-	"\x04repo\x18\x02 \x01(\tR\x04repo\"D\n" +
-	"\x16ListCollectionsRequest\x12*\n" +
-	"\x11include_repo_info\x18\x01 \x01(\bR\x0fincludeRepoInfo\"Y\n" +
+	"\x04repo\x18\x02 \x01(\tR\x04repo\"\x18\n" +
+	"\x16ListCollectionsRequest\"Y\n" +
 	"\x17ListCollectionsResponse\x12>\n" +
-	"\vcollections\x18\x01 \x03(\v2\x1c.myawesomelist.v1.CollectionR\vcollections\"q\n" +
-	"\x14GetCollectionRequest\x12-\n" +
-	"\x04repo\x18\x01 \x01(\v2\x19.myawesomelist.v1.RepoRefR\x04repo\x12*\n" +
-	"\x11include_repo_info\x18\x02 \x01(\bR\x0fincludeRepoInfo\"U\n" +
+	"\vcollections\x18\x01 \x03(\v2\x1c.myawesomelist.v1.CollectionR\vcollections\"H\n" +
+	"\x14GetCollectionRequest\x120\n" +
+	"\x04repo\x18\x01 \x01(\v2\x1c.myawesomelist.v1.RepositoryR\x04repo\"U\n" +
 	"\x15GetCollectionResponse\x12<\n" +
 	"\n" +
 	"collection\x18\x01 \x01(\v2\x1c.myawesomelist.v1.CollectionR\n" +
-	"collection\"r\n" +
-	"\x15ListCategoriesRequest\x12-\n" +
-	"\x04repo\x18\x01 \x01(\v2\x19.myawesomelist.v1.RepoRefR\x04repo\x12*\n" +
-	"\x11include_repo_info\x18\x02 \x01(\bR\x0fincludeRepoInfo\"T\n" +
+	"collection\"I\n" +
+	"\x15ListCategoriesRequest\x120\n" +
+	"\x04repo\x18\x01 \x01(\v2\x1c.myawesomelist.v1.RepositoryR\x04repo\"T\n" +
 	"\x16ListCategoriesResponse\x12:\n" +
 	"\n" +
 	"categories\x18\x01 \x03(\v2\x1a.myawesomelist.v1.CategoryR\n" +
-	"categories\"\x95\x01\n" +
-	"\x13ListProjectsRequest\x12-\n" +
-	"\x04repo\x18\x01 \x01(\v2\x19.myawesomelist.v1.RepoRefR\x04repo\x12#\n" +
-	"\rcategory_name\x18\x02 \x01(\tR\fcategoryName\x12*\n" +
-	"\x11include_repo_info\x18\x03 \x01(\bR\x0fincludeRepoInfo\"M\n" +
+	"categories\"l\n" +
+	"\x13ListProjectsRequest\x120\n" +
+	"\x04repo\x18\x01 \x01(\v2\x1c.myawesomelist.v1.RepositoryR\x04repo\x12#\n" +
+	"\rcategory_name\x18\x02 \x01(\tR\fcategoryName\"M\n" +
 	"\x14ListProjectsResponse\x125\n" +
-	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"\xa0\x01\n" +
+	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"w\n" +
 	"\x15SearchProjectsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12/\n" +
-	"\x05repos\x18\x03 \x03(\v2\x19.myawesomelist.v1.RepoRefR\x05repos\x12*\n" +
-	"\x11include_repo_info\x18\x04 \x01(\bR\x0fincludeRepoInfo\"O\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x122\n" +
+	"\x05repos\x18\x03 \x03(\v2\x1c.myawesomelist.v1.RepositoryR\x05repos\"O\n" +
 	"\x16SearchProjectsResponse\x125\n" +
 	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"\x11\n" +
 	"\x0fLivenessRequest\"\x12\n" +
@@ -986,7 +939,7 @@ var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*Project)(nil),                 // 0: myawesomelist.v1.Project
 	(*Category)(nil),                // 1: myawesomelist.v1.Category
 	(*Collection)(nil),              // 2: myawesomelist.v1.Collection
-	(*RepoRef)(nil),                 // 3: myawesomelist.v1.RepoRef
+	(*Repository)(nil),              // 3: myawesomelist.v1.Repository
 	(*ListCollectionsRequest)(nil),  // 4: myawesomelist.v1.ListCollectionsRequest
 	(*ListCollectionsResponse)(nil), // 5: myawesomelist.v1.ListCollectionsResponse
 	(*GetCollectionRequest)(nil),    // 6: myawesomelist.v1.GetCollectionRequest
@@ -1006,13 +959,13 @@ var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	0,  // 0: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
 	1,  // 1: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
 	2,  // 2: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
-	3,  // 3: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.RepoRef
+	3,  // 3: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.Repository
 	2,  // 4: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
-	3,  // 5: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.RepoRef
+	3,  // 5: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.Repository
 	1,  // 6: myawesomelist.v1.ListCategoriesResponse.categories:type_name -> myawesomelist.v1.Category
-	3,  // 7: myawesomelist.v1.ListProjectsRequest.repo:type_name -> myawesomelist.v1.RepoRef
+	3,  // 7: myawesomelist.v1.ListProjectsRequest.repo:type_name -> myawesomelist.v1.Repository
 	0,  // 8: myawesomelist.v1.ListProjectsResponse.projects:type_name -> myawesomelist.v1.Project
-	3,  // 9: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.RepoRef
+	3,  // 9: myawesomelist.v1.SearchProjectsRequest.repos:type_name -> myawesomelist.v1.Repository
 	0,  // 10: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
 	14, // 11: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
 	16, // 12: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest

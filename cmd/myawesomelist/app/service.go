@@ -5,9 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"myawesomelist.shikanime.studio/internal/awesome"
-
 	"connectrpc.com/connect"
+	"myawesomelist.shikanime.studio/internal/awesome"
 	v1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 	myawesomelistv1connect "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1/myawesomelistv1connect"
 )
@@ -57,19 +56,14 @@ func (s *AwesomeService) ListCollections(
 ) {
 	collections := make([]*v1.Collection, 0, len(awesome.DefaultGitHubRepos))
 	for _, rr := range awesome.DefaultGitHubRepos {
-		coll, err := s.cs.GitHub.GetCollection(
-			ctx,
-			rr.Owner,
-			rr.Repo,
-		)
+		coll, err := s.cs.GitHub.GetCollection(ctx, rr.Owner, rr.Repo)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
-		collections = append(collections, toProtoCollection(coll))
+		// Use protobuf collection directly
+		collections = append(collections, coll)
 	}
-	return connect.NewResponse(
-		&v1.ListCollectionsResponse{Collections: collections},
-	), nil
+	return connect.NewResponse(&v1.ListCollectionsResponse{Collections: collections}), nil
 }
 
 func (s *AwesomeService) GetCollection(
@@ -95,7 +89,7 @@ func (s *AwesomeService) GetCollection(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	return connect.NewResponse(
-		&v1.GetCollectionResponse{Collection: toProtoCollection(coll)},
+		&v1.GetCollectionResponse{Collection: coll},
 	), nil
 }
 
@@ -121,13 +115,8 @@ func (s *AwesomeService) ListCategories(
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	cats := make([]*v1.Category, 0, len(coll.Categories))
-	for _, c := range coll.Categories {
-		cats = append(cats, toProtoCategory(c))
-	}
-	return connect.NewResponse(
-		&v1.ListCategoriesResponse{Categories: cats},
-	), nil
+	// Protobuf categories already in the collection
+	return connect.NewResponse(&v1.ListCategoriesResponse{Categories: coll.Categories}), nil
 }
 
 func (s *AwesomeService) ListProjects(
@@ -155,15 +144,11 @@ func (s *AwesomeService) ListProjects(
 	var projects []*v1.Project
 	for _, c := range coll.Categories {
 		if c.Name == req.Msg.GetCategoryName() {
-			for _, p := range c.Projects {
-				projects = append(projects, toProtoProject(p))
-			}
+			projects = c.Projects
 			break
 		}
 	}
-	return connect.NewResponse(
-		&v1.ListProjectsResponse{Projects: projects},
-	), nil
+	return connect.NewResponse(&v1.ListProjectsResponse{Projects: projects}), nil
 }
 
 func (s *AwesomeService) SearchProjects(
@@ -180,104 +165,25 @@ func (s *AwesomeService) SearchProjects(
 		limit = 50
 	}
 
-	// Fetch collections from provided repos or defaults
-	var repoList []struct{ owner, repo string }
+	// Build repo list from request or use defaults
+	var repoList []v1.Repository
 	if len(repos) == 0 {
 		for _, rr := range awesome.DefaultGitHubRepos {
-			repoList = append(
-				repoList,
-				struct{ owner, repo string }{rr.Owner, rr.Repo},
-			)
+			repoList = append(repoList, v1.Repository{Owner: rr.Owner, Repo: rr.Repo})
 		}
 	} else {
 		for _, r := range repos {
 			if r == nil {
 				continue
 			}
-			repoList = append(
-				repoList,
-				struct{ owner, repo string }{r.GetOwner(), r.GetRepo()},
-			)
+			repoList = append(repoList, v1.Repository{Owner: r.GetOwner(), Repo: r.GetRepo()})
 		}
 	}
 
-	var results []*v1.Project
-	for _, rr := range repoList {
-		coll, err := s.cs.GitHub.GetCollection(
-			ctx,
-			rr.owner,
-			rr.repo,
-		)
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, err)
-		}
-		for _, c := range coll.Categories {
-			for _, p := range c.Projects {
-				if matchesQuery(p, q) {
-					results = append(results, toProtoProject(p))
-					if int32(len(results)) >= limit {
-						return connect.NewResponse(
-							&v1.SearchProjectsResponse{Projects: results},
-						), nil
-					}
-				}
-			}
-		}
+	projects, err := s.cs.GitHub.SearchProjects(ctx, q, limit, repoList)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	return connect.NewResponse(
-		&v1.SearchProjectsResponse{Projects: results},
-	), nil
-}
 
-// Helpers
-
-func toProtoCollection(in awesome.Collection) *v1.Collection {
-	out := &v1.Collection{Language: in.Language}
-	out.Categories = make([]*v1.Category, 0, len(in.Categories))
-	for _, c := range in.Categories {
-		out.Categories = append(out.Categories, toProtoCategory(c))
-	}
-	return out
-}
-
-func toProtoCategory(in awesome.Category) *v1.Category {
-	out := &v1.Category{Name: in.Name}
-	out.Projects = make([]*v1.Project, 0, len(in.Projects))
-	for _, p := range in.Projects {
-		out.Projects = append(out.Projects, toProtoProject(p))
-	}
-	return out
-}
-
-func toProtoProject(in awesome.Project) *v1.Project {
-	out := &v1.Project{
-		Name:        in.Name,
-		Description: in.Description,
-		Url:         in.URL,
-	}
-	if in.StargazersCount != nil {
-		v := int64(*in.StargazersCount)
-		out.StargazersCount = &v
-	}
-	if in.OpenIssueCount != nil {
-		v := int64(*in.OpenIssueCount)
-		out.OpenIssueCount = &v
-	}
-	return out
-}
-
-func matchesQuery(p awesome.Project, q string) bool {
-	if q == "" {
-		return true
-	}
-	if strings.Contains(strings.ToLower(p.Name), q) {
-		return true
-	}
-	if strings.Contains(strings.ToLower(p.Description), q) {
-		return true
-	}
-	if strings.Contains(strings.ToLower(p.URL), q) {
-		return true
-	}
-	return false
+	return connect.NewResponse(&v1.SearchProjectsResponse{Projects: projects}), nil
 }

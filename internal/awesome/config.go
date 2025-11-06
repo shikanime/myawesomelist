@@ -23,6 +23,7 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 		Repo:  "awesome-go",
 		Options: []Option{
 			WithStartSection("Actor Model"),
+			WithSubsectionAsCategory(),
 		},
 	},
 	{

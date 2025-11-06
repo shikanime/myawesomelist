@@ -30,8 +30,9 @@ type Project struct {
 
 // options represents configuration options for parsing
 type options struct {
-	startSection string
-	endSection   string
+	startSection         string
+	endSection           string
+	subsectionAsCategory bool
 }
 
 // Option is a function that configures options
@@ -48,6 +49,13 @@ func WithStartSection(section string) Option {
 func WithEndSection(section string) Option {
 	return func(o *options) {
 		o.endSection = section
+	}
+}
+
+// New: treat H3 headings as separate categories under the current H2
+func WithSubsectionAsCategory() Option {
+	return func(o *options) {
+		o.subsectionAsCategory = true
 	}
 }
 
@@ -68,6 +76,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 	var foundStartSection bool
 	var reachedEndSection bool
 	var foundAwesomeHeader bool
+	var currentMainCategory string
 	categoryMap := make(map[string]*Category)
 
 	// If no start section specified, start parsing immediately
@@ -110,15 +119,19 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 					reachedEndSection = true
 					return ast.WalkStop, nil
 				}
-
 				// Check if we've reached the specified start section
 				if options.startSection != "" && strings.Contains(headingText, options.startSection) {
 					foundStartSection = true
-					category = strings.TrimSpace(headingText)
+					currentMainCategory = strings.TrimSpace(headingText)
+					category = currentMainCategory
 				} else if foundStartSection {
-					// Update current category for subsequent sections
-					category = strings.TrimSpace(headingText)
+					currentMainCategory = strings.TrimSpace(headingText)
+					category = currentMainCategory
 				}
+			} else if n.Level == 3 && options.subsectionAsCategory && foundStartSection && currentMainCategory != "" {
+				// Flatten subsections under the current main category
+				sub := strings.TrimSpace(headingText)
+				category = currentMainCategory + " - " + sub
 			}
 
 		case *ast.List:

@@ -26,7 +26,7 @@ message Collection {
 }
 
 // Identify a source awesome repository (owner/repo)
-message RepoRef {
+message Repository {
   string owner = 1;
   string repo = 2;
 }
@@ -40,7 +40,7 @@ message ListCollectionsResponse {
 }
 
 message GetCollectionRequest {
-  RepoRef repo = 1;
+  Repository repo = 1;
 }
 
 message GetCollectionResponse {
@@ -48,7 +48,7 @@ message GetCollectionResponse {
 }
 
 message ListCategoriesRequest {
-  RepoRef repo = 1;
+  Repository repo = 1;
 }
 
 message ListCategoriesResponse {
@@ -56,7 +56,7 @@ message ListCategoriesResponse {
 }
 
 message ListProjectsRequest {
-  RepoRef repo = 1;
+  Repository repo = 1;
   string category_name = 2;
 }
 
@@ -67,7 +67,7 @@ message ListProjectsResponse {
 message SearchProjectsRequest {
   string query = 1;
   int32 limit = 2;
-  repeated RepoRef repos = 3;
+  repeated Repository repos = 3;
 }
 
 message SearchProjectsResponse {
