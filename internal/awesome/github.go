@@ -43,12 +43,15 @@ type GitHubClient struct {
 	d *DataStore
 }
 
+// GitHubClientOptions holds configuration for initializing a GitHubClient.
 type GitHubClientOptions struct {
 	token string
 }
 
+// GitHubClientOption applies a configuration to GitHubClientOptions.
 type GitHubClientOption func(*GitHubClientOptions)
 
+// WithToken sets the OAuth token used for authenticated GitHub requests.
 func WithToken(token string) GitHubClientOption {
 	return func(o *GitHubClientOptions) { o.token = token }
 }

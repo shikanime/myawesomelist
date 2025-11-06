@@ -12,10 +12,12 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
+// DataStore wraps a SQL database and provides typed operations for collections.
 type DataStore struct {
 	db *sql.DB
 }
 
+// NewDataStore constructs a DataStore using the provided sql.DB connection.
 func NewDataStore(db *sql.DB) *DataStore {
 	return &DataStore{
 		db: db,
