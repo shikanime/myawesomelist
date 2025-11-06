@@ -180,3 +180,86 @@ func (ds *DataStore) Close() error {
 	}
 	return nil
 }
+
+// GetProjectStats retrieves project stats from the datastore
+func (ds *DataStore) GetProjectStats(ctx context.Context, owner, repo string) (*myawesomelistv1.ProjectsStats, error) {
+	if ds.db == nil {
+		return nil, fmt.Errorf("database connection not available")
+	}
+	stmt, args, err := ds.PrepareGetProjectStats(ctx, owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build get project stats query: %w", err)
+	}
+	defer stmt.Close()
+
+	var stargazers sql.NullInt64
+	var openIssues sql.NullInt64
+	var updatedAt time.Time
+
+	if err = stmt.QueryRowContext(ctx, args...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to query project stats: %w", err)
+	}
+
+	stats := &myawesomelistv1.ProjectsStats{}
+	if stargazers.Valid {
+		v := stargazers.Int64
+		stats.StargazersCount = &v
+	}
+	if openIssues.Valid {
+		v := openIssues.Int64
+		stats.OpenIssueCount = &v
+	}
+	return stats, nil
+}
+
+// UpsertProjectStats stores project stats in the datastore
+func (ds *DataStore) UpsertProjectStats(ctx context.Context, owner, repo string, stats *myawesomelistv1.ProjectsStats) error {
+	if ds.db == nil {
+		return fmt.Errorf("database connection not available")
+	}
+
+	stmt, args, err := ds.PrepareUpsertProjectStats(ctx, owner, repo, *stats.StargazersCount, *stats.OpenIssueCount)
+	if err != nil {
+		return fmt.Errorf("failed to build upsert project stats query: %w", err)
+	}
+	defer stmt.Close()
+
+	if _, err = stmt.ExecContext(ctx, args...); err != nil {
+		return fmt.Errorf("failed to store project stats: %w", err)
+	}
+
+	slog.Debug("Stored project stats in database",
+		"owner", owner,
+		"repo", repo)
+
+	return nil
+}
+
+// PrepareGetProjectStats renders and prepares the SQL statement to fetch project stats.
+func (ds *DataStore) PrepareGetProjectStats(ctx context.Context, owner, repo string) (*sql.Stmt, []any, error) {
+	query, args, err := sqlx.GetProjectStatsQuery(owner, repo)
+	if err != nil {
+		return nil, nil, err
+	}
+	stmt, err := ds.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, nil, err
+	}
+	return stmt, args, nil
+}
+
+// PrepareUpsertProjectStats renders and prepares the SQL statement to upsert project stats.
+func (ds *DataStore) PrepareUpsertProjectStats(ctx context.Context, owner, repo string, stargazersCount, openIssueCount int64) (*sql.Stmt, []any, error) {
+	query, args, err := sqlx.UpsertProjectStatsQuery(owner, repo, stargazersCount, openIssueCount)
+	if err != nil {
+		return nil, nil, err
+	}
+	stmt, err := ds.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, nil, err
+	}
+	return stmt, args, nil
+}

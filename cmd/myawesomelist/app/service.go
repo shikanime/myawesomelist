@@ -186,3 +186,26 @@ func (s *AwesomeService) SearchProjects(
 
 	return connect.NewResponse(&myawesomelistv1.SearchProjectsResponse{Projects: projects}), nil
 }
+
+// GetProjectStats serves per-repo stats (stars, open issues), persisted in datastore
+func (s *AwesomeService) GetProjectStats(
+	ctx context.Context,
+	req *connect.Request[myawesomelistv1.GetProjectStatsRequest],
+) (
+	*connect.Response[myawesomelistv1.GetProjectStatsResponse],
+	error,
+) {
+	repo := req.Msg.GetRepo()
+	if repo == nil {
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
+		)
+	}
+
+	stats, err := s.cs.GitHub().GetProjectStats(ctx, repo.GetOwner(), repo.GetRepo())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	return connect.NewResponse(&myawesomelistv1.GetProjectStatsResponse{Stats: stats}), nil
+}
