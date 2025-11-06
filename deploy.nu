@@ -1,6 +1,13 @@
 #!/usr/bin/env nix
 #! nix develop --impure --command nu
 
+let images: list<string> = (
+    skaffold build --cache-artifacts=false --output={{json .}} --quiet
+    | from json
+    | get builds
+    | each { |build| $build.tag | split row "@" | first }
+)
+
 let container_id: string = (
     scw container container list --output json
     | from json
@@ -9,12 +16,14 @@ let container_id: string = (
     | first
 )
 
-let image: string = (
-    skaffold build --cache-artifacts=false --output={{json .}} --quiet
+scw container container update $container_id registry-image=($images.0) --wait
+
+let www_container_id: string = (
+    scw container container list --output json
     | from json
-    | get builds.0.tag
-    | split row "@"
+    | where name == "container-cool-hypatia"
+    | get id
     | first
 )
 
-scw container container update $container_id registry-image=($image) --wait
+scw container container update $www_container_id registry-image=($images.1) --wait
