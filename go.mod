@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.19.0
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/cobra v1.10.1
 	google.golang.org/protobuf v1.36.9
 )
