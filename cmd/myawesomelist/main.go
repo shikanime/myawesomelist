@@ -9,10 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	_ "github.com/lib/pq"
 	"github.com/spf13/cobra"
 	"myawesomelist.shikanime.studio/cmd/myawesomelist/app"
 	"myawesomelist.shikanime.studio/internal/awesome"
+
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
