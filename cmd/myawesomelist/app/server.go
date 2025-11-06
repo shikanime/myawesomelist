@@ -27,17 +27,9 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) ListenAndServe(addr string) error {
-	http.HandleFunc("/health", s.handleHealth)
-	svc := NewAwesomeService(s.cs)
-	path, handler := myawesomelistv1connect.NewAwesomeServiceHandler(svc)
+	path, handler := myawesomelistv1connect.NewAwesomeServiceHandler(NewAwesomeService(s.cs))
 	http.Handle(path, handler)
 	log.Printf("Server starting on %s", addr)
 	log.Printf("gRPC (Connect/gRPC-Web) mounted at %s", path)
 	return http.ListenAndServe(addr, nil)
-}
-
-func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"ok","service":"myawesomelist"}`))
 }

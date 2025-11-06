@@ -146,11 +146,7 @@ func openDataStoreFromEnv() (*awesome.DataStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	ds := awesome.NewDataStore(db)
-	if err := ds.Connect(); err != nil {
-		return nil, err
-	}
-	return ds, nil
+	return awesome.NewDataStore(db), nil
 }
 
 // openDbFromEnv opens a connection to the database using the provided DSN or falls back to the environment variable.

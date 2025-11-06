@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_myawesomelist_v1_myawesomelist: GenFile =
   /*@__PURE__*/
   fileDesc(
-    "CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEioQEKB1Byb2plY3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRILCgN1cmwYAyABKAkSHQoQc3RhcmdhemVyc19jb3VudBgEIAEoA0gAiAEBEh0KEG9wZW5faXNzdWVfY291bnQYBSABKANIAYgBAUITChFfc3RhcmdhemVyc19jb3VudEITChFfb3Blbl9pc3N1ZV9jb3VudCJFCghDYXRlZ29yeRIMCgRuYW1lGAEgASgJEisKCHByb2plY3RzGAIgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0Ik4KCkNvbGxlY3Rpb24SEAoIbGFuZ3VhZ2UYASABKAkSLgoKY2F0ZWdvcmllcxgCIAMoCzIaLm15YXdlc29tZWxpc3QudjEuQ2F0ZWdvcnkiJgoHUmVwb1JlZhINCgVvd25lchgBIAEoCRIMCgRyZXBvGAIgASgJIl0KFkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QSGQoRaW5jbHVkZV9yZXBvX2luZm8YASABKAgSKAoFcmVwb3MYAiADKAsyGS5teWF3ZXNvbWVsaXN0LnYxLlJlcG9SZWYiTAoXTGlzdENvbGxlY3Rpb25zUmVzcG9uc2USMQoLY29sbGVjdGlvbnMYASADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iWgoUR2V0Q29sbGVjdGlvblJlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgCIAEoCCJJChVHZXRDb2xsZWN0aW9uUmVzcG9uc2USMAoKY29sbGVjdGlvbhgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuQ29sbGVjdGlvbiJbChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgCIAEoCCJIChZMaXN0Q2F0ZWdvcmllc1Jlc3BvbnNlEi4KCmNhdGVnb3JpZXMYASADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5InAKE0xpc3RQcm9qZWN0c1JlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIVCg1jYXRlZ29yeV9uYW1lGAIgASgJEhkKEWluY2x1ZGVfcmVwb19pbmZvGAMgASgIIkMKFExpc3RQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0InoKFVNlYXJjaFByb2plY3RzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBRIoCgVyZXBvcxgDIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgEIAEoCCJFChZTZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0IhQKEkhlYWx0aENoZWNrUmVxdWVzdCIlChNIZWFsdGhDaGVja1Jlc3BvbnNlEg4KBnN0YXR1cxgBIAEoCTLfBAoOQXdlc29tZVNlcnZpY2USWgoLSGVhbHRoQ2hlY2sSJC5teWF3ZXNvbWVsaXN0LnYxLkhlYWx0aENoZWNrUmVxdWVzdBolLm15YXdlc29tZWxpc3QudjEuSGVhbHRoQ2hlY2tSZXNwb25zZRJmCg9MaXN0Q29sbGVjdGlvbnMSKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QaKS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEmAKDUdldENvbGxlY3Rpb24SJi5teWF3ZXNvbWVsaXN0LnYxLkdldENvbGxlY3Rpb25SZXF1ZXN0GicubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVzcG9uc2USYwoOTGlzdENhdGVnb3JpZXMSJy5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBooLm15YXdlc29tZWxpc3QudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJdCgxMaXN0UHJvamVjdHMSJS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1JlcXVlc3QaJi5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1Jlc3BvbnNlEmMKDlNlYXJjaFByb2plY3RzEicubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLlNlYXJjaFByb2plY3RzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw",
+    "CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEioQEKB1Byb2plY3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRILCgN1cmwYAyABKAkSHQoQc3RhcmdhemVyc19jb3VudBgEIAEoA0gAiAEBEh0KEG9wZW5faXNzdWVfY291bnQYBSABKANIAYgBAUITChFfc3RhcmdhemVyc19jb3VudEITChFfb3Blbl9pc3N1ZV9jb3VudCJFCghDYXRlZ29yeRIMCgRuYW1lGAEgASgJEisKCHByb2plY3RzGAIgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0Ik4KCkNvbGxlY3Rpb24SEAoIbGFuZ3VhZ2UYASABKAkSLgoKY2F0ZWdvcmllcxgCIAMoCzIaLm15YXdlc29tZWxpc3QudjEuQ2F0ZWdvcnkiJgoHUmVwb1JlZhINCgVvd25lchgBIAEoCRIMCgRyZXBvGAIgASgJIjMKFkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QSGQoRaW5jbHVkZV9yZXBvX2luZm8YASABKAgiTAoXTGlzdENvbGxlY3Rpb25zUmVzcG9uc2USMQoLY29sbGVjdGlvbnMYASADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iWgoUR2V0Q29sbGVjdGlvblJlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgCIAEoCCJJChVHZXRDb2xsZWN0aW9uUmVzcG9uc2USMAoKY29sbGVjdGlvbhgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuQ29sbGVjdGlvbiJbChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgCIAEoCCJIChZMaXN0Q2F0ZWdvcmllc1Jlc3BvbnNlEi4KCmNhdGVnb3JpZXMYASADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5InAKE0xpc3RQcm9qZWN0c1JlcXVlc3QSJwoEcmVwbxgBIAEoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIVCg1jYXRlZ29yeV9uYW1lGAIgASgJEhkKEWluY2x1ZGVfcmVwb19pbmZvGAMgASgIIkMKFExpc3RQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0InoKFVNlYXJjaFByb2plY3RzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBRIoCgVyZXBvcxgDIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUmVwb1JlZhIZChFpbmNsdWRlX3JlcG9faW5mbxgEIAEoCCJFChZTZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0IhEKD0xpdmVuZXNzUmVxdWVzdCISChBMaXZlbmVzc1Jlc3BvbnNlIhIKEFJlYWRpbmVzc1JlcXVlc3QiEwoRUmVhZGluZXNzUmVzcG9uc2UyrAUKDkF3ZXNvbWVTZXJ2aWNlElEKCExpdmVuZXNzEiEubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1JlcXVlc3QaIi5teWF3ZXNvbWVsaXN0LnYxLkxpdmVuZXNzUmVzcG9uc2USVAoJUmVhZGluZXNzEiIubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXF1ZXN0GiMubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXNwb25zZRJmCg9MaXN0Q29sbGVjdGlvbnMSKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QaKS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEmAKDUdldENvbGxlY3Rpb24SJi5teWF3ZXNvbWVsaXN0LnYxLkdldENvbGxlY3Rpb25SZXF1ZXN0GicubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVzcG9uc2USYwoOTGlzdENhdGVnb3JpZXMSJy5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBooLm15YXdlc29tZWxpc3QudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJdCgxMaXN0UHJvamVjdHMSJS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1JlcXVlc3QaJi5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1Jlc3BvbnNlEmMKDlNlYXJjaFByb2plY3RzEicubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLlNlYXJjaFByb2plY3RzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw",
   );
 
 /**
@@ -45,8 +45,6 @@ export type Project = Message<"myawesomelist.v1.Project"> & {
   url: string;
 
   /**
-   * Presence-aware optional fields (supported in modern proto3)
-   *
    * @generated from field: optional int64 stargazers_count = 4;
    */
   stargazersCount?: bigint;
@@ -146,18 +144,9 @@ export const RepoRefSchema: GenMessage<RepoRef> =
 export type ListCollectionsRequest =
   Message<"myawesomelist.v1.ListCollectionsRequest"> & {
     /**
-     * When true, backend enriches projects with GitHub repo info
-     *
      * @generated from field: bool include_repo_info = 1;
      */
     includeRepoInfo: boolean;
-
-    /**
-     * If empty, server uses its DefaultGitHubRepos; otherwise overrides
-     *
-     * @generated from field: repeated myawesomelist.v1.RepoRef repos = 2;
-     */
-    repos: RepoRef[];
   };
 
 /**
@@ -379,51 +368,81 @@ export const SearchProjectsResponseSchema: GenMessage<SearchProjectsResponse> =
   messageDesc(file_myawesomelist_v1_myawesomelist, 13);
 
 /**
- * @generated from message myawesomelist.v1.HealthCheckRequest
+ * Replace health with liveness and readiness
+ *
+ * @generated from message myawesomelist.v1.LivenessRequest
  */
-export type HealthCheckRequest =
-  Message<"myawesomelist.v1.HealthCheckRequest"> & {};
+export type LivenessRequest = Message<"myawesomelist.v1.LivenessRequest"> & {};
 
 /**
- * Describes the message myawesomelist.v1.HealthCheckRequest.
- * Use `create(HealthCheckRequestSchema)` to create a new message.
+ * Describes the message myawesomelist.v1.LivenessRequest.
+ * Use `create(LivenessRequestSchema)` to create a new message.
  */
-export const HealthCheckRequestSchema: GenMessage<HealthCheckRequest> =
+export const LivenessRequestSchema: GenMessage<LivenessRequest> =
   /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 14);
 
 /**
- * @generated from message myawesomelist.v1.HealthCheckResponse
+ * @generated from message myawesomelist.v1.LivenessResponse
  */
-export type HealthCheckResponse =
-  Message<"myawesomelist.v1.HealthCheckResponse"> & {
-    /**
-     * "ok"
-     *
-     * @generated from field: string status = 1;
-     */
-    status: string;
-  };
+export type LivenessResponse =
+  Message<"myawesomelist.v1.LivenessResponse"> & {};
 
 /**
- * Describes the message myawesomelist.v1.HealthCheckResponse.
- * Use `create(HealthCheckResponseSchema)` to create a new message.
+ * Describes the message myawesomelist.v1.LivenessResponse.
+ * Use `create(LivenessResponseSchema)` to create a new message.
  */
-export const HealthCheckResponseSchema: GenMessage<HealthCheckResponse> =
+export const LivenessResponseSchema: GenMessage<LivenessResponse> =
   /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 15);
+
+/**
+ * @generated from message myawesomelist.v1.ReadinessRequest
+ */
+export type ReadinessRequest =
+  Message<"myawesomelist.v1.ReadinessRequest"> & {};
+
+/**
+ * Describes the message myawesomelist.v1.ReadinessRequest.
+ * Use `create(ReadinessRequestSchema)` to create a new message.
+ */
+export const ReadinessRequestSchema: GenMessage<ReadinessRequest> =
+  /*@__PURE__*/
+  messageDesc(file_myawesomelist_v1_myawesomelist, 16);
+
+/**
+ * @generated from message myawesomelist.v1.ReadinessResponse
+ */
+export type ReadinessResponse =
+  Message<"myawesomelist.v1.ReadinessResponse"> & {};
+
+/**
+ * Describes the message myawesomelist.v1.ReadinessResponse.
+ * Use `create(ReadinessResponseSchema)` to create a new message.
+ */
+export const ReadinessResponseSchema: GenMessage<ReadinessResponse> =
+  /*@__PURE__*/
+  messageDesc(file_myawesomelist_v1_myawesomelist, 17);
 
 /**
  * @generated from service myawesomelist.v1.AwesomeService
  */
 export const AwesomeService: GenService<{
   /**
-   * @generated from rpc myawesomelist.v1.AwesomeService.HealthCheck
+   * @generated from rpc myawesomelist.v1.AwesomeService.Liveness
    */
-  healthCheck: {
+  liveness: {
     methodKind: "unary";
-    input: typeof HealthCheckRequestSchema;
-    output: typeof HealthCheckResponseSchema;
+    input: typeof LivenessRequestSchema;
+    output: typeof LivenessResponseSchema;
+  };
+  /**
+   * @generated from rpc myawesomelist.v1.AwesomeService.Readiness
+   */
+  readiness: {
+    methodKind: "unary";
+    input: typeof ReadinessRequestSchema;
+    output: typeof ReadinessResponseSchema;
   };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.ListCollections

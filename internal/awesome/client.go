@@ -1,5 +1,10 @@
 package awesome
 
+import (
+	"context"
+	"fmt"
+)
+
 type ClientSet struct {
 	GitHub *GitHubClient
 }
@@ -29,4 +34,11 @@ func (cs *ClientSet) Close() error {
 		return cs.GitHub.Close()
 	}
 	return nil
+}
+
+func (cs *ClientSet) Ping(ctx context.Context) error {
+	if cs.GitHub == nil {
+		return fmt.Errorf("clients not configured")
+	}
+	return cs.GitHub.Ping(ctx)
 }
