@@ -41,6 +41,11 @@ func (cs *ClientSet) GitHub() *GitHubClient {
 	return NewGitHubClient(cs.ds, cs.opts.github...)
 }
 
+// Core returns the core datastore-backed API, or nil if not set.
+func (cs *ClientSet) Core() *Core {
+	return NewCoreClient(cs.ds)
+}
+
 func (cs *ClientSet) Close() error {
 	if cs.ds != nil {
 		return cs.ds.Close()

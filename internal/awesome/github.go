@@ -280,11 +280,6 @@ func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collect
 	return errors
 }
 
-// SearchProjects performs SQL-backed search over stored collections.
-func (c *GitHubClient) SearchProjects(ctx context.Context, q string, limit int32, repos []myawesomelistv1.Repository) ([]*myawesomelistv1.Project, error) {
-	return c.d.SearchProjects(ctx, q, limit, repos)
-}
-
 // Add a readiness check that verifies the datastore is reachable
 func (c *GitHubClient) Ping(ctx context.Context) error {
 	if c.d == nil {

@@ -180,7 +180,7 @@ func (s *AwesomeService) SearchProjects(
 		}
 	}
 
-	projects, err := s.cs.GitHub().SearchProjects(ctx, q, limit, repoList)
+	projects, err := s.cs.Core().SearchProjects(ctx, q, limit, repoList)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
