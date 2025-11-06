@@ -5,9 +5,9 @@ package myawesomelist.v1;
 option go_package = "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1;myawesomelistv1";
 
 // Project represents a single project from an awesome list
-message ProjectsStats {
-  optional int64 stargazers_count = 1;
-  optional int64 open_issue_count = 2;
+message ProjectStats {
+  optional int32 stargazers_count = 1;
+  optional int32 open_issue_count = 2;
 }
 
 message Project {
@@ -89,7 +89,7 @@ message GetProjectStatsRequest {
 }
 
 message GetProjectStatsResponse {
-  ProjectsStats stats = 1;
+  ProjectStats stats = 1;
 }
 
 // Service
