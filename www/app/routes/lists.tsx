@@ -1,10 +1,6 @@
 import { useLoaderData, useFetcher } from "react-router";
 import type { Route } from "./+types/lists";
 import { awesomeClient } from "~/api/client";
-import type {
-  Collection,
-  Project,
-} from "../proto/myawesomelist/v1/myawesomelist_pb";
 import { useState, useEffect } from "react";
 import { useIntersectionObserver, useTimeout } from "usehooks-ts";
 import {
@@ -12,6 +8,10 @@ import {
   ProjectStatsSchema,
 } from "~/routes/projects.stats";
 import { z } from "zod";
+import type {
+  Collection,
+  Project,
+} from "~/proto/myawesomelist/v1/myawesomelist_pb";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -25,34 +25,7 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader(_: Route.LoaderArgs) {
   const res = await awesomeClient.listCollections({});
-
-  // Zod schemas to validate and normalize collections shape
-  const ProjectsStatsSchema = z.object({
-    stargazersCount: z.coerce.number().int().nonnegative().optional(),
-    openIssueCount: z.coerce.number().int().nonnegative().optional(),
-  });
-
-  const ProjectSchema = z.object({
-    name: z.string().catch(""),
-    url: z.string().catch(""),
-    description: z.string().catch(""),
-    stats: ProjectsStatsSchema.nullable().optional(),
-  });
-
-  const CategorySchema = z.object({
-    name: z.string().catch(""),
-    projects: z.array(ProjectSchema).catch([]),
-  });
-
-  const CollectionSchema = z.object({
-    language: z.string().catch(""),
-    categories: z.array(CategorySchema).catch([]),
-  });
-
-  const CollectionsSchema = z.array(CollectionSchema);
-
-  // Validate and return a stable, serializable payload
-  return CollectionsSchema.parse(res.collections ?? []);
+  return res.collections;
 }
 
 export default function Lists() {
@@ -113,7 +86,7 @@ function ProjectCard({ project }: { project: Project }) {
     null,
   );
   const [errorToast, setErrorToast] = useState<string | null>(null);
-  const fetcher = useFetcher<z.infer<typeof ProjectStatsResponseSchema>>();
+  const fetcher = useFetcher<typeof ProjectStatsResponseSchema>();
 
   useTimeout(() => setErrorToast(null), errorToast ? 4000 : null);
 

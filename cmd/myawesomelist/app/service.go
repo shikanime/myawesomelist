@@ -55,7 +55,7 @@ func (s *AwesomeService) ListCollections(
 ) {
 	collections := make([]*myawesomelistv1.Collection, 0, len(awesome.DefaultGitHubRepos))
 	for _, rr := range awesome.DefaultGitHubRepos {
-		coll, err := s.cs.GitHub().GetCollection(ctx, rr.Owner, rr.Repo)
+		coll, err := s.cs.GitHub().GetCollection(ctx, rr.Repo, rr.Options...)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
@@ -80,11 +80,7 @@ func (s *AwesomeService) GetCollection(
 	}
 	switch repo.GetHostname() {
 	case "github.com":
-		coll, err := s.cs.GitHub().GetCollection(
-			ctx,
-			repo.GetOwner(),
-			repo.GetRepo(),
-		)
+		coll, err := s.cs.GitHub().GetCollection(ctx, repo)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
@@ -115,11 +111,7 @@ func (s *AwesomeService) ListCategories(
 	}
 	switch repo.GetHostname() {
 	case "github.com":
-		coll, err := s.cs.GitHub().GetCollection(
-			ctx,
-			repo.GetOwner(),
-			repo.GetRepo(),
-		)
+		coll, err := s.cs.GitHub().GetCollection(ctx, repo)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
@@ -148,11 +140,7 @@ func (s *AwesomeService) ListProjects(
 	}
 	switch repo.GetHostname() {
 	case "github.com":
-		coll, err := s.cs.GitHub().GetCollection(
-			ctx,
-			repo.GetOwner(),
-			repo.GetRepo(),
-		)
+		coll, err := s.cs.GitHub().GetCollection(ctx, repo)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
@@ -183,19 +171,13 @@ func (s *AwesomeService) SearchProjects(
 	limit := req.Msg.GetLimit()
 	repos := req.Msg.GetRepos()
 
-	// Build repo list from request or use defaults
-	var repoList []*myawesomelistv1.Repository
 	if len(repos) == 0 {
 		for _, rr := range awesome.DefaultGitHubRepos {
-			repoList = append(repoList, &myawesomelistv1.Repository{Owner: rr.Owner, Repo: rr.Repo})
-		}
-	} else {
-		for _, r := range repos {
-			repoList = append(repoList, &myawesomelistv1.Repository{Owner: r.GetOwner(), Repo: r.GetRepo()})
+			repos = append(repos, rr.Repo)
 		}
 	}
 
-	projects, err := s.cs.Core().SearchProjects(ctx, q, limit, repoList)
+	projects, err := s.cs.Core().SearchProjects(ctx, q, limit, repos)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -221,7 +203,7 @@ func (s *AwesomeService) GetProjectStats(
 
 	switch repo.GetHostname() {
 	case "github.com":
-		stats, err := s.cs.GitHub().GetProjectStats(ctx, repo.GetOwner(), repo.GetRepo())
+		stats, err := s.cs.GitHub().GetProjectStats(ctx, repo)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}

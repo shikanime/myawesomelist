@@ -98,40 +98,43 @@ func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string)
 }
 
 // GetCollection fetches a project collection from a single awesome repository
-func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, opts ...Option) (*myawesomelistv1.Collection, error) {
+func (c *GitHubClient) GetCollection(ctx context.Context, repo *myawesomelistv1.Repository, opts ...Option) (*myawesomelistv1.Collection, error) {
 	options := &Options{}
 	for _, opt := range opts {
 		opt(options)
 	}
 
 	// First, try to get the collection from the datastore
-	if cachedCollection, err := c.d.GetCollection(ctx, owner, repo); err != nil {
+	if cachedCollection, err := c.d.GetCollection(ctx, repo); err != nil {
 		slog.Warn("Failed to query datastore for collection",
-			"owner", owner,
-			"repo", repo,
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
 			"error", err)
 	} else if cachedCollection != nil {
 		slog.Info("Retrieved collection from datastore cache",
-			"owner", owner,
-			"repo", repo,
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
 			"categories", len(cachedCollection.Categories))
 		return cachedCollection, nil
 	}
 
 	// Collection not found in datastore or is stale, fetch from GitHub API
 	slog.Info("Fetching collection from GitHub API",
-		"owner", owner,
-		"repo", repo)
+		"hostname", repo.Hostname,
+		"owner", repo.Owner,
+		"repo", repo.Repo)
 
-	content, err := c.GetReadme(ctx, owner, repo)
+	content, err := c.GetReadme(ctx, repo.Owner, repo.Repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read content for %s/%s: %v", owner, repo, err)
+		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
 	// Parse using encoding package with embedded options
 	encColl, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse collection for %s/%s: %v", owner, repo, err)
+		return nil, fmt.Errorf("failed to parse collection for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
 	categories := make([]*myawesomelistv1.Category, len(encColl.Categories))
@@ -141,11 +144,7 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 			projects[j] = &myawesomelistv1.Project{
 				Name:        encProj.Name,
 				Description: encProj.Description,
-				Repo: &myawesomelistv1.Repository{
-					Hostname: "github.com",
-					Owner:    owner,
-					Repo:     repo,
-				},
+				Repo:        repo,
 			}
 		}
 		categories[i] = &myawesomelistv1.Category{
@@ -154,28 +153,29 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 		}
 	}
 
-	collection := &myawesomelistv1.Collection{
+	col := &myawesomelistv1.Collection{
 		Language:   encColl.Language,
 		Categories: categories,
 	}
 
-	if err := c.d.UpSertCollection(ctx, owner, repo, collection); err != nil {
+	if err := c.d.UpSertCollection(ctx, repo, col); err != nil {
 		slog.Warn("Failed to upsert collection",
-			"owner", owner,
-			"repo", repo,
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
 			"error", err)
 	}
 
-	return collection, nil
+	return col, nil
 }
 
 // GetProjectStats retrieves cached stats or fetches from GitHub and persists them
-func (c *GitHubClient) GetProjectStats(ctx context.Context, owner, repo string) (*myawesomelistv1.ProjectsStats, error) {
-	stats, err := c.d.GetProjectStats(ctx, owner, repo)
+func (c *GitHubClient) GetProjectStats(ctx context.Context, repo *myawesomelistv1.Repository) (*myawesomelistv1.ProjectsStats, error) {
+	stats, err := c.d.GetProjectStats(ctx, repo)
 	if err != nil {
 		slog.Warn("Failed to query project stats from datastore",
-			"owner", owner,
-			"repo", repo,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
 			"error", err)
 	}
 	if stats != nil {
@@ -186,9 +186,9 @@ func (c *GitHubClient) GetProjectStats(ctx context.Context, owner, repo string) 
 	if err = c.l.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
-	repository, _, err := c.c.Repositories.Get(ctx, owner, repo)
+	repository, _, err := c.c.Repositories.Get(ctx, repo.Owner, repo.Repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", owner, repo, err)
+		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", repo.Owner, repo.Repo, err)
 	}
 
 	stats = &myawesomelistv1.ProjectsStats{
@@ -197,10 +197,10 @@ func (c *GitHubClient) GetProjectStats(ctx context.Context, owner, repo string) 
 	}
 
 	// Persist stats
-	if err := c.d.UpsertProjectStats(ctx, owner, repo, stats); err != nil {
+	if err := c.d.UpsertProjectStats(ctx, repo, stats); err != nil {
 		slog.Warn("Failed to upsert project stats",
-			"owner", owner,
-			"repo", repo,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
 			"error", err)
 	}
 
