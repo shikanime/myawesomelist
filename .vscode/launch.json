@@ -6,7 +6,6 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/www/node_modules/.bin/vite",
-      "args": ["--open"],
       "cwd": "${workspaceFolder}/www",
       "console": "integratedTerminal"
     },
