@@ -142,12 +142,7 @@ export const RepoRefSchema: GenMessage<RepoRef> =
  * @generated from message myawesomelist.v1.ListCollectionsRequest
  */
 export type ListCollectionsRequest =
-  Message<"myawesomelist.v1.ListCollectionsRequest"> & {
-    /**
-     * @generated from field: bool include_repo_info = 1;
-     */
-    includeRepoInfo: boolean;
-  };
+  Message<"myawesomelist.v1.ListCollectionsRequest"> & {};
 
 /**
  * Describes the message myawesomelist.v1.ListCollectionsRequest.
@@ -273,8 +268,6 @@ export type ListProjectsRequest =
     repo?: RepoRef;
 
     /**
-     * Exact category name as parsed from README
-     *
      * @generated from field: string category_name = 2;
      */
     categoryName: string;
