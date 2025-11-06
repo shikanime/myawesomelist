@@ -257,11 +257,11 @@ func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collect
 				"category", cat.Name,
 				"projects", len(cat.Projects))
 
-			pg, ctx := errgroup.WithContext(ctx)
+			pg, pctx := errgroup.WithContext(ctx)
 			for _, project := range cat.Projects {
 				proj := project // capture loop variable
 				pg.Go(func() error {
-					if err := c.EnrichProjectWithRepoInfo(ctx, proj, opts...); err != nil {
+					if err := c.EnrichProjectWithRepoInfo(pctx, proj, opts...); err != nil {
 						slog.Warn("Error processing project",
 							"project", proj.Name,
 							"category", cat.Name,
