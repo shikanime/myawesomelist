@@ -14,7 +14,6 @@ message Project {
   string name = 1;
   string description = 2;
   string url = 3;
-  ProjectsStats stats = 4;
 }
 
 // Category groups projects under a section

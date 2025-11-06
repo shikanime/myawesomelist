@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-github/v75/github"
 	"golang.org/x/time/rate"
+	"k8s.io/utils/ptr"
 	"myawesomelist.shikanime.studio/internal/encoding"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
@@ -22,12 +23,12 @@ func NewGitHubLimiter(authenticated bool) *rate.Limiter {
 	if authenticated {
 		limiter = rate.NewLimiter(rate.Every(time.Hour), 5000)
 		slog.Info("Created authenticated GitHub rate limiter",
-			"rate", "1 request/second",
+			"rate", "5000 requests/hour",
 			"burst", 10)
 	} else {
 		limiter = rate.NewLimiter(rate.Every(time.Hour), 60)
 		slog.Info("Created unauthenticated GitHub rate limiter",
-			"rate", "1 request/minute",
+			"rate", "60 requests/hour",
 			"burst", 1)
 	}
 
@@ -186,14 +187,9 @@ func (c *GitHubClient) GetProjectStats(ctx context.Context, owner, repo string) 
 		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", owner, repo, err)
 	}
 
-	stats = &myawesomelistv1.ProjectsStats{}
-	if repository.StargazersCount != nil {
-		v := int64(*repository.StargazersCount)
-		stats.StargazersCount = &v
-	}
-	if repository.OpenIssuesCount != nil {
-		v := int64(*repository.OpenIssuesCount)
-		stats.OpenIssueCount = &v
+	stats = &myawesomelistv1.ProjectsStats{
+		StargazersCount: ptr.To(int64(ptr.Deref(repository.StargazersCount, 0))),
+		OpenIssueCount:  ptr.To(int64(ptr.Deref(repository.OpenIssuesCount, 0))),
 	}
 
 	// Persist stats

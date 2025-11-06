@@ -16,6 +16,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/cobra v1.10.1
 	google.golang.org/protobuf v1.36.9
+	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 )
 
 require (
