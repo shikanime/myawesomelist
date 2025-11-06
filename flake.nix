@@ -80,6 +80,9 @@
                 pkgs.ko
                 pkgs.nodejs
                 pkgs.nushell
+                pkgs.protoc-gen-connect-go
+                pkgs.protoc-gen-es
+                pkgs.protoc-gen-go
                 pkgs.scaleway-cli
                 pkgs.skaffold
               ];
