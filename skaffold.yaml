@@ -9,3 +9,6 @@ build:
         dir: cmd/myawesomelist
     - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist-www
       context: www
+  platforms:
+    - linux/amd64
+    - linux/arm64
