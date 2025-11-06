@@ -14,9 +14,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader(_: Route.LoaderArgs) {
-  const res = await awesomeClient.listCollections({
-    includeRepoInfo: false,
-  });
+  const res = await awesomeClient.listCollections({  });
   const collections = res.collections ?? [];
   const categories = collections.flatMap((c) => c.categories ?? []);
   return categories;

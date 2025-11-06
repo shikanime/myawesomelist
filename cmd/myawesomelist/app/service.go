@@ -55,14 +55,12 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[v1.ListCollectionsResponse],
 	error,
 ) {
-	includeRepo := req.Msg.GetIncludeRepoInfo()
 	collections := make([]*v1.Collection, 0, len(awesome.DefaultGitHubRepos))
 	for _, rr := range awesome.DefaultGitHubRepos {
 		coll, err := s.cs.GitHub.GetCollection(
 			ctx,
 			rr.Owner,
 			rr.Repo,
-			optionsFromInclude(includeRepo)...,
 		)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
@@ -92,7 +90,6 @@ func (s *AwesomeService) GetCollection(
 		ctx,
 		repo.GetOwner(),
 		repo.GetRepo(),
-		optionsFromInclude(req.Msg.GetIncludeRepoInfo())...,
 	)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -120,7 +117,6 @@ func (s *AwesomeService) ListCategories(
 		ctx,
 		repo.GetOwner(),
 		repo.GetRepo(),
-		optionsFromInclude(req.Msg.GetIncludeRepoInfo())...,
 	)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -152,7 +148,6 @@ func (s *AwesomeService) ListProjects(
 		ctx,
 		repo.GetOwner(),
 		repo.GetRepo(),
-		optionsFromInclude(req.Msg.GetIncludeRepoInfo())...,
 	)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -179,7 +174,6 @@ func (s *AwesomeService) SearchProjects(
 	error,
 ) {
 	repos := req.Msg.GetRepos()
-	includeRepo := req.Msg.GetIncludeRepoInfo()
 	q := strings.ToLower(req.Msg.GetQuery())
 	limit := req.Msg.GetLimit()
 	if limit <= 0 {
@@ -213,7 +207,6 @@ func (s *AwesomeService) SearchProjects(
 			ctx,
 			rr.owner,
 			rr.repo,
-			optionsFromInclude(includeRepo)...,
 		)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
@@ -237,15 +230,6 @@ func (s *AwesomeService) SearchProjects(
 }
 
 // Helpers
-
-func optionsFromInclude(include bool) []awesome.Option {
-	if include {
-		// Note: WithRepoInfo currently sets includeRepoInfo=false in internal/awesome.
-		// We still pass it for future fix; enrichment is skipped until corrected.
-		return []awesome.Option{awesome.WithRepoInfo()}
-	}
-	return nil
-}
 
 func toProtoCollection(in awesome.Collection) *v1.Collection {
 	out := &v1.Collection{Language: in.Language}
