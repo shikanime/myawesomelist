@@ -7,3 +7,7 @@ build:
     - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist
       ko:
         dir: cmd/myawesomelist
+    - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist-www
+      context: www
+  platforms:
+    - linux/amd64
