@@ -5,12 +5,16 @@ package myawesomelist.v1;
 option go_package = "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1;myawesomelistv1";
 
 // Project represents a single project from an awesome list
+message ProjectsStats {
+  optional int64 stargazers_count = 1;
+  optional int64 open_issue_count = 2;
+}
+
 message Project {
   string name = 1;
   string description = 2;
   string url = 3;
-  optional int64 stargazers_count = 4;
-  optional int64 open_issue_count = 5;
+  ProjectsStats stats = 4;
 }
 
 // Category groups projects under a section

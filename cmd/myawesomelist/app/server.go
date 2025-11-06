@@ -20,8 +20,8 @@ func NewServer(ds *awesome.DataStore, opts ...awesome.ClientSetOption) *Server {
 
 // Close gracefully shuts down the server and closes database connections
 func (s *Server) Close() error {
-	if s.cs != nil && s.cs.GitHub != nil {
-		return s.cs.GitHub.Close()
+	if s.cs != nil {
+		return s.cs.Close()
 	}
 	return nil
 }
