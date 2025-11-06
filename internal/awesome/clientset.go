@@ -7,7 +7,8 @@ import (
 
 // ClientSet aggregates external clients used by the application.
 type ClientSet struct {
-	GitHub *GitHubClient
+	ds   *DataStore
+	opts ClientSetOptions
 }
 
 // ClientSetOptions holds configuration for initializing a ClientSet.
@@ -30,21 +31,27 @@ func NewClientSet(ds *DataStore, opts ...ClientSetOption) *ClientSet {
 		opt(&o)
 	}
 	return &ClientSet{
-		GitHub: NewGitHubClient(ds, o.github...),
+		ds:   ds,
+		opts: o,
 	}
 }
 
+// GitHub returns the configured GitHub client, or nil if not set.
+func (cs *ClientSet) GitHub() *GitHubClient {
+	return NewGitHubClient(cs.ds, cs.opts.github...)
+}
+
 func (cs *ClientSet) Close() error {
-	if cs.GitHub != nil {
-		return cs.GitHub.Close()
+	if cs.ds != nil {
+		return cs.ds.Close()
 	}
 	return nil
 }
 
 // Ping verifies that all configured clients are reachable.
 func (cs *ClientSet) Ping(ctx context.Context) error {
-	if cs.GitHub == nil {
+	if cs.GitHub() == nil {
 		return fmt.Errorf("clients not configured")
 	}
-	return cs.GitHub.Ping(ctx)
+	return cs.GitHub().Ping(ctx)
 }

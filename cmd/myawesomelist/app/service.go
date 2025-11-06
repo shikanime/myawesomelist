@@ -56,7 +56,7 @@ func (s *AwesomeService) ListCollections(
 ) {
 	collections := make([]*myawesomelistv1.Collection, 0, len(awesome.DefaultGitHubRepos))
 	for _, rr := range awesome.DefaultGitHubRepos {
-		coll, err := s.cs.GitHub.GetCollection(ctx, rr.Owner, rr.Repo)
+		coll, err := s.cs.GitHub().GetCollection(ctx, rr.Owner, rr.Repo)
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
@@ -80,7 +80,7 @@ func (s *AwesomeService) GetCollection(
 			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
 		)
 	}
-	coll, err := s.cs.GitHub.GetCollection(
+	coll, err := s.cs.GitHub().GetCollection(
 		ctx,
 		repo.GetOwner(),
 		repo.GetRepo(),
@@ -107,7 +107,7 @@ func (s *AwesomeService) ListCategories(
 			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
 		)
 	}
-	coll, err := s.cs.GitHub.GetCollection(
+	coll, err := s.cs.GitHub().GetCollection(
 		ctx,
 		repo.GetOwner(),
 		repo.GetRepo(),
@@ -133,7 +133,7 @@ func (s *AwesomeService) ListProjects(
 			connect.NewError(connect.CodeInvalidArgument, errors.New("repo is required")),
 		)
 	}
-	coll, err := s.cs.GitHub.GetCollection(
+	coll, err := s.cs.GitHub().GetCollection(
 		ctx,
 		repo.GetOwner(),
 		repo.GetRepo(),
@@ -180,7 +180,7 @@ func (s *AwesomeService) SearchProjects(
 		}
 	}
 
-	projects, err := s.cs.GitHub.SearchProjects(ctx, q, limit, repoList)
+	projects, err := s.cs.GitHub().SearchProjects(ctx, q, limit, repoList)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}

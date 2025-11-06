@@ -285,14 +285,6 @@ func (c *GitHubClient) SearchProjects(ctx context.Context, q string, limit int32
 	return c.d.SearchProjects(ctx, q, limit, repos)
 }
 
-// Close closes the GitHub client and its datastore
-func (c *GitHubClient) Close() error {
-	if c.d != nil {
-		return c.d.Close()
-	}
-	return nil
-}
-
 // Add a readiness check that verifies the datastore is reachable
 func (c *GitHubClient) Ping(ctx context.Context) error {
 	if c.d == nil {
