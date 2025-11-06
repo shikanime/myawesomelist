@@ -17,7 +17,6 @@ func ExtractGitHubRepoFromURL(repoURL string) (owner, repo string, err error) {
 		return "", "", fmt.Errorf("not a GitHub URL")
 	}
 
-	// Remove leading slash and split path
 	path := strings.Trim(parsedURL.Path, "/")
 	parts := strings.Split(path, "/")
 

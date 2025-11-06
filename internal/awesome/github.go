@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-github/v75/github"
 	"golang.org/x/time/rate"
 	"myawesomelist.shikanime.studio/internal/encoding"
+	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
 // NewGitHubLimiter creates a new rate limiter for GitHub API calls
@@ -42,12 +43,15 @@ type GitHubClient struct {
 	d *DataStore
 }
 
+// GitHubClientOptions holds configuration for initializing a GitHubClient.
 type GitHubClientOptions struct {
 	token string
 }
 
+// GitHubClientOption applies a configuration to GitHubClientOptions.
 type GitHubClientOption func(*GitHubClientOptions)
 
+// WithToken sets the OAuth token used for authenticated GitHub requests.
 func WithToken(token string) GitHubClientOption {
 	return func(o *GitHubClientOptions) { o.token = token }
 }
@@ -95,7 +99,7 @@ func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string)
 }
 
 // GetCollection fetches a project collection from a single awesome repository
-func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, opts ...Option) (Collection, error) {
+func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, opts ...Option) (*myawesomelistv1.Collection, error) {
 	options := &Options{}
 	for _, opt := range opts {
 		opt(options)
@@ -115,7 +119,7 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 
 		// If we need repo info and it's not already enriched, enrich it
 		if options.includeRepoInfo {
-			errors := c.EnrichCollectionWithRepoInfo(ctx, *cachedCollection, opts...)
+			errors := c.EnrichCollectionWithRepoInfo(ctx, cachedCollection, opts...)
 			if len(errors) > 0 {
 				slog.Warn("Encountered errors during enrichment of cached collection",
 					"owner", owner,
@@ -124,7 +128,7 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 			}
 		}
 
-		return *cachedCollection, nil
+		return cachedCollection, nil
 	}
 
 	// Collection not found in datastore or is stale, fetch from GitHub API
@@ -134,33 +138,33 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 
 	content, err := c.GetReadme(ctx, owner, repo)
 	if err != nil {
-		return Collection{}, fmt.Errorf("failed to read content for %s/%s: %v", owner, repo, err)
+		return nil, fmt.Errorf("failed to read content for %s/%s: %v", owner, repo, err)
 	}
 
 	// Parse using encoding package with embedded options
-	collection, err := encoding.UnmarshallCollection(content, options.eopts...)
+	encColl, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
-		return Collection{}, fmt.Errorf("failed to parse collection for %s/%s: %v", owner, repo, err)
+		return nil, fmt.Errorf("failed to parse collection for %s/%s: %v", owner, repo, err)
 	}
 
-	categories := make([]Category, len(collection.Categories))
-	for i, category := range collection.Categories {
-		projects := make([]Project, len(category.Projects))
-		for j, encProj := range category.Projects {
-			projects[j] = Project{
+	categories := make([]*myawesomelistv1.Category, len(encColl.Categories))
+	for i, encCat := range encColl.Categories {
+		projects := make([]*myawesomelistv1.Project, len(encCat.Projects))
+		for j, encProj := range encCat.Projects {
+			projects[j] = &myawesomelistv1.Project{
 				Name:        encProj.Name,
 				Description: encProj.Description,
-				URL:         encProj.URL,
+				Url:         encProj.URL,
 			}
 		}
-		categories[i] = Category{
-			Name:     category.Name,
+		categories[i] = &myawesomelistv1.Category{
+			Name:     encCat.Name,
 			Projects: projects,
 		}
 	}
 
-	enrichedCollection := Collection{
-		Language:   collection.Language,
+	enrichedCollection := &myawesomelistv1.Collection{
+		Language:   encColl.Language,
 		Categories: categories,
 	}
 
@@ -186,18 +190,18 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 }
 
 // EnrichProjectWithRepoInfo enriches a single project with GitHub repository information
-func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *Project, opts ...Option) error {
+func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *myawesomelistv1.Project, opts ...Option) error {
 	options := &Options{}
 	for _, opt := range opts {
 		opt(options)
 	}
 
-	if options.includeRepoInfo && strings.Contains(project.URL, "github.com") {
+	if options.includeRepoInfo && strings.Contains(project.Url, "github.com") {
 		slog.Debug("Enriching project with GitHub repo info",
 			"project", project.Name,
-			"url", project.URL)
+			"url", project.Url)
 
-		owner, repo, err := ExtractGitHubRepoFromURL(project.URL)
+		owner, repo, err := ExtractGitHubRepoFromURL(project.Url)
 		if err != nil {
 			slog.Error("Failed to extract repo info for project",
 				"project", project.Name,
@@ -224,20 +228,29 @@ func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *P
 			return fmt.Errorf("failed to get repo info for project %s: %w", project.Name, err)
 		}
 
-		project.StargazersCount = repository.StargazersCount
-		project.OpenIssueCount = repository.OpenIssuesCount
+		if project.Stats == nil {
+			project.Stats = &myawesomelistv1.ProjectsStats{}
+		}
+		if repository.StargazersCount != nil {
+			v := int64(*repository.StargazersCount)
+			project.Stats.StargazersCount = &v
+		}
+		if repository.OpenIssuesCount != nil {
+			v := int64(*repository.OpenIssuesCount)
+			project.Stats.OpenIssueCount = &v
+		}
 	} else {
 		slog.Debug("Skipping enrichment for project",
 			"project", project.Name,
 			"include_github_repo_info", options.includeRepoInfo,
-			"is_github", strings.Contains(project.URL, "github.com"))
+			"is_github", strings.Contains(project.Url, "github.com"))
 	}
 
 	return nil
 }
 
 // EnrichCollectionWithRepoInfo enriches all projects in a collection with GitHub information using parallel processing
-func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collection Collection, opts ...Option) []error {
+func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collection *myawesomelistv1.Collection, opts ...Option) []error {
 	var categoryWg sync.WaitGroup
 	var errors []error
 	for _, category := range collection.Categories {
@@ -248,8 +261,9 @@ func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collect
 
 			var projectWg sync.WaitGroup
 			for _, project := range category.Projects {
+				p := project
 				projectWg.Go(func() {
-					if err := c.EnrichProjectWithRepoInfo(ctx, &project, opts...); err != nil {
+					if err := c.EnrichProjectWithRepoInfo(ctx, p, opts...); err != nil {
 						slog.Warn("Error processing project",
 							"project", project.Name,
 							"category", category.Name,
@@ -264,20 +278,4 @@ func (c *GitHubClient) EnrichCollectionWithRepoInfo(ctx context.Context, collect
 	categoryWg.Wait()
 
 	return errors
-}
-
-// Close closes the GitHub client and its datastore
-func (c *GitHubClient) Close() error {
-	if c.d != nil {
-		return c.d.Close()
-	}
-	return nil
-}
-
-// Add a readiness check that verifies the datastore is reachable
-func (c *GitHubClient) Ping(ctx context.Context) error {
-	if c.d == nil {
-		return fmt.Errorf("datastore not configured")
-	}
-	return c.d.Ping(ctx)
 }
