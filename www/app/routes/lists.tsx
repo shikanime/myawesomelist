@@ -73,15 +73,15 @@ export default function Lists() {
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                      {p.stargazersCount ? (
+                      {p.stats?.stargazersCount ? (
                         <span>
-                          ⭐ {p.stargazersCount.toLocaleString()} stars
+                          ⭐ {p.stats.stargazersCount.toLocaleString()} stars
                         </span>
                       ) : (
                         <span>⭐ —</span>
                       )}
-                      {p.openIssueCount ? (
-                        <span>{p.openIssueCount} open issues</span>
+                      {p.stats?.openIssueCount ? (
+                        <span>{p.stats.openIssueCount} open issues</span>
                       ) : (
                         <span>Issues —</span>
                       )}

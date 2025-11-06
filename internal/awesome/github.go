@@ -188,53 +188,62 @@ func (c *GitHubClient) GetCollection(ctx context.Context, owner, repo string, op
 
 // EnrichProjectWithRepoInfo enriches a single project with GitHub repository information
 func (c *GitHubClient) EnrichProjectWithRepoInfo(ctx context.Context, project *v1.Project, opts ...Option) error {
-	options := &Options{}
-	for _, opt := range opts {
-		opt(options)
-	}
+    options := &Options{}
+    for _, opt := range opts {
+        opt(options)
+    }
 
-	if options.includeRepoInfo && strings.Contains(project.Url, "github.com") {
-		slog.Debug("Enriching project with GitHub repo info",
-			"project", project.Name,
-			"url", project.Url)
+    if options.includeRepoInfo && strings.Contains(project.Url, "github.com") {
+        slog.Debug("Enriching project with GitHub repo info",
+            "project", project.Name,
+            "url", project.Url)
 
-		owner, repo, err := ExtractGitHubRepoFromURL(project.Url)
-		if err != nil {
-			slog.Error("Failed to extract repo info for project",
-				"project", project.Name,
-				"error", err)
-			return fmt.Errorf("failed to extract repo info for project %s: %w", project.Name, err)
-		}
+        owner, repo, err := ExtractGitHubRepoFromURL(project.Url)
+        if err != nil {
+            slog.Error("Failed to extract repo info for project",
+                "project", project.Name,
+                "error", err)
+            return fmt.Errorf("failed to extract repo info for project %s: %w", project.Name, err)
+        }
 
-		slog.Debug("Fetching GitHub data",
-			"owner", owner,
-			"repo", repo,
-			"project", project.Name)
+        slog.Debug("Fetching GitHub data",
+            "owner", owner,
+            "repo", repo,
+            "project", project.Name)
 
-		// Get repository information (includes stargazer count and open issues)
-		if err = c.l.Wait(ctx); err != nil {
-			return fmt.Errorf("rate limiter wait failed: %w", err)
-		}
-		repository, _, err := c.c.Repositories.Get(ctx, owner, repo)
-		if err != nil {
-			slog.Error("Failed to get repo info from GitHub API",
-				"project", project.Name,
-				"owner", owner,
-				"repo", repo,
-				"error", err)
-			return fmt.Errorf("failed to get repo info for project %s: %w", project.Name, err)
-		}
+        // Get repository information (includes stargazer count and open issues)
+        if err = c.l.Wait(ctx); err != nil {
+            return fmt.Errorf("rate limiter wait failed: %w", err)
+        }
+        repository, _, err := c.c.Repositories.Get(ctx, owner, repo)
+        if err != nil {
+            slog.Error("Failed to get repo info from GitHub API",
+                "project", project.Name,
+                "owner", owner,
+                "repo", repo,
+                "error", err)
+            return fmt.Errorf("failed to get repo info for project %s: %w", project.Name, err)
+        }
 
-		*project.StargazersCount = int64(*repository.StargazersCount)
-		*project.OpenIssueCount = int64(*repository.OpenIssuesCount)
-	} else {
-		slog.Debug("Skipping enrichment for project",
-			"project", project.Name,
-			"include_github_repo_info", options.includeRepoInfo,
-			"is_github", strings.Contains(project.Url, "github.com"))
-	}
+        if project.Stats == nil {
+            project.Stats = &v1.ProjectsStats{}
+        }
+        if repository.StargazersCount != nil {
+            v := int64(*repository.StargazersCount)
+            project.Stats.StargazersCount = &v
+        }
+        if repository.OpenIssuesCount != nil {
+            v := int64(*repository.OpenIssuesCount)
+            project.Stats.OpenIssueCount = &v
+        }
+    } else {
+        slog.Debug("Skipping enrichment for project",
+            "project", project.Name,
+            "include_github_repo_info", options.includeRepoInfo,
+            "is_github", strings.Contains(project.Url, "github.com"))
+    }
 
-	return nil
+    return nil
 }
 
 // EnrichCollectionWithRepoInfo enriches all projects in a collection with GitHub information using parallel processing

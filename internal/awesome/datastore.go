@@ -130,8 +130,8 @@ func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit int32, 
 			p->>'name' AS name,
 			p->>'description' AS description,
 			p->>'url' AS url,
-			NULLIF(p->>'stargazers_count','')::int AS stargazers,
-			NULLIF(p->>'open_issue_count','')::int AS open_issues
+			NULLIF((p->'stats'->>'stargazers_count'),'')::int AS stargazers,
+			NULLIF((p->'stats'->>'open_issue_count'),'')::int AS open_issues
 		FROM collections c
 		JOIN LATERAL jsonb_array_elements((c.data::jsonb)->'categories') cat ON TRUE
 		JOIN LATERAL jsonb_array_elements(cat->'projects') p ON TRUE
@@ -173,13 +173,15 @@ func (ds *DataStore) SearchProjects(ctx context.Context, q string, limit int32, 
 			Description: description,
 			Url:         url,
 		}
+		// Initialize nested stats
+		p.Stats = &v1.ProjectsStats{}
 		if stargazers.Valid {
 			v := int64(stargazers.Int64)
-			p.StargazersCount = &v
+			p.Stats.StargazersCount = &v
 		}
 		if openIssues.Valid {
 			v := int64(openIssues.Int64)
-			p.OpenIssueCount = &v
+			p.Stats.OpenIssueCount = &v
 		}
 		results = append(results, p)
 	}
