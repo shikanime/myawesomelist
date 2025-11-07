@@ -164,7 +164,10 @@ func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collectio
 }
 
 // UnmarshallProjectFromListItem extracts project information from a list item
-func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (*myawesomelistv1.Project, error) {
+func UnmarshallProjectFromListItem(
+	listItem *ast.ListItem,
+	src []byte,
+) (*myawesomelistv1.Project, error) {
 	project := &myawesomelistv1.Project{
 		Repo: &myawesomelistv1.Repository{},
 	}
