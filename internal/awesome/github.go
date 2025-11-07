@@ -146,36 +146,9 @@ func (c *GitHubClient) GetCollection(
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
-	// Parse using encoding package with embedded options
-	encCol, err := encoding.UnmarshallCollection(content, options.eopts...)
+	col, err = encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to parse collection for %s/%s: %v",
-			repo.Owner,
-			repo.Repo,
-			err,
-		)
-	}
-
-	col = &myawesomelistv1.Collection{
-		Language:   encCol.Language,
-		Categories: make([]*myawesomelistv1.Category, len(encCol.Categories)),
-	}
-	for i, category := range encCol.Categories {
-		col.Categories[i] = &myawesomelistv1.Category{
-			Name:     category.Name,
-			Projects: make([]*myawesomelistv1.Project, 0),
-		}
-		for _, project := range category.Projects {
-			col.Categories[i].Projects = append(
-				col.Categories[i].Projects,
-				&myawesomelistv1.Project{
-					Name:        project.Name,
-					Description: project.Description,
-					Repo:        project.Repo,
-				},
-			)
-		}
+		return nil, fmt.Errorf("failed to parse collection for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
 	if err := c.d.UpSertCollection(ctx, repo, col); err != nil {
