@@ -86,14 +86,17 @@ func NewGitHubClient(ds *DataStore, opts ...GitHubClientOption) *GitHubClient {
 }
 
 // GetReadme creates a reader for the README.md file of the specified repository
-func (c *GitHubClient) GetReadme(ctx context.Context, owner string, repo string) ([]byte, error) {
+func (c *GitHubClient) GetReadme(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+) ([]byte, error) {
 	if err := c.l.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
 	file, _, _, err := c.c.Repositories.GetContents(
 		ctx,
-		owner,
-		repo,
+		repo.Owner,
+		repo.Repo,
 		"README.md",
 		nil,
 	)
@@ -115,19 +118,21 @@ func (c *GitHubClient) GetCollection(
 	}
 
 	// First, try to get the collection from the datastore
-	if cachedCollection, err := c.d.GetCollection(ctx, repo); err != nil {
+	col, err := c.d.GetCollection(ctx, repo)
+	if err != nil {
 		slog.Warn("Failed to query datastore for collection",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
 			"error", err)
-	} else if cachedCollection != nil {
+	}
+	if col != nil {
 		slog.Info("Retrieved collection from datastore cache",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
-			"categories", len(cachedCollection.Categories))
-		return cachedCollection, nil
+			"categories", len(col.Categories))
+		return col, nil
 	}
 
 	// Collection not found in datastore or is stale, fetch from GitHub API
@@ -136,13 +141,13 @@ func (c *GitHubClient) GetCollection(
 		"owner", repo.Owner,
 		"repo", repo.Repo)
 
-	content, err := c.GetReadme(ctx, repo.Owner, repo.Repo)
+	content, err := c.GetReadme(ctx, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
 	// Parse using encoding package with embedded options
-	encColl, err := encoding.UnmarshallCollection(content, options.eopts...)
+	encCol, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to parse collection for %s/%s: %v",
@@ -152,25 +157,25 @@ func (c *GitHubClient) GetCollection(
 		)
 	}
 
-	categories := make([]*myawesomelistv1.Category, len(encColl.Categories))
-	for i, encCat := range encColl.Categories {
-		projects := make([]*myawesomelistv1.Project, len(encCat.Projects))
-		for j, encProj := range encCat.Projects {
-			projects[j] = &myawesomelistv1.Project{
-				Name:        encProj.Name,
-				Description: encProj.Description,
-				Repo:        encProj.Repo,
-			}
-		}
-		categories[i] = &myawesomelistv1.Category{
-			Name:     encCat.Name,
-			Projects: projects,
-		}
+	col = &myawesomelistv1.Collection{
+		Language:   encCol.Language,
+		Categories: make([]*myawesomelistv1.Category, len(encCol.Categories)),
 	}
-
-	col := &myawesomelistv1.Collection{
-		Language:   encColl.Language,
-		Categories: categories,
+	for i, category := range encCol.Categories {
+		col.Categories[i] = &myawesomelistv1.Category{
+			Name:     category.Name,
+			Projects: make([]*myawesomelistv1.Project, 0),
+		}
+		for _, project := range category.Projects {
+			col.Categories[i].Projects = append(
+				col.Categories[i].Projects,
+				&myawesomelistv1.Project{
+					Name:        project.Name,
+					Description: project.Description,
+					Repo:        project.Repo,
+				},
+			)
+		}
 	}
 
 	if err := c.d.UpSertCollection(ctx, repo, col); err != nil {
@@ -204,14 +209,14 @@ func (c *GitHubClient) GetProjectStats(
 	if err = c.l.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
-	repository, _, err := c.c.Repositories.Get(ctx, repo.Owner, repo.Repo)
+	ghRepo, _, err := c.c.Repositories.Get(ctx, repo.Owner, repo.Repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", repo.Owner, repo.Repo, err)
 	}
 
 	stats = &myawesomelistv1.ProjectStats{
-		StargazersCount: ptr.To(int32(ptr.Deref(repository.StargazersCount, 0))),
-		OpenIssueCount:  ptr.To(int32(ptr.Deref(repository.OpenIssuesCount, 0))),
+		StargazersCount: ptr.To(uint32(ptr.Deref(ghRepo.StargazersCount, 0))),
+		OpenIssueCount:  ptr.To(uint32(ptr.Deref(ghRepo.OpenIssuesCount, 0))),
 	}
 
 	// Persist stats

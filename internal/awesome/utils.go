@@ -7,7 +7,7 @@ import (
 )
 
 // ExtractGitHubRepoFromURL extracts owner and repo name from a GitHub URL
-func ExtractGitHubRepoFromURL(repoURL string) (owner, repo string, err error) {
+func ExtractGitHubRepoFromURL(repoURL string) (string, string, error) {
 	parsedURL, err := url.Parse(repoURL)
 	if err != nil {
 		return "", "", fmt.Errorf("invalid URL: %v", err)

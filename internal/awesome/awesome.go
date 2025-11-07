@@ -6,19 +6,11 @@ import (
 
 // Options represents configuration options for fetching data
 type Options struct {
-	includeRepoInfo bool
-	eopts           []encoding.Option
+	eopts []encoding.Option
 }
 
 // Option is a function that configures Options
 type Option func(*Options)
-
-// WithRepoInfo enables fetching GitHub repository information (stargazers and open issues)
-func WithRepoInfo() Option {
-	return func(o *Options) {
-		o.includeRepoInfo = true
-	}
-}
 
 // WithStartSection overrides the start section for parsing categories
 func WithStartSection(section string) Option {

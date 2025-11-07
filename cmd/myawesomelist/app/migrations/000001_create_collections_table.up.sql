@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS collections (
     owner VARCHAR(255) NOT NULL,
     repo VARCHAR(255) NOT NULL,
     language VARCHAR(100) NOT NULL,
-    data JSONB NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(hostname, owner, repo)

@@ -24,8 +24,8 @@ const (
 // Project represents a single project from an awesome list
 type ProjectStats struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	StargazersCount *int32                 `protobuf:"varint,1,opt,name=stargazers_count,json=stargazersCount,proto3,oneof" json:"stargazers_count,omitempty"`
-	OpenIssueCount  *int32                 `protobuf:"varint,2,opt,name=open_issue_count,json=openIssueCount,proto3,oneof" json:"open_issue_count,omitempty"`
+	StargazersCount *uint32                `protobuf:"varint,1,opt,name=stargazers_count,json=stargazersCount,proto3,oneof" json:"stargazers_count,omitempty"`
+	OpenIssueCount  *uint32                `protobuf:"varint,2,opt,name=open_issue_count,json=openIssueCount,proto3,oneof" json:"open_issue_count,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -60,14 +60,14 @@ func (*ProjectStats) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ProjectStats) GetStargazersCount() int32 {
+func (x *ProjectStats) GetStargazersCount() uint32 {
 	if x != nil && x.StargazersCount != nil {
 		return *x.StargazersCount
 	}
 	return 0
 }
 
-func (x *ProjectStats) GetOpenIssueCount() int32 {
+func (x *ProjectStats) GetOpenIssueCount() uint32 {
 	if x != nil && x.OpenIssueCount != nil {
 		return *x.OpenIssueCount
 	}
@@ -995,8 +995,8 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\n" +
 	"$myawesomelist/v1/myawesomelist.proto\x12\x10myawesomelist.v1\"\x97\x01\n" +
 	"\fProjectStats\x12.\n" +
-	"\x10stargazers_count\x18\x01 \x01(\x05H\x00R\x0fstargazersCount\x88\x01\x01\x12-\n" +
-	"\x10open_issue_count\x18\x02 \x01(\x05H\x01R\x0eopenIssueCount\x88\x01\x01B\x13\n" +
+	"\x10stargazers_count\x18\x01 \x01(\rH\x00R\x0fstargazersCount\x88\x01\x01\x12-\n" +
+	"\x10open_issue_count\x18\x02 \x01(\rH\x01R\x0eopenIssueCount\x88\x01\x01B\x13\n" +
 	"\x11_stargazers_countB\x13\n" +
 	"\x11_open_issue_count\"q\n" +
 	"\aProject\x12\x12\n" +
