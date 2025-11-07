@@ -215,8 +215,8 @@ func (c *GitHubClient) GetProjectStats(
 	}
 
 	stats = &myawesomelistv1.ProjectStats{
-		StargazersCount: ptr.To(int32(ptr.Deref(ghRepo.StargazersCount, 0))),
-		OpenIssueCount:  ptr.To(int32(ptr.Deref(ghRepo.OpenIssuesCount, 0))),
+		StargazersCount: ptr.To(uint32(ptr.Deref(ghRepo.StargazersCount, 0))),
+		OpenIssueCount:  ptr.To(uint32(ptr.Deref(ghRepo.OpenIssuesCount, 0))),
 	}
 
 	// Persist stats

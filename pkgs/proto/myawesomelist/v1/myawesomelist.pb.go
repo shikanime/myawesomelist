@@ -7,12 +7,11 @@
 package myawesomelistv1
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -25,8 +24,8 @@ const (
 // Project represents a single project from an awesome list
 type ProjectStats struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	StargazersCount *int32                 `protobuf:"varint,1,opt,name=stargazers_count,json=stargazersCount,proto3,oneof" json:"stargazers_count,omitempty"`
-	OpenIssueCount  *int32                 `protobuf:"varint,2,opt,name=open_issue_count,json=openIssueCount,proto3,oneof" json:"open_issue_count,omitempty"`
+	StargazersCount *uint32                `protobuf:"varint,1,opt,name=stargazers_count,json=stargazersCount,proto3,oneof" json:"stargazers_count,omitempty"`
+	OpenIssueCount  *uint32                `protobuf:"varint,2,opt,name=open_issue_count,json=openIssueCount,proto3,oneof" json:"open_issue_count,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -61,14 +60,14 @@ func (*ProjectStats) Descriptor() ([]byte, []int) {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ProjectStats) GetStargazersCount() int32 {
+func (x *ProjectStats) GetStargazersCount() uint32 {
 	if x != nil && x.StargazersCount != nil {
 		return *x.StargazersCount
 	}
 	return 0
 }
 
-func (x *ProjectStats) GetOpenIssueCount() int32 {
+func (x *ProjectStats) GetOpenIssueCount() uint32 {
 	if x != nil && x.OpenIssueCount != nil {
 		return *x.OpenIssueCount
 	}
@@ -340,7 +339,7 @@ func (*ListCollectionsRequest) Descriptor() ([]byte, []int) {
 
 type ListCollectionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Collections   []*Collection          `protobuf:"bytes,1,rep,name=cols,proto3" json:"cols,omitempty"`
+	Collections   []*Collection          `protobuf:"bytes,1,rep,name=collections,proto3" json:"collections,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -996,8 +995,8 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\n" +
 	"$myawesomelist/v1/myawesomelist.proto\x12\x10myawesomelist.v1\"\x97\x01\n" +
 	"\fProjectStats\x12.\n" +
-	"\x10stargazers_count\x18\x01 \x01(\x05H\x00R\x0fstargazersCount\x88\x01\x01\x12-\n" +
-	"\x10open_issue_count\x18\x02 \x01(\x05H\x01R\x0eopenIssueCount\x88\x01\x01B\x13\n" +
+	"\x10stargazers_count\x18\x01 \x01(\rH\x00R\x0fstargazersCount\x88\x01\x01\x12-\n" +
+	"\x10open_issue_count\x18\x02 \x01(\rH\x01R\x0eopenIssueCount\x88\x01\x01B\x13\n" +
 	"\x11_stargazers_countB\x13\n" +
 	"\x11_open_issue_count\"q\n" +
 	"\aProject\x12\x12\n" +
@@ -1102,7 +1101,7 @@ var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	4,  // 0: myawesomelist.v1.Project.repo:type_name -> myawesomelist.v1.Repository
 	1,  // 1: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
 	2,  // 2: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
-	3,  // 3: myawesomelist.v1.ListCollectionsResponse.cols:type_name -> myawesomelist.v1.Collection
+	3,  // 3: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
 	4,  // 4: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.Repository
 	3,  // 5: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
 	4,  // 6: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.Repository

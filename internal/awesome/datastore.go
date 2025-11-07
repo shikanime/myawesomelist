@@ -230,13 +230,12 @@ func (ds *DataStore) SearchProjects(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
-	stmt, args, err := ds.PrepareSearchProjects(ctx, q, repos, limit)
+	sqlQuery, args, err := sqlx.SearchProjectsQuery(q, repos, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to render search query: %w", err)
 	}
-	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, args...)
+	rows, err := ds.db.QueryContext(ctx, sqlQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
 	}
@@ -295,17 +294,17 @@ func (ds *DataStore) GetProjectStats(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
-	stmt, args, err := ds.PrepareGetProjectStats(ctx, repo)
+
+	sqlQuery, args, err := sqlx.GetProjectStatsQuery(repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build get project stats query: %w", err)
 	}
-	defer stmt.Close()
 
 	var stargazers sql.NullInt32
 	var openIssues sql.NullInt32
 	var updatedAt time.Time
 
-	if err = stmt.QueryRowContext(ctx, args...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
+	if err = ds.db.QueryRowContext(ctx, sqlQuery, args...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -314,11 +313,12 @@ func (ds *DataStore) GetProjectStats(
 
 	stats := &myawesomelistv1.ProjectStats{}
 	if stargazers.Valid {
-		stats.StargazersCount = ptr.To(stargazers.Int32)
+		stats.StargazersCount = ptr.To(uint32(stargazers.Int32))
 	}
 	if openIssues.Valid {
-		stats.OpenIssueCount = ptr.To(openIssues.Int32)
+		stats.OpenIssueCount = ptr.To(uint32(openIssues.Int32))
 	}
+
 	return stats, nil
 }
 
@@ -332,13 +332,12 @@ func (ds *DataStore) UpSertProjectStats(
 		return fmt.Errorf("database connection not available")
 	}
 
-	stmt, args, err := ds.PrepareUpSertProjectStats(ctx, repo, stats)
+	sqlQuery, args, err := sqlx.UpSertProjectStatsQuery(repo, stats)
 	if err != nil {
 		return fmt.Errorf("failed to build upsert project stats query: %w", err)
 	}
-	defer stmt.Close()
 
-	if _, err = stmt.ExecContext(ctx, args...); err != nil {
+	if _, err = ds.db.ExecContext(ctx, sqlQuery, args...); err != nil {
 		return fmt.Errorf("failed to store project stats: %w", err)
 	}
 
