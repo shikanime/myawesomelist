@@ -159,7 +159,7 @@ func (c *GitHubClient) GetCollection(
 			projects[j] = &myawesomelistv1.Project{
 				Name:        encProj.Name,
 				Description: encProj.Description,
-				Repo:        repo,
+				Repo:        encProj.Repo,
 			}
 		}
 		categories[i] = &myawesomelistv1.Category{
@@ -188,7 +188,7 @@ func (c *GitHubClient) GetCollection(
 func (c *GitHubClient) GetProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
-) (*myawesomelistv1.ProjectsStats, error) {
+) (*myawesomelistv1.ProjectStats, error) {
 	stats, err := c.d.GetProjectStats(ctx, repo)
 	if err != nil {
 		slog.Warn("Failed to query project stats from datastore",
@@ -209,13 +209,13 @@ func (c *GitHubClient) GetProjectStats(
 		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", repo.Owner, repo.Repo, err)
 	}
 
-	stats = &myawesomelistv1.ProjectsStats{
-		StargazersCount: ptr.To(int64(ptr.Deref(repository.StargazersCount, 0))),
-		OpenIssueCount:  ptr.To(int64(ptr.Deref(repository.OpenIssuesCount, 0))),
+	stats = &myawesomelistv1.ProjectStats{
+		StargazersCount: ptr.To(int32(ptr.Deref(repository.StargazersCount, 0))),
+		OpenIssueCount:  ptr.To(int32(ptr.Deref(repository.OpenIssuesCount, 0))),
 	}
 
 	// Persist stats
-	if err := c.d.UpsertProjectStats(ctx, repo, stats); err != nil {
+	if err := c.d.UpSertProjectStats(ctx, repo, stats); err != nil {
 		slog.Warn("Failed to upsert project stats",
 			"owner", repo.Owner,
 			"repo", repo.Repo,

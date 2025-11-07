@@ -1,6 +1,7 @@
 import { awesomeClient } from "~/api/client";
 import type { Route } from "./+types/projects.stats";
 import { z } from "zod";
+import type { ProjectStats } from "~/proto/myawesomelist/v1/myawesomelist_pb";
 
 export const SearchParamsSchema = z.object({
   hostname: z.string().min(1, "hostname is required"),
@@ -8,13 +9,10 @@ export const SearchParamsSchema = z.object({
   repo: z.string().min(1, "repo is required"),
 });
 
-export const ProjectStatsSchema = z.object({
-  stargazersCount: z.coerce.number().int().nonnegative().default(0),
-  openIssueCount: z.coerce.number().int().nonnegative().default(0),
-});
+export const ProjectStatsSchema: z.ZodType<ProjectStats> = z.any();
 
 export const StatsSuccessSchema = z.object({
-  stats: ProjectStatsSchema.nullable(),
+  stats: ProjectStatsSchema,
 });
 
 export const ErrorPayloadSchema = z.object({
@@ -35,34 +33,37 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 
   if (!sp.success) {
-    const payload = ErrorPayloadSchema.parse({
-      error: "invalid query",
-      message: sp.error.message,
-      issues: sp.error.issues,
-    });
-    return new Response(JSON.stringify(payload), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify(
+        ErrorPayloadSchema.parse({
+          error: "invalid query",
+          message: sp.error.message,
+          issues: sp.error.issues,
+        }),
+      ),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 
   try {
-    const payload = StatsSuccessSchema.parse(
+    return StatsSuccessSchema.parse(
       await awesomeClient.getProjectStats({ repo: sp.data }),
     );
-
-    return new Response(JSON.stringify(payload), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
   } catch (err) {
-    const payload = ErrorPayloadSchema.parse({
-      error: "backend error",
-      message: String(err),
-    });
-    return new Response(JSON.stringify(payload), {
-      status: 502,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify(
+        ErrorPayloadSchema.parse({
+          error: "backend error",
+          message: String(err),
+        }),
+      ),
+      {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 }

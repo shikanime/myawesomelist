@@ -2,11 +2,13 @@ package encoding
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
+	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
 // Collection represents a collection of categories
@@ -25,7 +27,7 @@ type Category struct {
 type Project struct {
 	Name        string
 	Description string
-	URL         string
+	Repo        *myawesomelistv1.Repository
 }
 
 // options represents configuration options for parsing
@@ -196,7 +198,32 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Proje
 		switch n := node.(type) {
 		case *ast.Link:
 			// Extract project name and URL
-			project.URL = string(n.Destination)
+			url, err := url.Parse(string(n.Destination))
+			if err != nil {
+				return ast.WalkStop, fmt.Errorf("failed to parse project URL: %v", err)
+			}
+			owner := ""
+			repo := ""
+			path := strings.Trim(url.Path, "/")
+			parts := strings.Split(path, "/")
+			if len(parts) >= 2 {
+				owner = parts[0]
+				repo = parts[1]
+			} else if len(parts) == 1 {
+				repo = parts[0]
+			}
+
+			hostname := url.Hostname()
+			if hostname == "" && len(parts) >= 2 {
+				hostname = "github.com"
+			}
+
+			project.Repo = &myawesomelistv1.Repository{
+				Hostname: hostname,
+				Owner:    owner,
+				Repo:     repo,
+			}
+
 			name, err := DecodeTextFromNode(n, source)
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("failed to decode project name: %v", err)

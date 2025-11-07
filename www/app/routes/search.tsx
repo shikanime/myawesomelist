@@ -1,5 +1,31 @@
-import { useState } from "react";
 import type { Route } from "./+types/search";
+import { useFetcher } from "react-router";
+import { awesomeClient } from "~/api/client";
+import { z } from "zod";
+import { ProjectCard } from "~/components/ProjectCard";
+import type { Project } from "~/proto/myawesomelist/v1/myawesomelist_pb";
+
+export const SearchParamsSchema = z.object({
+  query: z.string().optional().default(""),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
+export const ProjectZodSchema: z.ZodType<Project> = z.any();
+
+export const SearchSuccessPayloadSchema = z.object({
+  projects: z.array(ProjectZodSchema),
+});
+
+export const ErrorPayloadSchema = z.object({
+  error: z.string(),
+  message: z.string(),
+  issues: z.any().optional(),
+});
+
+export const SearchResponseSchema = z.union([
+  SearchSuccessPayloadSchema,
+  ErrorPayloadSchema,
+]);
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,46 +37,54 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Search() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const parsed = SearchParamsSchema.safeParse(
+    Object.fromEntries(url.searchParams.entries()),
+  );
 
-  const handleSearch = (searchQuery: string) => {
-    setQuery(searchQuery);
-    // Mock search results - in a real app, this would be an API call
-    if (searchQuery.trim()) {
-      const mockResults = [
-        {
-          id: 1,
-          title: "Awesome React",
-          description:
-            "A collection of awesome things regarding React ecosystem",
-          category: "Frontend Development",
-          tags: ["react", "javascript", "frontend"],
-          stars: 58000,
-        },
-        {
-          id: 2,
-          title: "Awesome Python",
-          description:
-            "A curated list of awesome Python frameworks, libraries, software and resources",
-          category: "Backend Development",
-          tags: ["python", "backend", "frameworks"],
-          stars: 190000,
-        },
-      ].filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase()),
-          ),
-      );
-      setResults(mockResults);
-    } else {
-      setResults([]);
-    }
-  };
+  if (!parsed.success) {
+    const payload = ErrorPayloadSchema.parse({
+      error: "invalid query",
+      message: parsed.error.message,
+      issues: parsed.error.issues,
+    });
+    return new Response(JSON.stringify(payload), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (!parsed.data.query) {
+    return [];
+  }
+
+  try {
+    return SearchSuccessPayloadSchema.parse(
+      await awesomeClient.searchProjects({
+        query: parsed.data.query,
+        limit: parsed.data.limit,
+        repos: [],
+      }),
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify(
+        ErrorPayloadSchema.parse({
+          error: "backend error",
+          message: String(err),
+        }),
+      ),
+      {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+}
+
+export default function Search() {
+  const fetcher = useFetcher<z.infer<typeof SearchResponseSchema>>();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -64,90 +98,72 @@ export default function Search() {
           </p>
 
           <div className="max-w-2xl">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search for lists, tools, or technologies..."
-                value={query}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-3 pl-12 text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {query && (
-          <div className="mb-6">
-            <p className="text-gray-600 dark:text-gray-300">
-              {results.length} results for "{query}"
-            </p>
-          </div>
-        )}
-
-        <div className="grid gap-6">
-          {results.map((result) => (
-            <div
-              key={result.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    {result.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-2">
-                    {result.description}
-                  </p>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">
-                    {result.category}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    ⭐ {result.stars.toLocaleString()} stars
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {result.tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs"
+            <fetcher.Form method="get">
+              <div className="relative">
+                <input
+                  type="text"
+                  name="query"
+                  placeholder="Search for lists, tools, or technologies..."
+                  className="w-full px-4 py-3 pl-12 text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <input type="hidden" name="limit" value="20" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    className="h-6 w-6 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {tag}
-                  </span>
-                ))}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
               </div>
-            </div>
-          ))}
+            </fetcher.Form>
+
+            {fetcher.data && "error" in fetcher.data && (
+              <div
+                className="alert alert-error mt-4"
+                role="alert"
+                aria-live="polite"
+              >
+                <span>{fetcher.data.message}</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {query && results.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              No results found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Try searching with different keywords or browse our categories
-            </p>
-          </div>
-        )}
+        <div className="grid gap-6" aria-busy={fetcher.state === "loading"}>
+          {fetcher.state === "loading" && (
+            <div className="flex justify-center py-6">
+              <span
+                className="loading loading-spinner loading-md text-blue-600"
+                aria-label="Searching"
+              />
+            </div>
+          )}
+
+          {fetcher.data &&
+            "projects" in fetcher.data &&
+            fetcher.data.projects.length === 0 && (
+              <p className="text-gray-600 dark:text-gray-300">
+                No results found.
+              </p>
+            )}
+
+          {fetcher.data &&
+            "projects" in fetcher.data &&
+            fetcher.data.projects.map((p) => (
+              <ProjectCard
+                key={`${p.repo?.hostname}-${p.repo?.owner}-${p.repo?.repo}-${p.name}`}
+                project={p}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );

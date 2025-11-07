@@ -47,6 +47,11 @@ var (
 		Short: "Revert all applied migrations",
 		RunE:  runMigrateDown,
 	}
+	dropCmd = &cobra.Command{
+		Use:   "drop",
+		Short: "Drop all migrations",
+		RunE:  runMigrateDrop,
+	}
 
 	// Flags
 	addr string
@@ -58,7 +63,7 @@ func init() {
 		StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
 	rootCmd.PersistentFlags().
 		StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
-	migrateCmd.AddCommand(upCmd, downCmd)
+	migrateCmd.AddCommand(upCmd, downCmd, dropCmd)
 	rootCmd.AddCommand(serveCmd, migrateCmd)
 }
 
@@ -133,6 +138,22 @@ func runMigrateDown(cmd *cobra.Command, args []string) error {
 	defer mg.Close()
 
 	return mg.Down()
+}
+
+func runMigrateDrop(cmd *cobra.Command, args []string) error {
+	db, err := openDbFromEnv()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	mg, err := app.NewMigrator(db)
+	if err != nil {
+		return err
+	}
+	defer mg.Close()
+
+	return mg.Drop()
 }
 
 // newServerFromEnv creates a new Server instance with options from environment variables.

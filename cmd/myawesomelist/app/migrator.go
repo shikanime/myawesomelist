@@ -53,6 +53,13 @@ func (mg *Migrator) Down() error {
 	return nil
 }
 
+func (mg *Migrator) Drop() error {
+	if mg.m == nil {
+		return fmt.Errorf("migrator not initialized")
+	}
+	return mg.m.Drop()
+}
+
 func (mg *Migrator) Close() error {
 	if mg.m == nil {
 		return nil

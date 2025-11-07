@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 
+	"k8s.io/utils/ptr"
 	sqlx "myawesomelist.shikanime.studio/internal/sqlx"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
@@ -100,17 +101,49 @@ func (ds *DataStore) UpSertCollection(
 		return fmt.Errorf("database connection not available")
 	}
 
-	stmt, args, err := ds.PrepareUpsertCollection(ctx, repo, col)
+	tx, err := ds.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin tx: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	q, args, err := sqlx.UpSertCollectionQuery(repo, col)
 	if err != nil {
 		return fmt.Errorf("failed to build upsert collection query: %w", err)
 	}
-	defer stmt.Close()
-
-	if _, err = stmt.ExecContext(ctx, args...); err != nil {
+	var collectionID int64
+	if err = tx.QueryRowContext(ctx, q, args...).Scan(&collectionID); err != nil {
 		return fmt.Errorf("failed to store collection: %w", err)
 	}
 
-	slog.Debug("Stored collection in database",
+	for _, cat := range col.Categories {
+		catQuery, catArgs, catErr := sqlx.UpSertCategoryQuery(collectionID, cat)
+		if catErr != nil {
+			return fmt.Errorf("failed to build upsert category query: %w", catErr)
+		}
+		var categoryID int64
+		if catErr = tx.QueryRowContext(ctx, catQuery, catArgs...).Scan(&categoryID); catErr != nil {
+			return fmt.Errorf("failed to upsert category: %w", catErr)
+		}
+
+		for _, p := range cat.Projects {
+			pq, pargs, perr := sqlx.UpSertProjectQuery(categoryID, p)
+			if perr != nil {
+				return fmt.Errorf("failed to build upsert project query: %w", perr)
+			}
+			if _, perr = tx.ExecContext(ctx, pq, pargs...); perr != nil {
+				return fmt.Errorf("failed to upsert project: %w", perr)
+			}
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit tx: %w", err)
+	}
+
+	slog.Debug("Stored collection and projects in database",
 		"hostname", repo.Hostname,
 		"owner", repo.Owner,
 		"repo", repo.Repo,
@@ -119,13 +152,13 @@ func (ds *DataStore) UpSertCollection(
 	return nil
 }
 
-// PrepareUpsertCollection renders and prepares the SQL statement to upsert a collection.
-func (ds *DataStore) PrepareUpsertCollection(
+// PrepareUpSertCollection renders and prepares the SQL statement to upsert a collection.
+func (ds *DataStore) PrepareUpSertCollection(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
 	col *myawesomelistv1.Collection,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.UpsertCollectionQuery(repo, col)
+	query, args, err := sqlx.UpSertCollectionQuery(repo, col)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -161,13 +194,20 @@ func (ds *DataStore) SearchProjects(
 
 	var projects []*myawesomelistv1.Project
 	for rows.Next() {
-		var project myawesomelistv1.Project
-		err := rows.Scan(&project)
+		project := &myawesomelistv1.Project{
+			Repo: &myawesomelistv1.Repository{},
+		}
+		err := rows.Scan(
+			&project.Name,
+			&project.Description,
+			&project.Repo.Hostname,
+			&project.Repo.Owner,
+			&project.Repo.Repo,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
-
-		projects = append(projects, &project)
+		projects = append(projects, project)
 	}
 
 	return projects, nil
@@ -203,7 +243,7 @@ func (ds *DataStore) Close() error {
 func (ds *DataStore) GetProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
-) (*myawesomelistv1.ProjectsStats, error) {
+) (*myawesomelistv1.ProjectStats, error) {
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
@@ -213,8 +253,8 @@ func (ds *DataStore) GetProjectStats(
 	}
 	defer stmt.Close()
 
-	var stargazers sql.NullInt64
-	var openIssues sql.NullInt64
+	var stargazers sql.NullInt32
+	var openIssues sql.NullInt32
 	var updatedAt time.Time
 
 	if err = stmt.QueryRowContext(ctx, args...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
@@ -224,29 +264,27 @@ func (ds *DataStore) GetProjectStats(
 		return nil, fmt.Errorf("failed to query project stats: %w", err)
 	}
 
-	stats := &myawesomelistv1.ProjectsStats{}
+	stats := &myawesomelistv1.ProjectStats{}
 	if stargazers.Valid {
-		v := stargazers.Int64
-		stats.StargazersCount = &v
+		stats.StargazersCount = ptr.To(stargazers.Int32)
 	}
 	if openIssues.Valid {
-		v := openIssues.Int64
-		stats.OpenIssueCount = &v
+		stats.OpenIssueCount = ptr.To(openIssues.Int32)
 	}
 	return stats, nil
 }
 
-// UpsertProjectStats stores project stats in the datastore
-func (ds *DataStore) UpsertProjectStats(
+// UpSertProjectStats stores project stats in the datastore
+func (ds *DataStore) UpSertProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
-	stats *myawesomelistv1.ProjectsStats,
+	stats *myawesomelistv1.ProjectStats,
 ) error {
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
 
-	stmt, args, err := ds.PrepareUpsertProjectStats(ctx, repo, stats)
+	stmt, args, err := ds.PrepareUpSertProjectStats(ctx, repo, stats)
 	if err != nil {
 		return fmt.Errorf("failed to build upsert project stats query: %w", err)
 	}
@@ -282,13 +320,13 @@ func (ds *DataStore) PrepareGetProjectStats(
 	return stmt, args, nil
 }
 
-// PrepareUpsertProjectStats renders and prepares the SQL statement to upsert project stats.
-func (ds *DataStore) PrepareUpsertProjectStats(
+// PrepareUpSertProjectStats renders and prepares the SQL statement to upsert project stats.
+func (ds *DataStore) PrepareUpSertProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
-	stats *myawesomelistv1.ProjectsStats,
+	stats *myawesomelistv1.ProjectStats,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.UpsertProjectStatsQuery(repo, stats)
+	query, args, err := sqlx.UpSertProjectStatsQuery(repo, stats)
 	if err != nil {
 		return nil, nil, err
 	}
