@@ -177,7 +177,12 @@ func (c *GitHubClient) GetCollection(
 
 	col, err = encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse collection for %s/%s: %v", repo.Owner, repo.Repo, err)
+		return nil, fmt.Errorf(
+			"failed to parse collection for %s/%s: %v",
+			repo.Owner,
+			repo.Repo,
+			err,
+		)
 	}
 
 	if err := c.d.UpSertCollection(ctx, repo, col); err != nil {
