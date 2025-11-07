@@ -69,17 +69,16 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 	}
 
 	// Create a goldmark parser
-	p := goldmark.New()
-	root := p.Parser().Parse(text.NewReader(in))
+	root := goldmark.New().Parser().Parse(text.NewReader(in))
 
 	// Find the specified start section and begin parsing from there
-	var language string
+	var lang string
 	var category string
 	var foundStartSection bool
 	var reachedEndSection bool
 	var foundAwesomeHeader bool
-	var currentMainCategory string
-	categoryMap := make(map[string]*Category)
+	var currMainCat string
+	categoriesMap := make(map[string]*Category)
 
 	// If no start section specified, start parsing immediately
 	if options.startSection == "" {
@@ -109,7 +108,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 				// Extract language from "Awesome {language}" format
 				parts := strings.Fields(headingText)
 				if len(parts) >= 2 {
-					language = strings.Join(parts[1:], " ")
+					lang = strings.Join(parts[1:], " ")
 				}
 				foundAwesomeHeader = true
 			}
@@ -124,23 +123,23 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 				// Check if we've reached the specified start section
 				if options.startSection != "" && strings.Contains(headingText, options.startSection) {
 					foundStartSection = true
-					currentMainCategory = strings.TrimSpace(headingText)
-					category = currentMainCategory
+					currMainCat = strings.TrimSpace(headingText)
+					category = currMainCat
 				} else if foundStartSection {
-					currentMainCategory = strings.TrimSpace(headingText)
-					category = currentMainCategory
+					currMainCat = strings.TrimSpace(headingText)
+					category = currMainCat
 				}
-			} else if n.Level == 3 && options.subsectionAsCategory && foundStartSection && currentMainCategory != "" {
+			} else if n.Level == 3 && options.subsectionAsCategory && foundStartSection && currMainCat != "" {
 				// Flatten subsections under the current main category
 				sub := strings.TrimSpace(headingText)
-				category = currentMainCategory + " - " + sub
+				category = currMainCat + " - " + sub
 			}
 
 		case *ast.List:
 			if foundStartSection && !reachedEndSection && category != "" {
 				// Ensure category exists in map
-				if _, exists := categoryMap[category]; !exists {
-					categoryMap[category] = &Category{
+				if _, exists := categoriesMap[category]; !exists {
+					categoriesMap[category] = &Category{
 						Name:     category,
 						Projects: []Project{},
 					}
@@ -154,7 +153,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 							return ast.WalkStop, fmt.Errorf("failed to decode project: %v", err)
 						}
 						if project.Name != "" {
-							categoryMap[category].Projects = append(categoryMap[category].Projects, project)
+							categoriesMap[category].Projects = append(categoriesMap[category].Projects, project)
 						}
 					}
 				}
@@ -175,19 +174,19 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 	}
 
 	// Convert map to slice to maintain order
-	var categories []Category
-	for _, category := range categoryMap {
-		categories = append(categories, *category)
+	var cats []Category
+	for _, category := range categoriesMap {
+		cats = append(cats, *category)
 	}
 
 	return Collection{
-		Language:   language,
-		Categories: categories,
+		Language:   lang,
+		Categories: cats,
 	}, nil
 }
 
 // UnmarshallProjectFromListItem extracts project information from a list item
-func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Project, error) {
+func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (Project, error) {
 	project := Project{}
 
 	err := ast.Walk(listItem, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -224,7 +223,7 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Proje
 				Repo:     repo,
 			}
 
-			name, err := DecodeTextFromNode(n, source)
+			name, err := DecodeTextFromNode(n, src)
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("failed to decode project name: %v", err)
 			}
@@ -232,7 +231,7 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Proje
 
 		case *ast.Text:
 			// Extract description (text after the link)
-			text, err := DecodeTextFromNode(n, source)
+			text, err := DecodeTextFromNode(n, src)
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("failed to decode project description: %v", err)
 			}
@@ -253,12 +252,12 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, source []byte) (Proje
 }
 
 // DecodeTextFromNode extracts text content from an AST node
-func DecodeTextFromNode(node ast.Node, source []byte) (string, error) {
+func DecodeTextFromNode(node ast.Node, src []byte) (string, error) {
 	var text strings.Builder
 	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
 			if textNode, ok := n.(*ast.Text); ok {
-				text.Write(textNode.Segment.Value(source))
+				text.Write(textNode.Segment.Value(src))
 			}
 		}
 		return ast.WalkContinue, nil

@@ -7,11 +7,12 @@
 package myawesomelistv1
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -339,7 +340,7 @@ func (*ListCollectionsRequest) Descriptor() ([]byte, []int) {
 
 type ListCollectionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Collections   []*Collection          `protobuf:"bytes,1,rep,name=collections,proto3" json:"collections,omitempty"`
+	Collections   []*Collection          `protobuf:"bytes,1,rep,name=cols,proto3" json:"cols,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1101,7 +1102,7 @@ var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	4,  // 0: myawesomelist.v1.Project.repo:type_name -> myawesomelist.v1.Repository
 	1,  // 1: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
 	2,  // 2: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
-	3,  // 3: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
+	3,  // 3: myawesomelist.v1.ListCollectionsResponse.cols:type_name -> myawesomelist.v1.Collection
 	4,  // 4: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.Repository
 	3,  // 5: myawesomelist.v1.GetCollectionResponse.collection:type_name -> myawesomelist.v1.Collection
 	4,  // 6: myawesomelist.v1.ListCategoriesRequest.repo:type_name -> myawesomelist.v1.Repository

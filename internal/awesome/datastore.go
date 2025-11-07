@@ -3,7 +3,6 @@ package awesome
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
@@ -13,7 +12,7 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
-// DataStore wraps a SQL database and provides typed operations for collections.
+// DataStore wraps a SQL database and provides typed operations for cols.
 type DataStore struct {
 	db *sql.DB
 }
@@ -45,34 +44,85 @@ func (ds *DataStore) GetCollection(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
-	stmt, args, err := ds.PrepareGetCollection(ctx, repo)
+	tx, err := ds.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Get collection id and language
+	q, args, err := sqlx.GetCollectionQuery(repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build get collection query: %w", err)
 	}
-	defer stmt.Close()
 
-	var language, data string
-	var updatedAt time.Time
-
-	if err = stmt.QueryRowContext(ctx, args...).Scan(&language, &data, &updatedAt); err != nil {
+	var colID int64
+	col := &myawesomelistv1.Collection{}
+	if err = tx.QueryRowContext(ctx, q, args...).Scan(&colID, &col.Language); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to query collection: %w", err)
 	}
 
-	var collection myawesomelistv1.Collection
-	if err := json.Unmarshal([]byte(data), &collection); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal collection data: %w", err)
+	// Load categories for the collection
+	categoriesQuery, catArgs, err := sqlx.GetCategoriesQuery(colID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build get categories query: %w", err)
+	}
+	categoriesRows, err := tx.QueryContext(ctx, categoriesQuery, catArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query categories: %w", err)
+	}
+	defer categoriesRows.Close()
+
+	for categoriesRows.Next() {
+		var categoryID int64
+		category := &myawesomelistv1.Category{}
+		if err := categoriesRows.Scan(&categoryID, &category.Name); err != nil {
+			return nil, fmt.Errorf("failed to scan category: %w", err)
+		}
+
+		// Load projects for the category
+		projectsQuery, projArgs, err := sqlx.GetProjectsQuery(categoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build get projects query: %w", err)
+		}
+		projectsRows, err := tx.QueryContext(ctx, projectsQuery, projArgs...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query projects: %w", err)
+		}
+
+		for projectsRows.Next() {
+			p := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
+			if err := projectsRows.Scan(
+				&p.Name,
+				&p.Description,
+				&p.Repo.Hostname,
+				&p.Repo.Owner,
+				&p.Repo.Repo,
+			); err != nil {
+				projectsRows.Close()
+				return nil, fmt.Errorf("failed to scan project: %w", err)
+			}
+			category.Projects = append(category.Projects, p)
+		}
+		projectsRows.Close()
+
+		col.Categories = append(col.Categories, category)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit tx: %w", err)
 	}
 
 	slog.Debug("Retrieved collection from database",
 		"hostname", repo.Hostname,
 		"owner", repo.Owner,
 		"repo", repo.Repo,
-		"categories", len(collection.Categories))
+		"categories", len(col.Categories))
 
-	return &collection, nil
+	return col, nil
 }
 
 // PrepareGetCollection renders and prepares the SQL statement to fetch a collection.
@@ -80,11 +130,11 @@ func (ds *DataStore) PrepareGetCollection(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.GetCollectionQuery(repo)
+	q, args, err := sqlx.GetCollectionQuery(repo)
 	if err != nil {
 		return nil, nil, err
 	}
-	stmt, err := ds.db.PrepareContext(ctx, query)
+	stmt, err := ds.db.PrepareContext(ctx, q)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,23 +168,23 @@ func (ds *DataStore) UpSertCollection(
 		return fmt.Errorf("failed to store collection: %w", err)
 	}
 
-	for _, cat := range col.Categories {
-		catQuery, catArgs, catErr := sqlx.UpSertCategoryQuery(collectionID, cat)
-		if catErr != nil {
-			return fmt.Errorf("failed to build upsert category query: %w", catErr)
+	for _, category := range col.Categories {
+		categoryQuery, categoryArgs, categoryErr := sqlx.UpSertCategoryQuery(collectionID, category)
+		if categoryErr != nil {
+			return fmt.Errorf("failed to build upsert category query: %w", categoryErr)
 		}
 		var categoryID int64
-		if catErr = tx.QueryRowContext(ctx, catQuery, catArgs...).Scan(&categoryID); catErr != nil {
-			return fmt.Errorf("failed to upsert category: %w", catErr)
+		if categoryErr = tx.QueryRowContext(ctx, categoryQuery, categoryArgs...).Scan(&categoryID); categoryErr != nil {
+			return fmt.Errorf("failed to upsert category: %w", categoryErr)
 		}
 
-		for _, p := range cat.Projects {
-			pq, pargs, perr := sqlx.UpSertProjectQuery(categoryID, p)
-			if perr != nil {
-				return fmt.Errorf("failed to build upsert project query: %w", perr)
+		for _, p := range category.Projects {
+			projectQuery, projectArgs, projectErr := sqlx.UpSertProjectQuery(categoryID, p)
+			if projectErr != nil {
+				return fmt.Errorf("failed to build upsert project query: %w", projectErr)
 			}
-			if _, perr = tx.ExecContext(ctx, pq, pargs...); perr != nil {
-				return fmt.Errorf("failed to upsert project: %w", perr)
+			if _, projectErr = tx.ExecContext(ctx, projectQuery, projectArgs...); projectErr != nil {
+				return fmt.Errorf("failed to upsert project: %w", projectErr)
 			}
 		}
 	}
@@ -158,11 +208,11 @@ func (ds *DataStore) PrepareUpSertCollection(
 	repo *myawesomelistv1.Repository,
 	col *myawesomelistv1.Collection,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.UpSertCollectionQuery(repo, col)
+	q, args, err := sqlx.UpSertCollectionQuery(repo, col)
 	if err != nil {
 		return nil, nil, err
 	}
-	stmt, err := ds.db.PrepareContext(ctx, query)
+	stmt, err := ds.db.PrepareContext(ctx, q)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -194,9 +244,7 @@ func (ds *DataStore) SearchProjects(
 
 	var projects []*myawesomelistv1.Project
 	for rows.Next() {
-		project := &myawesomelistv1.Project{
-			Repo: &myawesomelistv1.Repository{},
-		}
+		project := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
 		err := rows.Scan(
 			&project.Name,
 			&project.Description,
@@ -216,15 +264,15 @@ func (ds *DataStore) SearchProjects(
 // PrepareSearchProjects renders and prepares the SQL statement for project search.
 func (ds *DataStore) PrepareSearchProjects(
 	ctx context.Context,
-	q string,
+	query string,
 	repos []*myawesomelistv1.Repository,
 	limit uint32,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.SearchProjectsQuery(q, repos, limit)
+	q, args, err := sqlx.SearchProjectsQuery(query, repos, limit)
 	if err != nil {
 		return nil, nil, err
 	}
-	stmt, err := ds.db.PrepareContext(ctx, query)
+	stmt, err := ds.db.PrepareContext(ctx, q)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -309,11 +357,11 @@ func (ds *DataStore) PrepareGetProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.GetProjectStatsQuery(repo)
+	q, args, err := sqlx.GetProjectStatsQuery(repo)
 	if err != nil {
 		return nil, nil, err
 	}
-	stmt, err := ds.db.PrepareContext(ctx, query)
+	stmt, err := ds.db.PrepareContext(ctx, q)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -326,11 +374,11 @@ func (ds *DataStore) PrepareUpSertProjectStats(
 	repo *myawesomelistv1.Repository,
 	stats *myawesomelistv1.ProjectStats,
 ) (*sql.Stmt, []any, error) {
-	query, args, err := sqlx.UpSertProjectStatsQuery(repo, stats)
+	q, args, err := sqlx.UpSertProjectStatsQuery(repo, stats)
 	if err != nil {
 		return nil, nil, err
 	}
-	stmt, err := ds.db.PrepareContext(ctx, query)
+	stmt, err := ds.db.PrepareContext(ctx, q)
 	if err != nil {
 		return nil, nil, err
 	}
