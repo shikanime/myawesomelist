@@ -66,15 +66,26 @@ func (ds *DataStore) GetCollection(
 	}
 
 	// Load categories for the collection
-	categoriesQuery, catArgs, err := sqlx.GetCategoriesQuery(colID)
+	categoriesQuery, err := sqlx.GetCategoriesQuery()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build get categories query: %w", err)
 	}
-	categoriesRows, err := tx.QueryContext(ctx, categoriesQuery, catArgs...)
+	categoriesRows, err := tx.QueryContext(ctx, categoriesQuery, sqlx.GetCategoriesArgs(colID)...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query categories: %w", err)
 	}
 	defer categoriesRows.Close()
+
+	// Prepare projects query once, reuse for each category
+	projectsQuery, err := sqlx.GetProjectsQuery()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build get projects query: %w", err)
+	}
+	projectsStmt, err := tx.PrepareContext(ctx, projectsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare projects query: %w", err)
+	}
+	defer projectsStmt.Close()
 
 	for categoriesRows.Next() {
 		var categoryID int64
@@ -83,12 +94,7 @@ func (ds *DataStore) GetCollection(
 			return nil, fmt.Errorf("failed to scan category: %w", err)
 		}
 
-		// Load projects for the category
-		projectsQuery, projArgs, err := sqlx.GetProjectsQuery(categoryID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to build get projects query: %w", err)
-		}
-		projectsRows, err := tx.QueryContext(ctx, projectsQuery, projArgs...)
+		projectsRows, err := projectsStmt.QueryContext(ctx, sqlx.GetProjectsArgs(categoryID)...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query projects: %w", err)
 		}
@@ -143,31 +149,43 @@ func (ds *DataStore) UpSertCollection(
 		_ = tx.Rollback()
 	}()
 
-	q, args, err := sqlx.UpSertCollectionQuery(repo, col)
+	q, err := sqlx.UpSertCollectionQuery()
 	if err != nil {
 		return fmt.Errorf("failed to build upsert collection query: %w", err)
 	}
-	var collectionID int64
-	if err = tx.QueryRowContext(ctx, q, args...).Scan(&collectionID); err != nil {
+	var colID int64
+	if err = tx.QueryRowContext(ctx, q, sqlx.UpSertCollectionArgs(repo, col)...).Scan(&colID); err != nil {
 		return fmt.Errorf("failed to store collection: %w", err)
 	}
 
+	projectQuery, err := sqlx.UpSertProjectQuery()
+	if err != nil {
+		return fmt.Errorf("failed to build upsert project query: %w", err)
+	}
+	projectStmt, err := tx.PrepareContext(ctx, projectQuery)
+	if err != nil {
+		return fmt.Errorf("failed to prepare upsert project statement: %w", err)
+	}
+	defer projectStmt.Close()
+
+	categoryQuery, err := sqlx.UpSertCategoryQuery()
+	if err != nil {
+		return fmt.Errorf("failed to build upsert category query: %w", err)
+	}
+	categoryStmt, err := tx.PrepareContext(ctx, categoryQuery)
+	if err != nil {
+		return fmt.Errorf("failed to prepare upsert category statement: %w", err)
+	}
+	defer categoryStmt.Close()
+
 	for _, category := range col.Categories {
-		categoryQuery, categoryArgs, categoryErr := sqlx.UpSertCategoryQuery(collectionID, category)
-		if categoryErr != nil {
-			return fmt.Errorf("failed to build upsert category query: %w", categoryErr)
-		}
 		var categoryID int64
-		if categoryErr = tx.QueryRowContext(ctx, categoryQuery, categoryArgs...).Scan(&categoryID); categoryErr != nil {
+		if categoryErr := categoryStmt.QueryRowContext(ctx, sqlx.UpSertCategoryArgs(colID, category)...).Scan(&categoryID); categoryErr != nil {
 			return fmt.Errorf("failed to upsert category: %w", categoryErr)
 		}
 
 		for _, p := range category.Projects {
-			projectQuery, projectArgs, projectErr := sqlx.UpSertProjectQuery(categoryID, p)
-			if projectErr != nil {
-				return fmt.Errorf("failed to build upsert project query: %w", projectErr)
-			}
-			if _, projectErr = tx.ExecContext(ctx, projectQuery, projectArgs...); projectErr != nil {
+			if _, projectErr := projectStmt.ExecContext(ctx, sqlx.UpSertProjectArgs(categoryID, p)...); projectErr != nil {
 				return fmt.Errorf("failed to upsert project: %w", projectErr)
 			}
 		}
@@ -197,12 +215,12 @@ func (ds *DataStore) SearchProjects(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
-	sqlQuery, args, err := sqlx.SearchProjectsQuery(q, repos, limit)
+	sqlQuery, err := sqlx.SearchProjectsQuery(q, repos, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to render search query: %w", err)
 	}
 
-	rows, err := ds.db.QueryContext(ctx, sqlQuery, args...)
+	rows, err := ds.db.QueryContext(ctx, sqlQuery, sqlx.SearchProjectsArgs(q, repos, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
 	}
@@ -244,7 +262,7 @@ func (ds *DataStore) GetProjectStats(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
-	sqlQuery, args, err := sqlx.GetProjectStatsQuery(repo)
+	sqlQuery, err := sqlx.GetProjectStatsQuery()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build get project stats query: %w", err)
 	}
@@ -253,7 +271,7 @@ func (ds *DataStore) GetProjectStats(
 	var openIssues sql.NullInt32
 	var updatedAt time.Time
 
-	if err = ds.db.QueryRowContext(ctx, sqlQuery, args...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
+	if err = ds.db.QueryRowContext(ctx, sqlQuery, sqlx.GetProjectStatsArgs(repo)...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -281,12 +299,12 @@ func (ds *DataStore) UpSertProjectStats(
 		return fmt.Errorf("database connection not available")
 	}
 
-	sqlQuery, args, err := sqlx.UpSertProjectStatsQuery(repo, stats)
+	sqlQuery, err := sqlx.UpSertProjectStatsQuery()
 	if err != nil {
 		return fmt.Errorf("failed to build upsert project stats query: %w", err)
 	}
 
-	if _, err = ds.db.ExecContext(ctx, sqlQuery, args...); err != nil {
+	if _, err = ds.db.ExecContext(ctx, sqlQuery, sqlx.UpSertProjectStatsArgs(repo, stats)...); err != nil {
 		return fmt.Errorf("failed to store project stats: %w", err)
 	}
 

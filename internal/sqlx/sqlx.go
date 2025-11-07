@@ -20,15 +20,20 @@ func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, []any, error)
 	return string(q), []any{repo.Hostname, repo.Owner, repo.Repo}, nil
 }
 
-func UpSertCollectionQuery(
+func UpSertCollectionArgs(
 	repo *myawesomelistv1.Repository,
 	col *myawesomelistv1.Collection,
-) (string, []any, error) {
+) []any {
+	return []any{repo.Hostname, repo.Owner, repo.Repo, col.Language}
+}
+
+// UpSertCollectionQuery builds the upsert collection SQL and args.
+func UpSertCollectionQuery() (string, error) {
 	q, err := sqlTemplates.ReadFile("upsert_collection.sql.tpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("read sql template upsert_collection.sql.tpl: %w", err)
+		return "", fmt.Errorf("read sql template upsert_collection.sql.tpl: %w", err)
 	}
-	return string(q), []any{repo.Hostname, repo.Owner, repo.Repo, col.Language}, nil
+	return string(q), nil
 }
 
 type SearchRepoPos struct {
@@ -56,7 +61,7 @@ func SearchProjectsQuery(
 	q string,
 	repos []*myawesomelistv1.Repository,
 	limit uint32,
-) (string, []any, error) {
+) (string, error) {
 	repoPoss := make([]SearchRepoPos, 0, len(repos))
 	for i := range repos {
 		// pattern is $1, so repo positions start at $2
@@ -78,95 +83,113 @@ func SearchProjectsQuery(
 	var buf bytes.Buffer
 	sqlQuery, err := template.ParseFS(sqlTemplates, "search_projects.sql.tpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("read sql template search_projects.sql.tpl: %w", err)
+		return "", fmt.Errorf("read sql template search_projects.sql.tpl: %w", err)
 	}
 	if err := sqlQuery.Execute(&buf, params); err != nil {
-		return "", nil, err
+		return "", err
 	}
 
-	return buf.String(), SearchProjectsArgs(q, repos, limit), nil
+	return buf.String(), nil
+}
+
+func GetProjectStatsArgs(repo *myawesomelistv1.Repository) []any {
+	return []any{repo.Hostname, repo.Owner, repo.Repo}
 }
 
 // GetProjectStatsQuery returns project stats for a repository.
-func GetProjectStatsQuery(repo *myawesomelistv1.Repository) (string, []any, error) {
+func GetProjectStatsQuery() (string, error) {
 	q, err := sqlTemplates.ReadFile("get_project_stats.sql.tpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("read sql template get_project_stats.sql.tpl: %w", err)
+		return "", fmt.Errorf("read sql template get_project_stats.sql.tpl: %w", err)
 	}
-	return string(q), []any{repo.Hostname, repo.Owner, repo.Repo}, nil
+	return string(q), nil
 }
 
-// UpSertProjectStatsQuery upserts project stats for a repository.
-func UpSertProjectStatsQuery(
+// GetCategoriesArgs returns the args for get_categories.sql.tpl.
+func GetCategoriesArgs(collectionID int64) []any {
+	return []any{collectionID}
+}
+
+// GetCategoriesQuery returns all categories for a collection.
+func GetCategoriesQuery() (string, error) {
+	q, err := sqlTemplates.ReadFile("get_categories.sql.tpl")
+	if err != nil {
+		return "", fmt.Errorf("read sql template get_categories.sql.tpl: %w", err)
+	}
+	return string(q), nil
+}
+
+// GetProjectsArgs returns the args for get_projects.sql.tpl.
+func GetProjectsArgs(categoryID int64) []any {
+	return []any{categoryID}
+}
+
+// GetProjectsQuery returns all projects for a category.
+func GetProjectsQuery() (string, error) {
+	q, err := sqlTemplates.ReadFile("get_projects.sql.tpl")
+	if err != nil {
+		return "", fmt.Errorf("read sql template get_projects.sql.tpl: %w", err)
+	}
+	return string(q), nil
+}
+
+func UpSertProjectStatsArgs(
 	repo *myawesomelistv1.Repository,
 	stats *myawesomelistv1.ProjectStats,
-) (string, []any, error) {
-	q, err := sqlTemplates.ReadFile("upsert_project_stats.sql.tpl")
-	if err != nil {
-		return "", nil, fmt.Errorf("read sql template upsert_project_stats.sql.tpl: %w", err)
-	}
-	return string(q), []any{
+) []any {
+	return []any{
 		repo.Hostname,
 		repo.Owner,
 		repo.Repo,
 		stats.StargazersCount,
 		stats.OpenIssueCount,
-	}, nil
+	}
+}
+
+// UpSertProjectStatsQuery upserts project stats for a repository.
+func UpSertProjectStatsQuery() (string, error) {
+	q, err := sqlTemplates.ReadFile("upsert_project_stats.sql.tpl")
+	if err != nil {
+		return "", fmt.Errorf("read sql template upsert_project_stats.sql.tpl: %w", err)
+	}
+	return string(q), nil
+}
+
+func UpSertCategoryArgs(
+	collectionID int64,
+	category *myawesomelistv1.Category,
+) []any {
+	return []any{collectionID, category.Name}
 }
 
 // UpSertCategoryQuery upserts a category for a collection and returns its id.
-func UpSertCategoryQuery(
-	collectionID int64,
-	category *myawesomelistv1.Category,
-) (string, []any, error) {
-	if category == nil || category.Name == "" {
-		return "", nil, fmt.Errorf("invalid category")
-	}
+func UpSertCategoryQuery() (string, error) {
 	q, err := sqlTemplates.ReadFile("upsert_category.sql.tpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("read sql template upsert_category.sql.tpl: %w", err)
+		return "", fmt.Errorf("read sql template upsert_category.sql.tpl: %w", err)
 	}
-	return string(q), []any{collectionID, category.Name}, nil
+	return string(q), nil
+}
+
+func UpSertProjectArgs(
+	categoryID int64,
+	project *myawesomelistv1.Project,
+) []any {
+	return []any{
+		categoryID,
+		project.Name,
+		project.Description,
+		project.Repo.Hostname,
+		project.Repo.Owner,
+		project.Repo.Repo,
+	}
 }
 
 // UpSertProjectQuery renders a single-project upsert statement using category_id.
-func UpSertProjectQuery(
-	categoryID int64,
-	project *myawesomelistv1.Project,
-) (string, []any, error) {
-	if project == nil || project.Repo == nil {
-		return "", nil, fmt.Errorf("invalid project or missing repo")
-	}
+func UpSertProjectQuery() (string, error) {
 	q, err := sqlTemplates.ReadFile("upsert_project.sql.tpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("read sql template upsert_project.sql.tpl: %w", err)
+		return "", fmt.Errorf("read sql template upsert_project.sql.tpl: %w", err)
 	}
-	return string(
-			q,
-		), []any{
-			categoryID,
-			project.Name,
-			project.Description,
-			project.Repo.Hostname,
-			project.Repo.Owner,
-			project.Repo.Repo,
-		}, nil
-}
-
-// GetCategoriesQuery returns all categories for a collection.
-func GetCategoriesQuery(collectionID int64) (string, []any, error) {
-	q, err := sqlTemplates.ReadFile("get_categories.sql.tpl")
-	if err != nil {
-		return "", nil, fmt.Errorf("read sql template get_categories.sql.tpl: %w", err)
-	}
-	return string(q), []any{collectionID}, nil
-}
-
-// GetProjectsQuery returns all projects for a category.
-func GetProjectsQuery(categoryID int64) (string, []any, error) {
-	q, err := sqlTemplates.ReadFile("get_projects.sql.tpl")
-	if err != nil {
-		return "", nil, fmt.Errorf("read sql template get_projects.sql.tpl: %w", err)
-	}
-	return string(q), []any{categoryID}, nil
+	return string(q), nil
 }
