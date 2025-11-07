@@ -11,25 +11,6 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
-// Collection represents a collection of categories
-type Collection struct {
-	Language   string
-	Categories []Category
-}
-
-// Category represents a category of projects
-type Category struct {
-	Name     string
-	Projects []Project
-}
-
-// Project represents a single project in a category
-type Project struct {
-	Name        string
-	Description string
-	Repo        *myawesomelistv1.Repository
-}
-
 // options represents configuration options for parsing
 type options struct {
 	startSection         string
@@ -62,7 +43,7 @@ func WithSubsectionAsCategory() Option {
 }
 
 // UnmarshallCollection parses projects from a repository's README and groups them by category
-func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
+func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collection, error) {
 	options := &options{}
 	for _, opt := range opts {
 		opt(options)
@@ -78,7 +59,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 	var reachedEndSection bool
 	var foundAwesomeHeader bool
 	var currMainCat string
-	categoriesMap := make(map[string]*Category)
+	categoriesMap := make(map[string]*myawesomelistv1.Category)
 
 	// If no start section specified, start parsing immediately
 	if options.startSection == "" {
@@ -139,9 +120,9 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 			if foundStartSection && !reachedEndSection && category != "" {
 				// Ensure category exists in map
 				if _, exists := categoriesMap[category]; !exists {
-					categoriesMap[category] = &Category{
+					categoriesMap[category] = &myawesomelistv1.Category{
 						Name:     category,
-						Projects: []Project{},
+						Projects: []*myawesomelistv1.Project{},
 					}
 				}
 
@@ -152,7 +133,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 						if err != nil {
 							return ast.WalkStop, fmt.Errorf("failed to decode project: %v", err)
 						}
-						if project.Name != "" {
+						if project.GetName() != "" {
 							categoriesMap[category].Projects = append(categoriesMap[category].Projects, project)
 						}
 					}
@@ -163,31 +144,33 @@ func UnmarshallCollection(in []byte, opts ...Option) (Collection, error) {
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
-		return Collection{}, err
+		return nil, err
 	}
 
 	if options.startSection != "" && !foundStartSection {
-		return Collection{}, fmt.Errorf(
-			"%s section not found in the document",
-			options.startSection,
-		)
+		return nil, fmt.Errorf("%s section not found in the document", options.startSection)
 	}
 
 	// Convert map to slice to maintain order
-	var cats []Category
+	var cats []*myawesomelistv1.Category
 	for _, category := range categoriesMap {
-		cats = append(cats, *category)
+		cats = append(cats, category)
 	}
 
-	return Collection{
+	return &myawesomelistv1.Collection{
 		Language:   lang,
 		Categories: cats,
 	}, nil
 }
 
 // UnmarshallProjectFromListItem extracts project information from a list item
-func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (Project, error) {
-	project := Project{}
+func UnmarshallProjectFromListItem(
+	listItem *ast.ListItem,
+	src []byte,
+) (*myawesomelistv1.Project, error) {
+	project := &myawesomelistv1.Project{
+		Repo: &myawesomelistv1.Repository{},
+	}
 
 	err := ast.Walk(listItem, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
@@ -197,13 +180,13 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (Project,
 		switch n := node.(type) {
 		case *ast.Link:
 			// Extract project name and URL
-			url, err := url.Parse(string(n.Destination))
+			urlValue, err := url.Parse(string(n.Destination))
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("failed to parse project URL: %v", err)
 			}
 			owner := ""
 			repo := ""
-			path := strings.Trim(url.Path, "/")
+			path := strings.Trim(urlValue.Path, "/")
 			parts := strings.Split(path, "/")
 			if len(parts) >= 2 {
 				owner = parts[0]
@@ -212,16 +195,14 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (Project,
 				repo = parts[0]
 			}
 
-			hostname := url.Hostname()
+			hostname := urlValue.Hostname()
 			if hostname == "" && len(parts) >= 2 {
 				hostname = "github.com"
 			}
 
-			project.Repo = &myawesomelistv1.Repository{
-				Hostname: hostname,
-				Owner:    owner,
-				Repo:     repo,
-			}
+			project.Repo.Hostname = hostname
+			project.Repo.Owner = owner
+			project.Repo.Repo = repo
 
 			name, err := DecodeTextFromNode(n, src)
 			if err != nil {
@@ -231,13 +212,13 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (Project,
 
 		case *ast.Text:
 			// Extract description (text after the link)
-			text, err := DecodeTextFromNode(n, src)
+			textValue, err := DecodeTextFromNode(n, src)
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("failed to decode project description: %v", err)
 			}
-			if project.Name != "" && strings.Contains(text, " - ") {
+			if project.Name != "" && strings.Contains(textValue, " - ") {
 				// Split on " - " to get the description
-				parts := strings.SplitN(text, " - ", 2)
+				parts := strings.SplitN(textValue, " - ", 2)
 				if len(parts) > 1 {
 					project.Description = strings.TrimSpace(parts[1])
 				}
@@ -246,7 +227,7 @@ func UnmarshallProjectFromListItem(listItem *ast.ListItem, src []byte) (Project,
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
-		return Project{}, err
+		return nil, err
 	}
 	return project, nil
 }
