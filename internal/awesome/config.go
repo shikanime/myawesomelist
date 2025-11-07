@@ -14,7 +14,7 @@ import (
 // GitHubRepoConfig represents configuration for a GitHub repository
 type GitHubRepoConfig struct {
 	Repo    *myawesomelistv1.Repository
-	Options []Option
+	Options []GetCollectionOption
 }
 
 // DefaultGitHubRepos contains the default list of awesome repositories to fetch
@@ -25,7 +25,7 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 			Owner:    "avelino",
 			Repo:     "awesome-go",
 		},
-		Options: []Option{
+		Options: []GetCollectionOption{
 			WithStartSection("Actor Model"),
 			WithSubsectionAsCategory(),
 		},
@@ -36,7 +36,7 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 			Owner:    "h4cc",
 			Repo:     "awesome-elixir",
 		},
-		Options: []Option{
+		Options: []GetCollectionOption{
 			WithStartSection("Actors"),
 		},
 	},
@@ -46,7 +46,7 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 			Owner:    "sorrycc",
 			Repo:     "awesome-javascript",
 		},
-		Options: []Option{
+		Options: []GetCollectionOption{
 			WithStartSection("Package Managers"),
 			WithEndSection("Worth Reading"),
 		},
@@ -57,7 +57,7 @@ var DefaultGitHubRepos = []GitHubRepoConfig{
 			Owner:    "gostor",
 			Repo:     "awesome-go-storage",
 		},
-		Options: []Option{
+		Options: []GetCollectionOption{
 			WithStartSection("Storage Server"),
 		},
 	},

@@ -106,13 +106,42 @@ func (c *GitHubClient) GetReadme(
 	return base64.StdEncoding.DecodeString(*file.Content)
 }
 
+// getCollectionOptions represents configuration getCollectionOptions for fetching data
+type getCollectionOptions struct {
+	eopts []encoding.Option
+}
+
+// GetCollectionOption is a function that configures Options
+type GetCollectionOption func(*getCollectionOptions)
+
+// WithStartSection overrides the start section for parsing categories
+func WithStartSection(section string) GetCollectionOption {
+	return func(o *getCollectionOptions) {
+		o.eopts = append(o.eopts, encoding.WithStartSection(section))
+	}
+}
+
+// WithEndSection overrides the end section for parsing categories
+func WithEndSection(section string) GetCollectionOption {
+	return func(o *getCollectionOptions) {
+		o.eopts = append(o.eopts, encoding.WithEndSection(section))
+	}
+}
+
+// WithSubsectionAsCategory enables H3 subsections to be treated as categories.
+func WithSubsectionAsCategory() GetCollectionOption {
+	return func(o *getCollectionOptions) {
+		o.eopts = append(o.eopts, encoding.WithSubsectionAsCategory())
+	}
+}
+
 // GetCollection fetches a project collection from a single awesome repository
 func (c *GitHubClient) GetCollection(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
-	opts ...Option,
+	opts ...GetCollectionOption,
 ) (*myawesomelistv1.Collection, error) {
-	options := &Options{}
+	options := &getCollectionOptions{}
 	for _, opt := range opts {
 		opt(options)
 	}
