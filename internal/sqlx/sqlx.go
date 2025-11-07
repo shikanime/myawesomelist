@@ -9,11 +9,11 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
-//go:embed *.sql.tpl
-var sqlTemplates embed.FS
+//go:embed queries/*.sql.tpl
+var queries embed.FS
 
 func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, []any, error) {
-	q, err := sqlTemplates.ReadFile("get_collection.sql.tpl")
+	q, err := queries.ReadFile("get_collection.sql.tpl")
 	if err != nil {
 		return "", nil, fmt.Errorf("read sql template get_collection.sql.tpl: %w", err)
 	}
@@ -29,7 +29,7 @@ func UpSertCollectionArgs(
 
 // UpSertCollectionQuery builds the upsert collection SQL and args.
 func UpSertCollectionQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("upsert_collection.sql.tpl")
+	q, err := queries.ReadFile("upsert_collection.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template upsert_collection.sql.tpl: %w", err)
 	}
@@ -81,7 +81,7 @@ func SearchProjectsQuery(
 		LimitPosition: limitPos,
 	}
 	var buf bytes.Buffer
-	sqlQuery, err := template.ParseFS(sqlTemplates, "search_projects.sql.tpl")
+	sqlQuery, err := template.ParseFS(queries, "search_projects.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template search_projects.sql.tpl: %w", err)
 	}
@@ -98,7 +98,7 @@ func GetProjectStatsArgs(repo *myawesomelistv1.Repository) []any {
 
 // GetProjectStatsQuery returns project stats for a repository.
 func GetProjectStatsQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("get_project_stats.sql.tpl")
+	q, err := queries.ReadFile("get_project_stats.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template get_project_stats.sql.tpl: %w", err)
 	}
@@ -112,7 +112,7 @@ func GetCategoriesArgs(collectionID int64) []any {
 
 // GetCategoriesQuery returns all categories for a collection.
 func GetCategoriesQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("get_categories.sql.tpl")
+	q, err := queries.ReadFile("get_categories.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template get_categories.sql.tpl: %w", err)
 	}
@@ -126,7 +126,7 @@ func GetProjectsArgs(categoryID int64) []any {
 
 // GetProjectsQuery returns all projects for a category.
 func GetProjectsQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("get_projects.sql.tpl")
+	q, err := queries.ReadFile("get_projects.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template get_projects.sql.tpl: %w", err)
 	}
@@ -148,7 +148,7 @@ func UpSertProjectStatsArgs(
 
 // UpSertProjectStatsQuery upserts project stats for a repository.
 func UpSertProjectStatsQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("upsert_project_stats.sql.tpl")
+	q, err := queries.ReadFile("upsert_project_stats.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template upsert_project_stats.sql.tpl: %w", err)
 	}
@@ -164,7 +164,7 @@ func UpSertCategoryArgs(
 
 // UpSertCategoryQuery upserts a category for a collection and returns its id.
 func UpSertCategoryQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("upsert_category.sql.tpl")
+	q, err := queries.ReadFile("upsert_category.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template upsert_category.sql.tpl: %w", err)
 	}
@@ -187,7 +187,7 @@ func UpSertProjectArgs(
 
 // UpSertProjectQuery renders a single-project upsert statement using category_id.
 func UpSertProjectQuery() (string, error) {
-	q, err := sqlTemplates.ReadFile("upsert_project.sql.tpl")
+	q, err := queries.ReadFile("upsert_project.sql.tpl")
 	if err != nil {
 		return "", fmt.Errorf("read sql template upsert_project.sql.tpl: %w", err)
 	}
