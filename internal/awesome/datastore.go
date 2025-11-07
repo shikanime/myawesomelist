@@ -125,22 +125,6 @@ func (ds *DataStore) GetCollection(
 	return col, nil
 }
 
-// PrepareGetCollection renders and prepares the SQL statement to fetch a collection.
-func (ds *DataStore) PrepareGetCollection(
-	ctx context.Context,
-	repo *myawesomelistv1.Repository,
-) (*sql.Stmt, []any, error) {
-	q, args, err := sqlx.GetCollectionQuery(repo)
-	if err != nil {
-		return nil, nil, err
-	}
-	stmt, err := ds.db.PrepareContext(ctx, q)
-	if err != nil {
-		return nil, nil, err
-	}
-	return stmt, args, nil
-}
-
 // UpSertCollection stores a collection in the database
 func (ds *DataStore) UpSertCollection(
 	ctx context.Context,
@@ -202,23 +186,6 @@ func (ds *DataStore) UpSertCollection(
 	return nil
 }
 
-// PrepareUpSertCollection renders and prepares the SQL statement to upsert a collection.
-func (ds *DataStore) PrepareUpSertCollection(
-	ctx context.Context,
-	repo *myawesomelistv1.Repository,
-	col *myawesomelistv1.Collection,
-) (*sql.Stmt, []any, error) {
-	q, args, err := sqlx.UpSertCollectionQuery(repo, col)
-	if err != nil {
-		return nil, nil, err
-	}
-	stmt, err := ds.db.PrepareContext(ctx, q)
-	if err != nil {
-		return nil, nil, err
-	}
-	return stmt, args, nil
-}
-
 // SearchProjects executes a datastore-backed search across repositories.
 func (ds *DataStore) SearchProjects(
 	ctx context.Context,
@@ -258,24 +225,6 @@ func (ds *DataStore) SearchProjects(
 	}
 
 	return projects, nil
-}
-
-// PrepareSearchProjects renders and prepares the SQL statement for project search.
-func (ds *DataStore) PrepareSearchProjects(
-	ctx context.Context,
-	query string,
-	repos []*myawesomelistv1.Repository,
-	limit uint32,
-) (*sql.Stmt, []any, error) {
-	q, args, err := sqlx.SearchProjectsQuery(query, repos, limit)
-	if err != nil {
-		return nil, nil, err
-	}
-	stmt, err := ds.db.PrepareContext(ctx, q)
-	if err != nil {
-		return nil, nil, err
-	}
-	return stmt, args, nil
 }
 
 // Close closes the database connection
@@ -349,37 +298,4 @@ func (ds *DataStore) UpSertProjectStats(
 		"open_issue_count", stats.OpenIssueCount)
 
 	return nil
-}
-
-// PrepareGetProjectStats renders and prepares the SQL statement to fetch project stats.
-func (ds *DataStore) PrepareGetProjectStats(
-	ctx context.Context,
-	repo *myawesomelistv1.Repository,
-) (*sql.Stmt, []any, error) {
-	q, args, err := sqlx.GetProjectStatsQuery(repo)
-	if err != nil {
-		return nil, nil, err
-	}
-	stmt, err := ds.db.PrepareContext(ctx, q)
-	if err != nil {
-		return nil, nil, err
-	}
-	return stmt, args, nil
-}
-
-// PrepareUpSertProjectStats renders and prepares the SQL statement to upsert project stats.
-func (ds *DataStore) PrepareUpSertProjectStats(
-	ctx context.Context,
-	repo *myawesomelistv1.Repository,
-	stats *myawesomelistv1.ProjectStats,
-) (*sql.Stmt, []any, error) {
-	q, args, err := sqlx.UpSertProjectStatsQuery(repo, stats)
-	if err != nil {
-		return nil, nil, err
-	}
-	stmt, err := ds.db.PrepareContext(ctx, q)
-	if err != nil {
-		return nil, nil, err
-	}
-	return stmt, args, nil
 }
