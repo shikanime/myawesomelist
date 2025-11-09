@@ -54,24 +54,26 @@ export default function Lists() {
                 </h2>
               </div>
 
-              {(collection.categories ?? []).map((category, catIdx) => (
-                <section
-                  key={`${collection.language}-${category.name}-${catIdx}`}
-                >
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                    {category.name}
-                  </h3>
+              <div className="space-y-8">
+                {(collection.categories ?? []).map((category, catIdx) => (
+                  <section
+                    key={`${collection.language}-${category.name}-${catIdx}`}
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                      {category.name}
+                    </h3>
 
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {(category.projects ?? []).map((p, pIdx) => (
-                      <ProjectCard
-                        key={`${collection.language}-${category.name}-${p.name}-${p.repo?.hostname}-${p.repo?.owner}-${p.repo?.repo}-${pIdx}`}
-                        project={p}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {(category.projects ?? []).map((p, pIdx) => (
+                        <ProjectCard
+                          key={`${collection.language}-${category.name}-${p.name}-${p.repo?.hostname}-${p.repo?.owner}-${p.repo?.repo}-${pIdx}`}
+                          project={p}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
             </div>
           ))}
         </div>
