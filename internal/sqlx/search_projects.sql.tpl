@@ -3,7 +3,8 @@ SELECT
     COALESCE(p.description,'') AS description,
     p.repo_hostname AS hostname,
     p.repo_owner AS owner,
-    p.repo_repo AS repo
+    p.repo_repo AS repo,
+    p.updated_at AS updated_at
 FROM projects p
 JOIN categories cat ON cat.id = p.category_id
 JOIN collections c ON c.id = cat.collection_id
