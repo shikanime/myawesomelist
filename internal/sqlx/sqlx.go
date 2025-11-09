@@ -9,7 +9,7 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
-//go:embed queries/*.sql.tpl
+//go:embed *.sql.tpl
 var queries embed.FS
 
 func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, []any, error) {
