@@ -146,7 +146,7 @@ func (c *GitHubClient) GetCollection(
 		opt(options)
 	}
 
-	// First, try to get the collection from the datastore
+	// First, try to get the collection from the datastore with its last update time
 	col, err := c.d.GetCollection(ctx, repo)
 	if err != nil {
 		slog.Warn("Failed to query datastore for collection",
@@ -156,11 +156,31 @@ func (c *GitHubClient) GetCollection(
 			"error", err)
 	}
 	if col != nil {
+		ttl := GetCollectionCacheTTL()
+		if time.Since(col.UpdatedAt.AsTime()) < ttl {
+			slog.Info("Collection cache fresh; skip GitHub fetch",
+				"hostname", repo.Hostname,
+				"owner", repo.Owner,
+				"repo", repo.Repo,
+				"categories", len(col.Categories),
+				"updated_at", col.UpdatedAt.AsTime(),
+				"ttl", ttl)
+			return col, nil
+		}
+		slog.Info("Collection cache stale; refetching from GitHub",
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
+			"updated_at", col.UpdatedAt.AsTime(),
+			"ttl", ttl)
+	}
+	if col != nil {
 		slog.Info("Retrieved collection from datastore cache",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
-			"categories", len(col.Categories))
+			"categories", len(col.Categories),
+			"updated_at", col.UpdatedAt.AsTime())
 		return col, nil
 	}
 
@@ -209,7 +229,20 @@ func (c *GitHubClient) GetProjectStats(
 			"error", err)
 	}
 	if stats != nil {
-		return stats, nil
+		ttl := GetProjectStatsTTL()
+		if time.Since(stats.UpdatedAt.AsTime()) < ttl {
+			slog.Info("Project stats cache fresh; skip GitHub fetch",
+				"owner", repo.Owner,
+				"repo", repo.Repo,
+				"updated_at", stats.UpdatedAt.AsTime(),
+				"ttl", ttl)
+			return stats, nil
+		}
+		slog.Info("Project stats cache stale; refetching from GitHub",
+			"owner", repo.Owner,
+			"repo", repo.Repo,
+			"updated_at", stats.UpdatedAt.AsTime(),
+			"ttl", ttl)
 	}
 
 	// Fetch from GitHub

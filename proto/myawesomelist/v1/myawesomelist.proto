@@ -2,30 +2,36 @@ syntax = "proto3";
 
 package myawesomelist.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1;myawesomelistv1";
 
 // Project represents a single project from an awesome list
 message ProjectStats {
   optional uint32 stargazers_count = 1;
   optional uint32 open_issue_count = 2;
+  google.protobuf.Timestamp updated_at = 3;
 }
 
 message Project {
   string name = 1;
   string description = 2;
   Repository repo = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 // Category groups projects under a section
 message Category {
   string name = 1;
   repeated Project projects = 2;
+  google.protobuf.Timestamp updated_at = 3;
 }
 
 // Collection represents an awesome repository parsed into categories
 message Collection {
   string language = 1;
   repeated Category categories = 2;
+  google.protobuf.Timestamp updated_at = 3;
 }
 
 // Identify a source awesome repository (owner/repo)

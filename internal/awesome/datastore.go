@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"k8s.io/utils/ptr"
 	sqlx "myawesomelist.shikanime.studio/internal/sqlx"
@@ -58,7 +57,7 @@ func (ds *DataStore) GetCollection(
 
 	var colID int64
 	col := &myawesomelistv1.Collection{}
-	if err = tx.QueryRowContext(ctx, q, args...).Scan(&colID, &col.Language); err != nil {
+	if err = tx.QueryRowContext(ctx, q, args...).Scan(&colID, &col.Language, &col.UpdatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -90,7 +89,7 @@ func (ds *DataStore) GetCollection(
 	for categoriesRows.Next() {
 		var categoryID int64
 		category := &myawesomelistv1.Category{}
-		if err := categoriesRows.Scan(&categoryID, &category.Name); err != nil {
+		if err := categoriesRows.Scan(&categoryID, &category.Name, &category.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan category: %w", err)
 		}
 
@@ -107,6 +106,7 @@ func (ds *DataStore) GetCollection(
 				&p.Repo.Hostname,
 				&p.Repo.Owner,
 				&p.Repo.Repo,
+				&p.UpdatedAt,
 			); err != nil {
 				projectsRows.Close()
 				return nil, fmt.Errorf("failed to scan project: %w", err)
@@ -235,6 +235,7 @@ func (ds *DataStore) SearchProjects(
 			&project.Repo.Hostname,
 			&project.Repo.Owner,
 			&project.Repo.Repo,
+			&project.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
@@ -267,18 +268,16 @@ func (ds *DataStore) GetProjectStats(
 		return nil, fmt.Errorf("failed to build get project stats query: %w", err)
 	}
 
+	stats := &myawesomelistv1.ProjectStats{}
+
 	var stargazers sql.NullInt32
 	var openIssues sql.NullInt32
-	var updatedAt time.Time
-
-	if err = ds.db.QueryRowContext(ctx, sqlQuery, sqlx.GetProjectStatsArgs(repo)...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
+	if err = ds.db.QueryRowContext(ctx, sqlQuery, sqlx.GetProjectStatsArgs(repo)...).Scan(&stargazers, &openIssues, &stats.UpdatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to query project stats: %w", err)
 	}
-
-	stats := &myawesomelistv1.ProjectStats{}
 	if stargazers.Valid {
 		stats.StargazersCount = ptr.To(uint32(stargazers.Int32))
 	}

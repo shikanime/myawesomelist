@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
@@ -144,4 +145,28 @@ func GetAddr() string {
 		host = "localhost"
 	}
 	return host + ":" + port
+}
+
+// GetCollectionCacheTTL returns the TTL for collection cache entries.
+// Reads duration from env var COLLECTION_CACHE_TTL; defaults to 24h.
+func GetCollectionCacheTTL() time.Duration {
+	const def = 24 * time.Hour
+	if v := os.Getenv("COLLECTION_CACHE_TTL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
+	}
+	return def
+}
+
+// GetProjectStatsTTL returns the TTL for project stats cache entries.
+// Reads duration from env var PROJECT_STATS_TTL; defaults to 6h.
+func GetProjectStatsTTL() time.Duration {
+	const def = 6 * time.Hour
+	if v := os.Getenv("PROJECT_STATS_TTL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
+	}
+	return def
 }
