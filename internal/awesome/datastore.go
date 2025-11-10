@@ -59,12 +59,14 @@ func (ds *DataStore) GetCollection(
 
 	var colID int64
 	col := &myawesomelistv1.Collection{}
-	if err = tx.QueryRowContext(ctx, q, args...).Scan(&colID, &col.Language, &col.UpdatedAt); err != nil {
+	var updatedAt time.Time
+	if err = tx.QueryRowContext(ctx, q, args...).Scan(&colID, &col.Language, &updatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to query collection: %w", err)
 	}
+	col.UpdatedAt = timestamppb.New(updatedAt)
 
 	// Load categories for the collection
 	categoriesQuery, err := sqlx.GetCategoriesQuery()
@@ -91,28 +93,33 @@ func (ds *DataStore) GetCollection(
 	for categoriesRows.Next() {
 		var categoryID int64
 		category := &myawesomelistv1.Category{}
-		if err := categoriesRows.Scan(&categoryID, &category.Name, &category.UpdatedAt); err != nil {
+		var categoryUpdatedAt time.Time
+		if err := categoriesRows.Scan(&categoryID, &category.Name, &categoryUpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan category: %w", err)
 		}
+		category.UpdatedAt = timestamppb.New(categoryUpdatedAt)
 
 		projectsRows, err := projectsStmt.QueryContext(ctx, sqlx.GetProjectsArgs(categoryID)...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query projects: %w", err)
 		}
+		defer projectsRows.Close()
 
 		for projectsRows.Next() {
 			p := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
+			var projectUpdatedAt time.Time
 			if err := projectsRows.Scan(
 				&p.Name,
 				&p.Description,
 				&p.Repo.Hostname,
 				&p.Repo.Owner,
 				&p.Repo.Repo,
-				&p.UpdatedAt,
+				&projectUpdatedAt,
 			); err != nil {
 				projectsRows.Close()
 				return nil, fmt.Errorf("failed to scan project: %w", err)
 			}
+			p.UpdatedAt = timestamppb.New(projectUpdatedAt)
 			category.Projects = append(category.Projects, p)
 		}
 		projectsRows.Close()
