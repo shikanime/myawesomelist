@@ -9,5 +9,6 @@ build:
         dir: cmd/myawesomelist
     - image: rg.fr-par.scw.cloud/namespace-distracted-kepler/myawesomelist-www
       context: www
-  platforms:
-    - linux/amd64
+      docker:
+        buildArgs:
+          VITE_MYAWESOMELIST_BASE_URL: https://nssleepyhertzxnlfam5y-container-serene-dewdney.functions.fnc.fr-par.scw.cloud
