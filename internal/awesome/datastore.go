@@ -231,17 +231,19 @@ func (ds *DataStore) SearchProjects(
 	var projects []*myawesomelistv1.Project
 	for rows.Next() {
 		project := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
+		var updatedAt time.Time
 		err := rows.Scan(
 			&project.Name,
 			&project.Description,
 			&project.Repo.Hostname,
 			&project.Repo.Owner,
 			&project.Repo.Repo,
-			&project.UpdatedAt,
+			&updatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
+		project.UpdatedAt = timestamppb.New(updatedAt)
 		projects = append(projects, project)
 	}
 
