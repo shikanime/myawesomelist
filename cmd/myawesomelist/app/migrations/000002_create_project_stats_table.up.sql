@@ -14,9 +14,3 @@ CREATE TABLE IF NOT EXISTS project_stats (
 -- Indexes to speed up common queries (lookup, sort, filter)
 CREATE INDEX IF NOT EXISTS idx_project_stats_hostname_owner_repo ON project_stats(hostname, owner, repo);
 CREATE INDEX IF NOT EXISTS idx_project_stats_updated_at ON project_stats(updated_at);
-
--- Reuse the trigger function to auto-refresh updated_at
-CREATE TRIGGER update_project_stats_updated_at
-    BEFORE UPDATE ON project_stats
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();

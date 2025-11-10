@@ -20,12 +20,6 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE INDEX IF NOT EXISTS idx_categories_collection ON categories(collection_id);
 CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
 
--- Reuse the trigger function to auto-refresh updated_at
-CREATE TRIGGER update_categories_updated_at
-    BEFORE UPDATE ON categories
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
 -- Projects table uses category_id instead of collection_id
 CREATE TABLE IF NOT EXISTS projects (
     id SERIAL PRIMARY KEY,
@@ -55,9 +49,3 @@ CREATE TABLE IF NOT EXISTS projects (
 -- Helpful indexes
 CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name);
 CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);
-
--- Reuse the trigger function to auto-refresh updated_at
-CREATE TRIGGER update_projects_updated_at
-    BEFORE UPDATE ON projects
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();

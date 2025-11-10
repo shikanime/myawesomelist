@@ -9,4 +9,5 @@ ON CONFLICT (
 )
 DO UPDATE SET
     name = EXCLUDED.name,
-    description = EXCLUDED.description
+    description = EXCLUDED.description,
+    updated_at = NOW()
