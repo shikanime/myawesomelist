@@ -11,7 +11,7 @@ let images: list<string> = (
 let container_id: string = (
     scw container container list --output json
     | from json
-    | where name == "container-focused-kepler"
+    | where name == "container-serene-dewdney"
     | get id
     | first
 )
@@ -21,7 +21,7 @@ scw container container update $container_id registry-image=($images.0) --wait
 let www_container_id: string = (
     scw container container list --output json
     | from json
-    | where name == "container-cool-hypatia"
+    | where name == "container-pensive-mcclintock"
     | get id
     | first
 )
