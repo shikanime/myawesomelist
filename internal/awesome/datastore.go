@@ -51,87 +51,106 @@ func (ds *DataStore) GetCollection(
 	}
 	defer tx.Rollback()
 
-	// Get collection id and language
-	q, args, err := sqlx.GetCollectionQuery(repo)
+	q, err := sqlx.GetCollectionQuery(repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build get collection query: %w", err)
+		return nil, fmt.Errorf("failed to build joined collection query: %w", err)
 	}
 
-	var colID int64
+	rows, err := tx.QueryContext(ctx, q, sqlx.GetCollectionArgs(repo)...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query collection with join: %w", err)
+	}
+	defer rows.Close()
+
 	col := &myawesomelistv1.Collection{}
-	var updatedAt time.Time
-	if err = tx.QueryRowContext(ctx, q, args...).Scan(&colID, &col.Language, &updatedAt); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+	categoriesByID := make(map[int64]*myawesomelistv1.Category)
+	var categoryOrder []int64
+
+	for rows.Next() {
+		var (
+			categoryID        int64
+			categoryName      sql.NullString
+			categoryUpdatedAt time.Time
+
+			projectName        sql.NullString
+			projectDescription sql.NullString
+			repoHostname       sql.NullString
+			repoOwner          sql.NullString
+			repoRepo           sql.NullString
+			projectUpdatedAt   sql.NullTime
+
+			collectionLanguage sql.NullString
+			collectionUpdated  time.Time
+		)
+
+		if err := rows.Scan(
+			&categoryID,
+			&categoryName,
+			&categoryUpdatedAt,
+			&projectName,
+			&projectDescription,
+			&repoHostname,
+			&repoOwner,
+			&repoRepo,
+			&projectUpdatedAt,
+			&collectionLanguage,
+			&collectionUpdated,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan joined collection row: %w", err)
 		}
-		return nil, fmt.Errorf("failed to query collection: %w", err)
-	}
-	col.UpdatedAt = timestamppb.New(updatedAt)
 
-	// Load categories for the collection
-	categoriesQuery, err := sqlx.GetCategoriesQuery()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build get categories query: %w", err)
-	}
-	categoriesRows, err := tx.QueryContext(ctx, categoriesQuery, sqlx.GetCategoriesArgs(colID)...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query categories: %w", err)
-	}
-	defer categoriesRows.Close()
-
-	// Prepare projects query once, reuse for each category
-	projectsQuery, err := sqlx.GetProjectsQuery()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build get projects query: %w", err)
-	}
-	projectsStmt, err := tx.PrepareContext(ctx, projectsQuery)
-	if err != nil {
-		return nil, fmt.Errorf("failed to prepare projects query: %w", err)
-	}
-	defer projectsStmt.Close()
-
-	for categoriesRows.Next() {
-		var categoryID int64
-		category := &myawesomelistv1.Category{}
-		var categoryUpdatedAt time.Time
-		if err := categoriesRows.Scan(&categoryID, &category.Name, &categoryUpdatedAt); err != nil {
-			return nil, fmt.Errorf("failed to scan category: %w", err)
+		// Assign collection fields once, after Scan
+		if col.Language == "" && collectionLanguage.Valid {
+			col.Language = collectionLanguage.String
+			col.UpdatedAt = timestamppb.New(collectionUpdated)
 		}
-		category.UpdatedAt = timestamppb.New(categoryUpdatedAt)
 
-		projectsRows, err := projectsStmt.QueryContext(ctx, sqlx.GetProjectsArgs(categoryID)...)
-		if err != nil {
-			return nil, fmt.Errorf("failed to query projects: %w", err)
-		}
-		defer projectsRows.Close()
-
-		for projectsRows.Next() {
-			p := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
-			var projectUpdatedAt time.Time
-			if err := projectsRows.Scan(
-				&p.Name,
-				&p.Description,
-				&p.Repo.Hostname,
-				&p.Repo.Owner,
-				&p.Repo.Repo,
-				&projectUpdatedAt,
-			); err != nil {
-				projectsRows.Close()
-				return nil, fmt.Errorf("failed to scan project: %w", err)
+		// Get or create category struct
+		category, exists := categoriesByID[categoryID]
+		if !exists {
+			category = &myawesomelistv1.Category{}
+			if categoryName.Valid {
+				category.Name = categoryName.String
 			}
-			p.UpdatedAt = timestamppb.New(projectUpdatedAt)
+			category.UpdatedAt = timestamppb.New(categoryUpdatedAt)
+			categoriesByID[categoryID] = category
+			categoryOrder = append(categoryOrder, categoryID)
+		}
+
+		// Append project if present
+		if projectName.Valid || repoHostname.Valid || repoOwner.Valid || repoRepo.Valid {
+			p := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
+			if projectName.Valid {
+				p.Name = projectName.String
+			}
+			if projectDescription.Valid {
+				p.Description = projectDescription.String
+			}
+			if repoHostname.Valid {
+				p.Repo.Hostname = repoHostname.String
+			}
+			if repoOwner.Valid {
+				p.Repo.Owner = repoOwner.String
+			}
+			if repoRepo.Valid {
+				p.Repo.Repo = repoRepo.String
+			}
+			if projectUpdatedAt.Valid {
+				p.UpdatedAt = timestamppb.New(projectUpdatedAt.Time)
+			}
 			category.Projects = append(category.Projects, p)
 		}
-		projectsRows.Close()
+	}
 
-		col.Categories = append(col.Categories, category)
+	for _, cid := range categoryOrder {
+		col.Categories = append(col.Categories, categoriesByID[cid])
 	}
 
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("failed to commit tx: %w", err)
 	}
 
-	slog.Debug("Retrieved collection from database",
+	slog.Debug("Retrieved collection (joined) from database",
 		"hostname", repo.Hostname,
 		"owner", repo.Owner,
 		"repo", repo.Repo,
@@ -237,20 +256,44 @@ func (ds *DataStore) SearchProjects(
 
 	var projects []*myawesomelistv1.Project
 	for rows.Next() {
-		project := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
-		var updatedAt time.Time
-		err := rows.Scan(
-			&project.Name,
-			&project.Description,
-			&project.Repo.Hostname,
-			&project.Repo.Owner,
-			&project.Repo.Repo,
-			&updatedAt,
+		var (
+			name        sql.NullString
+			description sql.NullString
+			hostname    sql.NullString
+			owner       sql.NullString
+			repo        sql.NullString
+			updatedAt   time.Time
 		)
-		if err != nil {
+
+		if err := rows.Scan(
+			&name,
+			&description,
+			&hostname,
+			&owner,
+			&repo,
+			&updatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("failed to scan project: %w", err)
 		}
+
+		project := &myawesomelistv1.Project{Repo: &myawesomelistv1.Repository{}}
+		if name.Valid {
+			project.Name = name.String
+		}
+		if description.Valid {
+			project.Description = description.String
+		}
+		if hostname.Valid {
+			project.Repo.Hostname = hostname.String
+		}
+		if owner.Valid {
+			project.Repo.Owner = owner.String
+		}
+		if repo.Valid {
+			project.Repo.Repo = repo.String
+		}
 		project.UpdatedAt = timestamppb.New(updatedAt)
+
 		projects = append(projects, project)
 	}
 
@@ -279,9 +322,9 @@ func (ds *DataStore) GetProjectStats(
 		return nil, fmt.Errorf("failed to build get project stats query: %w", err)
 	}
 
-	var stargazers sql.NullInt32
-	var openIssues sql.NullInt32
-	var updatedAt time.Time
+	stargazers := sql.NullInt32{}
+	openIssues := sql.NullInt32{}
+	updatedAt := time.Time{}
 
 	if err = ds.db.QueryRowContext(ctx, sqlQuery, sqlx.GetProjectStatsArgs(repo)...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
 		if err == sql.ErrNoRows {

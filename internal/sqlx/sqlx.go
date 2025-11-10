@@ -12,12 +12,18 @@ import (
 //go:embed *.sql.tpl
 var queries embed.FS
 
-func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, []any, error) {
+func GetCollectionQuery(repo *myawesomelistv1.Repository) (string, error) {
 	q, err := queries.ReadFile("get_collection.sql.tpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("read sql template get_collection.sql.tpl: %w", err)
+		return "", fmt.Errorf("read sql template get_collection.sql.tpl: %w", err)
 	}
-	return string(q), []any{repo.Hostname, repo.Owner, repo.Repo}, nil
+	return string(q), nil
+}
+
+func GetCollectionArgs(
+	repo *myawesomelistv1.Repository,
+) []any {
+	return []any{repo.Hostname, repo.Owner, repo.Repo}
 }
 
 func UpSertCollectionArgs(
