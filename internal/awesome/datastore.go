@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"k8s.io/utils/ptr"
 	sqlx "myawesomelist.shikanime.studio/internal/sqlx"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
@@ -268,22 +270,25 @@ func (ds *DataStore) GetProjectStats(
 		return nil, fmt.Errorf("failed to build get project stats query: %w", err)
 	}
 
-	stats := &myawesomelistv1.ProjectStats{}
-
 	var stargazers sql.NullInt32
 	var openIssues sql.NullInt32
-	if err = ds.db.QueryRowContext(ctx, sqlQuery, sqlx.GetProjectStatsArgs(repo)...).Scan(&stargazers, &openIssues, &stats.UpdatedAt); err != nil {
+	var updatedAt time.Time
+
+	if err = ds.db.QueryRowContext(ctx, sqlQuery, sqlx.GetProjectStatsArgs(repo)...).Scan(&stargazers, &openIssues, &updatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to query project stats: %w", err)
 	}
+
+	stats := &myawesomelistv1.ProjectStats{}
 	if stargazers.Valid {
 		stats.StargazersCount = ptr.To(uint32(stargazers.Int32))
 	}
 	if openIssues.Valid {
 		stats.OpenIssueCount = ptr.To(uint32(openIssues.Int32))
 	}
+	stats.UpdatedAt = timestamppb.New(updatedAt)
 
 	return stats, nil
 }
