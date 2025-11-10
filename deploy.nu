@@ -2,7 +2,7 @@
 #! nix develop --impure --command nu
 
 let images: list<string> = (
-    skaffold build --cache-artifacts=false --output={{json .}} --quiet
+    skaffold build --cache-artifacts=false --output={{json .}} --quiet --platform linux/amd64
     | from json
     | get builds
     | each { |build| $build.tag | split row "@" | first }
