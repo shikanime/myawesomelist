@@ -2,6 +2,7 @@
   inputs = {
     devenv.url = "github:cachix/devenv";
     devlib.url = "github:shikanime-studio/devlib";
+    git-hooks.url = "github:cachix/git-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     treefmt-nix.url = "github:numtide/treefmt-nix";
@@ -24,6 +25,7 @@
     inputs@{
       devenv,
       devlib,
+      git-hooks,
       flake-parts,
       treefmt-nix,
       ...
@@ -31,93 +33,76 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         devenv.flakeModule
+        devlib.flakeModule
+        git-hooks.flakeModule
         treefmt-nix.flakeModule
       ];
       perSystem =
         { pkgs, ... }:
         {
-          treefmt = {
-            projectRootFile = "flake.nix";
-            enableDefaultExcludes = true;
-            programs = {
-              gofmt.enable = true;
-              golines.enable = true;
-              nixfmt.enable = true;
-              prettier.enable = true;
-              statix.enable = true;
-              terraform.enable = true;
+          devenv.shells.default = {
+            buf = {
+              enable = true;
+              generate = {
+                clean = true;
+                inputs = [
+                  { directory = "proto"; }
+                ];
+                plugins = [
+                  {
+                    include_imports = true;
+                    opt = "target=ts";
+                    out = "www/app/proto";
+                    package = pkgs.protoc-gen-es;
+                  }
+                  {
+                    opt = "paths=source_relative";
+                    out = "pkgs/proto";
+                    package = pkgs.protoc-gen-go;
+                  }
+                  {
+                    opt = "paths=source_relative";
+                    out = "pkgs/proto";
+                    package = pkgs.protoc-gen-connect-go;
+                  }
+                ];
+                version = "v2";
+              };
             };
-            settings.global.excludes = [
-              "public/**"
-              "*.terraform.lock.hcl"
-              ".gitattributes"
-              "LICENSE"
+            cachix = {
+              enable = true;
+              push = "shikanime";
+            };
+            containers = pkgs.lib.mkForce { };
+            docker.enable = true;
+            github.enable = true;
+            gitignore = {
+              enable = true;
+              enableDefaultTemplates = true;
+            };
+            languages = {
+              go.enable = true;
+              javascript.enable = true;
+              nix.enable = true;
+              opentofu.enable = true;
+              shell.enable = true;
+            };
+            packages = [
+              pkgs.ko
+              pkgs.nushell
+              pkgs.scaleway-cli
+              pkgs.skaffold
             ];
-          };
-          devenv = {
-            modules = [
-              devlib.devenvModule
-            ];
-            shells.default = {
-              buf = {
-                enable = true;
-                generate = {
-                  version = "v2";
-                  clean = true;
-                  plugins = [
-                    {
-                      package = pkgs.protoc-gen-es;
-                      out = "www/app/proto";
-                      include_imports = true;
-                      opt = "target=ts";
-                    }
-                    {
-                      package = pkgs.protoc-gen-go;
-                      out = "pkgs/proto";
-                      opt = "paths=source_relative";
-                    }
-                    {
-                      package = pkgs.protoc-gen-connect-go;
-                      out = "pkgs/proto";
-                      opt = "paths=source_relative";
-                    }
-                  ];
-                  inputs = [
-                    { directory = "proto"; }
-                  ];
-                };
+            services.postgres.enable = true;
+            treefmt = {
+              enable = true;
+              config = {
+                enableDefaultExcludes = true;
+                programs.prettier.enable = true;
+                settings.global.excludes = [
+                  "public/**"
+                ];
               };
-              cachix = {
-                enable = true;
-                push = "shikanime";
-              };
-              containers = pkgs.lib.mkForce { };
-              github.enable = true;
-              gitignore = {
-                enable = true;
-                enableDefaultTemplates = true;
-              };
-              languages = {
-                go.enable = true;
-                javascript.enable = true;
-                nix.enable = true;
-                opentofu.enable = true;
-                shell.enable = true;
-              };
-              packages = [
-                pkgs.buf
-                pkgs.gitnr
-                pkgs.go-migrate
-                pkgs.ko
-                pkgs.nodejs
-                pkgs.nushell
-                pkgs.protoc-gen-connect-go
-                pkgs.protoc-gen-es
-                pkgs.protoc-gen-go
-                pkgs.scaleway-cli
-                pkgs.skaffold
-              ];
-              services.postgres.enable = true;
             };
           };
         };
