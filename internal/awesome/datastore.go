@@ -33,6 +33,49 @@ func (ds *DataStore) Ping(ctx context.Context) error {
 	return db.PingContext(ctx)
 }
 
+// ListCollections retrieves collections for the provided repos from the database
+func (ds *DataStore) ListCollections(
+	ctx context.Context,
+	repos []*myawesomelistv1.Repository,
+) ([]*myawesomelistv1.Collection, error) {
+	if ds.db == nil {
+		return nil, fmt.Errorf("database connection not available")
+	}
+
+	if len(repos) == 0 {
+		return nil, nil
+	}
+
+	// Build OR predicates for target repos
+	db := ds.db.WithContext(ctx).
+		Preload("Categories").
+		Preload("Categories.Projects").
+		Model(&Collection{})
+
+	db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
+		for i, r := range repos {
+			cond := "(hostname = ? AND owner = ? AND repo = ?)"
+			if i == 0 {
+				tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
+			} else {
+				tx = tx.Or(cond, r.Hostname, r.Owner, r.Repo)
+			}
+		}
+		return tx
+	})
+
+	var rows []Collection
+	if err := db.Find(&rows).Error; err != nil {
+		return nil, fmt.Errorf("list collections query failed: %w", err)
+	}
+
+	var out []*myawesomelistv1.Collection
+	for _, r := range rows {
+		out = append(out, r.ToProto())
+	}
+	return out, nil
+}
+
 // GetCollection retrieves a collection from the database
 func (ds *DataStore) GetCollection(
 	ctx context.Context,
@@ -233,47 +276,4 @@ func (ds *DataStore) UpSertProjectStats(
 			"updated_at":       gorm.Expr("NOW()"),
 		}),
 	}).Create(&ps).Error
-}
-
-// ListCollections retrieves collections for the provided repos from the database
-func (ds *DataStore) ListCollections(
-	ctx context.Context,
-	repos []*myawesomelistv1.Repository,
-) ([]*myawesomelistv1.Collection, error) {
-	if ds.db == nil {
-		return nil, fmt.Errorf("database connection not available")
-	}
-
-	if len(repos) == 0 {
-		return nil, nil
-	}
-
-	// Build OR predicates for target repos
-	db := ds.db.WithContext(ctx).
-		Preload("Categories").
-		Preload("Categories.Projects").
-		Model(&Collection{})
-
-	db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
-		for i, r := range repos {
-			cond := "(hostname = ? AND owner = ? AND repo = ?)"
-			if i == 0 {
-				tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
-			} else {
-				tx = tx.Or(cond, r.Hostname, r.Owner, r.Repo)
-			}
-		}
-		return tx
-	})
-
-	var rows []Collection
-	if err := db.Find(&rows).Error; err != nil {
-		return nil, fmt.Errorf("list collections query failed: %w", err)
-	}
-
-	var out []*myawesomelistv1.Collection
-	for _, r := range rows {
-		out = append(out, r.ToProto())
-	}
-	return out, nil
 }

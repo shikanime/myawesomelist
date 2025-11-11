@@ -136,6 +136,61 @@ func WithSubsectionAsCategory() GetCollectionOption {
 	}
 }
 
+// ListCollections loads collections for given repos: first from datastore,
+// then fetches any missing via GetCollection (which also refreshes stale entries).
+func (c *GitHubClient) ListCollections(
+	ctx context.Context,
+	repos []*myawesomelistv1.Repository,
+	opts ...GetCollectionOption,
+) ([]*myawesomelistv1.Collection, error) {
+	if len(repos) == 0 {
+		return []*myawesomelistv1.Collection{}, nil
+	}
+
+	// Load available collections in bulk from datastore
+	cols, err := c.d.ListCollections(ctx, repos)
+	if err != nil {
+		slog.Warn("Failed to list collections from datastore", "error", err)
+	}
+
+	// Index datastore results by repository key
+	colsByKey := make(map[string]*myawesomelistv1.Collection, len(cols))
+	for _, col := range cols {
+		if col != nil && col.Repo != nil {
+			key, err := url.JoinPath(col.Repo.Hostname, col.Repo.Owner, col.Repo.Repo)
+			if err != nil {
+				return nil, fmt.Errorf("failed to join path for %s/%s: %w", col.Repo.Owner, col.Repo.Repo, err)
+			}
+			colsByKey[key] = col
+		}
+	}
+
+	// Build output in the same order as input repos, fetching missing via GetCollection
+	for _, r := range repos {
+		key, err := url.JoinPath(r.Hostname, r.Owner, r.Repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to join path for %s/%s: %w", r.Owner, r.Repo, err)
+		}
+
+		if _, ok := colsByKey[key]; ok {
+			continue
+		}
+
+		col, getErr := c.GetCollection(ctx, r, opts...)
+		if getErr != nil {
+			slog.Warn("Failed to get collection",
+				"hostname", r.Hostname,
+				"owner", r.Owner,
+				"repo", r.Repo,
+				"error", getErr)
+			continue
+		}
+		colsByKey[key] = col
+	}
+
+	return cols, nil
+}
+
 // GetCollection fetches a project collection from a single awesome repository
 func (c *GitHubClient) GetCollection(
 	ctx context.Context,
@@ -215,61 +270,6 @@ func (c *GitHubClient) GetCollection(
 	}
 
 	return col, nil
-}
-
-// ListCollections loads collections for given repos: first from datastore,
-// then fetches any missing via GetCollection (which also refreshes stale entries).
-func (c *GitHubClient) ListCollections(
-	ctx context.Context,
-	repos []*myawesomelistv1.Repository,
-	opts ...GetCollectionOption,
-) ([]*myawesomelistv1.Collection, error) {
-	if len(repos) == 0 {
-		return []*myawesomelistv1.Collection{}, nil
-	}
-
-	// Load available collections in bulk from datastore
-	cols, err := c.d.ListCollections(ctx, repos)
-	if err != nil {
-		slog.Warn("Failed to list collections from datastore", "error", err)
-	}
-
-	// Index datastore results by repository key
-	colsByKey := make(map[string]*myawesomelistv1.Collection, len(cols))
-	for _, col := range cols {
-		if col != nil && col.Repo != nil {
-			key, err := url.JoinPath(col.Repo.Hostname, col.Repo.Owner, col.Repo.Repo)
-			if err != nil {
-				return nil, fmt.Errorf("failed to join path for %s/%s: %w", col.Repo.Owner, col.Repo.Repo, err)
-			}
-			colsByKey[key] = col
-		}
-	}
-
-	// Build output in the same order as input repos, fetching missing via GetCollection
-	for _, r := range repos {
-		key, err := url.JoinPath(r.Hostname, r.Owner, r.Repo)
-		if err != nil {
-			return nil, fmt.Errorf("failed to join path for %s/%s: %w", r.Owner, r.Repo, err)
-		}
-
-		if _, ok := colsByKey[key]; ok {
-			continue
-		}
-
-		col, getErr := c.GetCollection(ctx, r, opts...)
-		if getErr != nil {
-			slog.Warn("Failed to get collection",
-				"hostname", r.Hostname,
-				"owner", r.Owner,
-				"repo", r.Repo,
-				"error", getErr)
-			continue
-		}
-		colsByKey[key] = col
-	}
-
-	return cols, nil
 }
 
 // GetProjectStats retrieves cached stats or fetches from GitHub and persists them
