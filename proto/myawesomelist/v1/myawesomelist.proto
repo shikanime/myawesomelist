@@ -8,30 +8,35 @@ option go_package = "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1;
 
 // Project represents a single project from an awesome list
 message ProjectStats {
-  optional uint32 stargazers_count = 1;
-  optional uint32 open_issue_count = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  uint64 id = 1;
+  optional uint32 stargazers_count = 2;
+  optional uint32 open_issue_count = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 message Project {
-  string name = 1;
-  string description = 2;
-  Repository repo = 3;
-  google.protobuf.Timestamp updated_at = 4;
+  uint64 id = 1;
+  string name = 2;
+  string description = 3;
+  Repository repo = 4;
+  google.protobuf.Timestamp updated_at = 5;
 }
 
 // Category groups projects under a section
 message Category {
-  string name = 1;
-  repeated Project projects = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  uint64 id = 1;
+  string name = 2;
+  repeated Project projects = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 // Collection represents an awesome repository parsed into categories
 message Collection {
-  string language = 1;
-  repeated Category categories = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  uint64 id = 1;
+  string language = 2;
+  Repository repo = 3;
+  repeated Category categories = 4;
+  google.protobuf.Timestamp updated_at = 5;
 }
 
 // Identify a source awesome repository (owner/repo)
@@ -43,7 +48,9 @@ message Repository {
 
 // Requests/Responses
 
-message ListCollectionsRequest {}
+message ListCollectionsRequest {
+  repeated Repository repos = 1;
+}
 
 message ListCollectionsResponse {
   repeated Collection collections = 1;
