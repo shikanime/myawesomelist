@@ -34,11 +34,7 @@
         treefmt-nix.flakeModule
       ];
       perSystem =
-        {
-          pkgs,
-          system,
-          ...
-        }:
+        { pkgs, ... }:
         {
           treefmt = {
             projectRootFile = "flake.nix";
