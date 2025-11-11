@@ -226,12 +226,13 @@ export const ListCollectionsRequestSchema: GenMessage<ListCollectionsRequest> =
 /**
  * @generated from message myawesomelist.v1.ListCollectionsResponse
  */
-export type ListCollectionsResponse = Message<"myawesomelist.v1.ListCollectionsResponse"> & {
-  /**
-   * @generated from field: repeated myawesomelist.v1.Collection collections = 1;
-   */
-  collections: Collection[];
-};
+export type ListCollectionsResponse =
+  Message<"myawesomelist.v1.ListCollectionsResponse"> & {
+    /**
+     * @generated from field: repeated myawesomelist.v1.Collection collections = 1;
+     */
+    collections: Collection[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListCollectionsResponse.
@@ -244,12 +245,13 @@ export const ListCollectionsResponseSchema: GenMessage<ListCollectionsResponse> 
 /**
  * @generated from message myawesomelist.v1.GetCollectionRequest
  */
-export type GetCollectionRequest = Message<"myawesomelist.v1.GetCollectionRequest"> & {
-  /**
-   * @generated from field: myawesomelist.v1.Repository repo = 1;
-   */
-  repo?: Repository;
-};
+export type GetCollectionRequest =
+  Message<"myawesomelist.v1.GetCollectionRequest"> & {
+    /**
+     * @generated from field: myawesomelist.v1.Repository repo = 1;
+     */
+    repo?: Repository;
+  };
 
 /**
  * Describes the message myawesomelist.v1.GetCollectionRequest.
@@ -300,12 +302,13 @@ export const ListCategoriesRequestSchema: GenMessage<ListCategoriesRequest> =
 /**
  * @generated from message myawesomelist.v1.ListCategoriesResponse
  */
-export type ListCategoriesResponse = Message<"myawesomelist.v1.ListCategoriesResponse"> & {
-  /**
-   * @generated from field: repeated myawesomelist.v1.Category categories = 1;
-   */
-  categories: Category[];
-};
+export type ListCategoriesResponse =
+  Message<"myawesomelist.v1.ListCategoriesResponse"> & {
+    /**
+     * @generated from field: repeated myawesomelist.v1.Category categories = 1;
+     */
+    categories: Category[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListCategoriesResponse.
@@ -318,11 +321,12 @@ export const ListCategoriesResponseSchema: GenMessage<ListCategoriesResponse> =
 /**
  * @generated from message myawesomelist.v1.ListProjectsRequest
  */
-export type ListProjectsRequest = Message<"myawesomelist.v1.ListProjectsRequest"> & {
-  /**
-   * @generated from field: myawesomelist.v1.Repository repo = 1;
-   */
-  repo?: Repository;
+export type ListProjectsRequest =
+  Message<"myawesomelist.v1.ListProjectsRequest"> & {
+    /**
+     * @generated from field: myawesomelist.v1.Repository repo = 1;
+     */
+    repo?: Repository;
 
     /**
      * @generated from field: string category_name = 2;
@@ -341,12 +345,13 @@ export const ListProjectsRequestSchema: GenMessage<ListProjectsRequest> =
 /**
  * @generated from message myawesomelist.v1.ListProjectsResponse
  */
-export type ListProjectsResponse = Message<"myawesomelist.v1.ListProjectsResponse"> & {
-  /**
-   * @generated from field: repeated myawesomelist.v1.Project projects = 1;
-   */
-  projects: Project[];
-};
+export type ListProjectsResponse =
+  Message<"myawesomelist.v1.ListProjectsResponse"> & {
+    /**
+     * @generated from field: repeated myawesomelist.v1.Project projects = 1;
+     */
+    projects: Project[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListProjectsResponse.
@@ -359,11 +364,12 @@ export const ListProjectsResponseSchema: GenMessage<ListProjectsResponse> =
 /**
  * @generated from message myawesomelist.v1.SearchProjectsRequest
  */
-export type SearchProjectsRequest = Message<"myawesomelist.v1.SearchProjectsRequest"> & {
-  /**
-   * @generated from field: string query = 1;
-   */
-  query: string;
+export type SearchProjectsRequest =
+  Message<"myawesomelist.v1.SearchProjectsRequest"> & {
+    /**
+     * @generated from field: string query = 1;
+     */
+    query: string;
 
     /**
      * @generated from field: uint32 limit = 2;
@@ -387,12 +393,13 @@ export const SearchProjectsRequestSchema: GenMessage<SearchProjectsRequest> =
 /**
  * @generated from message myawesomelist.v1.SearchProjectsResponse
  */
-export type SearchProjectsResponse = Message<"myawesomelist.v1.SearchProjectsResponse"> & {
-  /**
-   * @generated from field: repeated myawesomelist.v1.Project projects = 1;
-   */
-  projects: Project[];
-};
+export type SearchProjectsResponse =
+  Message<"myawesomelist.v1.SearchProjectsResponse"> & {
+    /**
+     * @generated from field: repeated myawesomelist.v1.Project projects = 1;
+     */
+    projects: Project[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.SearchProjectsResponse.
@@ -479,12 +486,13 @@ export const GetProjectStatsRequestSchema: GenMessage<GetProjectStatsRequest> =
 /**
  * @generated from message myawesomelist.v1.GetProjectStatsResponse
  */
-export type GetProjectStatsResponse = Message<"myawesomelist.v1.GetProjectStatsResponse"> & {
-  /**
-   * @generated from field: myawesomelist.v1.ProjectStats stats = 1;
-   */
-  stats?: ProjectStats;
-};
+export type GetProjectStatsResponse =
+  Message<"myawesomelist.v1.GetProjectStatsResponse"> & {
+    /**
+     * @generated from field: myawesomelist.v1.ProjectStats stats = 1;
+     */
+    stats?: ProjectStats;
+  };
 
 /**
  * Describes the message myawesomelist.v1.GetProjectStatsResponse.
@@ -561,7 +569,5 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof GetProjectStatsRequestSchema;
     output: typeof GetProjectStatsResponseSchema;
-  },
-}> = /*@__PURE__*/
-  serviceDesc(file_myawesomelist_v1_myawesomelist, 0);
-
+  };
+}> = /*@__PURE__*/ serviceDesc(file_myawesomelist_v1_myawesomelist, 0);
