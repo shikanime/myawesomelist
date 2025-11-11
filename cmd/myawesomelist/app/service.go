@@ -20,32 +20,6 @@ func NewAwesomeService(clients *awesome.ClientSet) *AwesomeService {
 	return &AwesomeService{cs: clients}
 }
 
-func (s *AwesomeService) Liveness(
-	ctx context.Context,
-	_ *connect.Request[myawesomelistv1.LivenessRequest],
-) (
-	*connect.Response[myawesomelistv1.LivenessResponse],
-	error,
-) {
-	if err := s.cs.Ping(ctx); err != nil {
-		return nil, connect.NewError(connect.CodeUnavailable, err)
-	}
-	return connect.NewResponse(&myawesomelistv1.LivenessResponse{}), nil
-}
-
-func (s *AwesomeService) Readiness(
-	ctx context.Context,
-	_ *connect.Request[myawesomelistv1.ReadinessRequest],
-) (
-	*connect.Response[myawesomelistv1.ReadinessResponse],
-	error,
-) {
-	if err := s.cs.Ping(ctx); err != nil {
-		return nil, connect.NewError(connect.CodeUnavailable, err)
-	}
-	return connect.NewResponse(&myawesomelistv1.ReadinessResponse{}), nil
-}
-
 func (s *AwesomeService) ListCollections(
 	ctx context.Context,
 	req *connect.Request[myawesomelistv1.ListCollectionsRequest],
