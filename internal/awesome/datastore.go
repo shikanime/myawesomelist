@@ -44,14 +44,17 @@ func (ds *DataStore) ListCollections(
 
 	// Build OR predicates for target repos
 	db := ds.db.WithContext(ctx).
+		Preload("Repository").
 		Preload("Categories").
 		Preload("Categories.Projects").
-		Model(&Collection{})
+		Preload("Categories.Projects.Repository").
+		Model(&Collection{}).
+		Joins("JOIN repositories ON repositories.id = collections.repository_id")
 
-	if len(repos) == 0 {
+	if len(repos) > 0 {
 		db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
 			for i, r := range repos {
-				cond := "(hostname = ? AND owner = ? AND repo = ?)"
+				cond := "(repositories.hostname = ? AND repositories.owner = ? AND repositories.repo = ?)"
 				if i == 0 {
 					tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
 				} else {
@@ -83,11 +86,23 @@ func (ds *DataStore) GetCollection(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
+	var r Repository
+	if err := ds.db.WithContext(ctx).
+		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+		First(&r).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to resolve repository: %w", err)
+	}
+
 	var col Collection
 	if err := ds.db.WithContext(ctx).
+		Preload("Repository").
 		Preload("Categories").
 		Preload("Categories.Projects").
-		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+		Preload("Categories.Projects.Repository").
+		Where("repository_id = ?", r.ID).
 		First(&col).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -108,20 +123,33 @@ func (ds *DataStore) UpSertCollection(
 	}
 
 	return ds.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		colm := Collection{
+		// ensure repository exists
+		var rm Repository
+		if err := tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+			DoNothing: true,
+		}).Create(&Repository{
 			Hostname: col.Repo.Hostname,
 			Owner:    col.Repo.Owner,
 			Repo:     col.Repo.Repo,
-			Language: col.Language,
+		}).Error; err != nil {
+			return fmt.Errorf("upsert repository failed: %w", err)
+		}
+		if err := tx.Where("hostname = ? AND owner = ? AND repo = ?",
+			col.Repo.Hostname, col.Repo.Owner, col.Repo.Repo).First(&rm).Error; err != nil {
+			return fmt.Errorf("load repository failed: %w", err)
+		}
+
+		// upsert collection by repository_id
+		colm := Collection{
+			RepositoryID: rm.ID,
+			Language:     col.Language,
 		}
 		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+			Columns:   []clause.Column{{Name: "repository_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"language": colm.Language, "updated_at": gorm.Expr("NOW()")}),
-		}).Create(&colm).Error; err != nil {
-			// If exists, load its ID
-			if !errors.Is(err, gorm.ErrDuplicatedKey) {
-				return fmt.Errorf("upsert collection failed: %w", err)
-			}
+		}).Create(&colm).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return fmt.Errorf("upsert collection failed: %w", err)
 		}
 
 		// Upsert categories and projects
@@ -138,17 +166,32 @@ func (ds *DataStore) UpSertCollection(
 			}
 
 			for _, p := range cat.Projects {
+				// ensure project repository exists
+				var prm Repository
+				if err := tx.Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+					DoNothing: true,
+				}).Create(&Repository{
+					Hostname: p.Repo.Hostname,
+					Owner:    p.Repo.Owner,
+					Repo:     p.Repo.Repo,
+				}).Error; err != nil {
+					return fmt.Errorf("upsert project repository failed: %w", err)
+				}
+				if err := tx.Where("hostname = ? AND owner = ? AND repo = ?",
+					p.Repo.Hostname, p.Repo.Owner, p.Repo.Repo).First(&prm).Error; err != nil {
+					return fmt.Errorf("load project repository failed: %w", err)
+				}
+
 				pm := Project{
-					CategoryID:  cm.ID,
-					Name:        p.Name,
-					Description: p.Description,
-					Hostname:    p.Repo.Hostname,
-					Owner:       p.Repo.Owner,
-					Repo:        p.Repo.Repo,
+					CategoryID:   cm.ID,
+					RepositoryID: prm.ID,
+					Name:         p.Name,
+					Description:  p.Description,
 				}
 				if err := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{
-						{Name: "category_id"}, {Name: "hostname"}, {Name: "owner"}, {Name: "repo"},
+						{Name: "category_id"}, {Name: "repository_id"},
 					},
 					DoUpdates: clause.Assignments(map[string]interface{}{
 						"name":        pm.Name,
@@ -176,15 +219,15 @@ func (ds *DataStore) SearchProjects(
 	}
 
 	db := ds.db.WithContext(ctx).Model(&Project{}).
+		Preload("Repository").
 		Joins("JOIN categories ON categories.id = projects.category_id").
-		Joins("JOIN collections ON collections.id = categories.collection_id")
+		Joins("JOIN collections ON collections.id = categories.collection_id").
+		Joins("JOIN repositories cr ON cr.id = collections.repository_id")
 
-	// Filter by repos if provided
 	if len(repos) > 0 {
-		// Group OR predicates for allowed repos with Scopes to avoid driver binding issues
 		db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
 			for i, r := range repos {
-				cond := "(collections.hostname = ? AND collections.owner = ? AND collections.repo = ?)"
+				cond := "(cr.hostname = ? AND cr.owner = ? AND cr.repo = ?)"
 				if i == 0 {
 					tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
 				} else {
@@ -237,9 +280,19 @@ func (ds *DataStore) GetProjectStats(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
+	var r Repository
+	if err := ds.db.WithContext(ctx).
+		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+		First(&r).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to resolve repository: %w", err)
+	}
+
 	var ps ProjectStats
 	err := ds.db.WithContext(ctx).
-		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+		Where("repository_id = ?", r.ID).
 		First(&ps).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -247,34 +300,44 @@ func (ds *DataStore) GetProjectStats(
 		}
 		return nil, fmt.Errorf("query project stats failed: %w", err)
 	}
-
 	return ps.ToProto(), nil
 }
 
 // UpSertProjectStats stores project stats in the datastore
 func (ds *DataStore) UpSertProjectStats(
-	ctx context.Context,
-	repo *myawesomelistv1.Repository,
-	stats *myawesomelistv1.ProjectStats,
+    ctx context.Context,
+    repo *myawesomelistv1.Repository,
+    stats *myawesomelistv1.ProjectStats,
 ) error {
-	if ds.db == nil {
-		return fmt.Errorf("database connection not available")
-	}
+    var r Repository
+    if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+        Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+        DoNothing: true,
+    }).Create(&Repository{
+        Hostname: repo.Hostname,
+        Owner:    repo.Owner,
+        Repo:     repo.Repo,
+    }).Error; err != nil {
+        return fmt.Errorf("upsert repository failed: %w", err)
+    }
+    if err := ds.db.WithContext(ctx).
+        Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+        First(&r).Error; err != nil {
+        return fmt.Errorf("load repository failed: %w", err)
+    }
 
-	ps := ProjectStats{
-		Hostname:        repo.Hostname,
-		Owner:           repo.Owner,
-		Repo:            repo.Repo,
-		StargazersCount: ptr.To(stats.GetStargazersCount()),
-		OpenIssueCount:  ptr.To(stats.GetOpenIssueCount()),
-	}
+    ps := ProjectStats{
+        RepositoryID:    r.ID,
+        StargazersCount: ptr.To(stats.GetStargazersCount()),
+        OpenIssueCount:  ptr.To(stats.GetOpenIssueCount()),
+    }
 
-	return ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"stargazers_count": ps.StargazersCount,
-			"open_issue_count": ps.OpenIssueCount,
-			"updated_at":       gorm.Expr("NOW()"),
-		}),
-	}).Create(&ps).Error
+    return ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+        Columns: []clause.Column{{Name: "repository_id"}},
+        DoUpdates: clause.Assignments(map[string]interface{}{
+            "stargazers_count": ps.StargazersCount,
+            "open_issue_count": ps.OpenIssueCount,
+            "updated_at":       gorm.Expr("NOW()"),
+        }),
+    }).Create(&ps).Error
 }

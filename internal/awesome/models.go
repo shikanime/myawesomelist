@@ -8,14 +8,13 @@ import (
 )
 
 type Collection struct {
-	ID         uint64     `gorm:"primaryKey"`
-	Hostname   string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
-	Owner      string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
-	Repo       string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
-	Language   string     `gorm:"size:100;not null;index"`
-	CreatedAt  time.Time  `gorm:"autoCreateTime"`
-	UpdatedAt  time.Time  `gorm:"autoUpdateTime"`
-	Categories []Category `gorm:"constraint:OnDelete:CASCADE"`
+	ID           uint64     `gorm:"primaryKey"`
+	RepositoryID uint64     `gorm:"index;uniqueIndex:uq_collections_repository_id"`
+	Repository   Repository `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Language     string     `gorm:"size:100;not null;index"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt    time.Time  `gorm:"autoUpdateTime"`
+	Categories   []Category `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 func (Collection) TableName() string { return "collections" }
@@ -24,9 +23,9 @@ func (m *Collection) ToProto() *myawesomelistv1.Collection {
 	pc := &myawesomelistv1.Collection{
 		Id: m.ID,
 		Repo: &myawesomelistv1.Repository{
-			Hostname: m.Hostname,
-			Owner:    m.Owner,
-			Repo:     m.Repo,
+			Hostname: m.Repository.Hostname,
+			Owner:    m.Repository.Owner,
+			Repo:     m.Repository.Repo,
 		},
 		Language:  m.Language,
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
@@ -61,15 +60,14 @@ func (m *Category) ToProto() *myawesomelistv1.Category {
 }
 
 type Project struct {
-	ID          uint64    `gorm:"primaryKey"`
-	CategoryID  uint64    `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
-	Hostname    string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	Owner       string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	Repo        string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	Name        string    `gorm:"size:255;not null;index"`
-	Description string    `gorm:"type:text"`
-	CreatedAt   time.Time `gorm:"autoCreateTime"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+	ID           uint64     `gorm:"primaryKey"`
+	CategoryID   uint64     `gorm:"not null;index;uniqueIndex:uq_projects_category_repository"`
+	RepositoryID uint64     `gorm:"not null;uniqueIndex:uq_projects_category_repository"`
+	Repository   Repository `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Name         string     `gorm:"size:255;not null;index"`
+	Description  string     `gorm:"type:text"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt    time.Time  `gorm:"autoUpdateTime"`
 }
 
 func (Project) TableName() string { return "projects" }
@@ -80,19 +78,18 @@ func (m *Project) ToProto() *myawesomelistv1.Project {
 		Name:        m.Name,
 		Description: m.Description,
 		Repo: &myawesomelistv1.Repository{
-			Hostname: m.Hostname,
-			Owner:    m.Owner,
-			Repo:     m.Repo,
+			Hostname: m.Repository.Hostname,
+			Owner:    m.Repository.Owner,
+			Repo:     m.Repository.Repo,
 		},
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
 }
 
 type ProjectStats struct {
-	ID              uint64 `gorm:"primaryKey"`
-	Hostname        string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
-	Owner           string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
-	Repo            string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
+	ID              uint64     `gorm:"primaryKey"`
+	RepositoryID    uint64     `gorm:"not null;index;uniqueIndex:uq_project_stats_repository"`
+	Repository      Repository `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	StargazersCount *uint32
 	OpenIssueCount  *uint32
 	CreatedAt       time.Time `gorm:"autoCreateTime"`
@@ -107,5 +104,25 @@ func (m *ProjectStats) ToProto() *myawesomelistv1.ProjectStats {
 		StargazersCount: m.StargazersCount,
 		OpenIssueCount:  m.OpenIssueCount,
 		UpdatedAt:       timestamppb.New(m.UpdatedAt),
+	}
+}
+
+// Repository GORM model and helpers
+type Repository struct {
+	ID        uint64    `gorm:"primaryKey"`
+	Hostname  string    `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
+	Owner     string    `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
+	Repo      string    `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+}
+
+func (Repository) TableName() string { return "repositories" }
+
+func (m *Repository) ToProto() *myawesomelistv1.Repository {
+	return &myawesomelistv1.Repository{
+		Hostname: m.Hostname,
+		Owner:    m.Owner,
+		Repo:     m.Repo,
 	}
 }
