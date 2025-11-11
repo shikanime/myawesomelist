@@ -251,7 +251,7 @@ func (c *GitHubClient) GetCollection(
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
-	col, err = encoding.UnmarshallCollection(content, options.eopts...)
+	encCol, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to parse collection for %s/%s: %v",
@@ -260,7 +260,7 @@ func (c *GitHubClient) GetCollection(
 			err,
 		)
 	}
-	col.Repo = repo
+	col = encCol.ToProto(repo)
 
 	if err := c.d.UpSertCollection(ctx, col); err != nil {
 		slog.Warn("Failed to upsert collection",

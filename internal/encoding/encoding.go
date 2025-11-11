@@ -42,8 +42,69 @@ func WithSubsectionAsCategory() Option {
 	}
 }
 
+type Repository struct {
+	Hostname string
+	Owner    string
+	Repo     string
+}
+
+func (r *Repository) ToProto() *myawesomelistv1.Repository {
+	return &myawesomelistv1.Repository{
+		Hostname: r.Hostname,
+		Owner:    r.Owner,
+		Repo:     r.Repo,
+	}
+}
+
+type Project struct {
+	Name        string
+	Description string
+	Repo        Repository
+}
+
+func (p *Project) ToProto() *myawesomelistv1.Project {
+	return &myawesomelistv1.Project{
+		Name:        p.Name,
+		Description: p.Description,
+		Repo:        p.Repo.ToProto(),
+	}
+}
+
+type Category struct {
+	Name     string
+	Projects []*Project
+}
+
+func (c *Category) ToProto() *myawesomelistv1.Category {
+	projects := make([]*myawesomelistv1.Project, len(c.Projects))
+	for i, proj := range c.Projects {
+		projects[i] = proj.ToProto()
+	}
+	return &myawesomelistv1.Category{
+		Name:     c.Name,
+		Projects: projects,
+	}
+}
+
+type Collection struct {
+	Language   string
+	Categories []*Category
+}
+
+func (c *Collection) ToProto(repo *myawesomelistv1.Repository) *myawesomelistv1.Collection {
+	categories := make([]*myawesomelistv1.Category, len(c.Categories))
+	for i, cat := range c.Categories {
+		categories[i] = cat.ToProto()
+	}
+	return &myawesomelistv1.Collection{
+		Language:   c.Language,
+		Categories: categories,
+		Repo:       repo,
+	}
+}
+
 // UnmarshallCollection parses projects from a repository's README and groups them by category
-func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collection, error) {
+func UnmarshallCollection(in []byte, opts ...Option) (*Collection, error) {
 	options := &options{}
 	for _, opt := range opts {
 		opt(options)
@@ -59,7 +120,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collectio
 	var reachedEndSection bool
 	var foundAwesomeHeader bool
 	var currMainCat string
-	categoriesMap := make(map[string]*myawesomelistv1.Category)
+	categoriesMap := make(map[string]*Category)
 
 	// If no start section specified, start parsing immediately
 	if options.startSection == "" {
@@ -120,9 +181,9 @@ func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collectio
 			if foundStartSection && !reachedEndSection && category != "" {
 				// Ensure category exists in map
 				if _, exists := categoriesMap[category]; !exists {
-					categoriesMap[category] = &myawesomelistv1.Category{
+					categoriesMap[category] = &Category{
 						Name:     category,
-						Projects: []*myawesomelistv1.Project{},
+						Projects: []*Project{},
 					}
 				}
 
@@ -133,7 +194,7 @@ func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collectio
 						if err != nil {
 							return ast.WalkStop, fmt.Errorf("failed to decode project: %v", err)
 						}
-						if project.GetName() != "" {
+						if project.Name != "" {
 							categoriesMap[category].Projects = append(categoriesMap[category].Projects, project)
 						}
 					}
@@ -152,12 +213,12 @@ func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collectio
 	}
 
 	// Convert map to slice to maintain order
-	var cats []*myawesomelistv1.Category
+	var cats []*Category
 	for _, category := range categoriesMap {
 		cats = append(cats, category)
 	}
 
-	return &myawesomelistv1.Collection{
+	return &Collection{
 		Language:   lang,
 		Categories: cats,
 	}, nil
@@ -167,9 +228,9 @@ func UnmarshallCollection(in []byte, opts ...Option) (*myawesomelistv1.Collectio
 func UnmarshallProjectFromListItem(
 	listItem *ast.ListItem,
 	src []byte,
-) (*myawesomelistv1.Project, error) {
-	project := &myawesomelistv1.Project{
-		Repo: &myawesomelistv1.Repository{},
+) (*Project, error) {
+	project := &Project{
+		Repo: Repository{},
 	}
 
 	err := ast.Walk(listItem, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
