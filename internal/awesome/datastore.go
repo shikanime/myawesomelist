@@ -42,27 +42,25 @@ func (ds *DataStore) ListCollections(
 		return nil, fmt.Errorf("database connection not available")
 	}
 
-	if len(repos) == 0 {
-		return nil, nil
-	}
-
 	// Build OR predicates for target repos
 	db := ds.db.WithContext(ctx).
 		Preload("Categories").
 		Preload("Categories.Projects").
 		Model(&Collection{})
 
-	db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
-		for i, r := range repos {
-			cond := "(hostname = ? AND owner = ? AND repo = ?)"
-			if i == 0 {
-				tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
-			} else {
-				tx = tx.Or(cond, r.Hostname, r.Owner, r.Repo)
+	if len(repos) == 0 {
+		db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
+			for i, r := range repos {
+				cond := "(hostname = ? AND owner = ? AND repo = ?)"
+				if i == 0 {
+					tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
+				} else {
+					tx = tx.Or(cond, r.Hostname, r.Owner, r.Repo)
+				}
 			}
-		}
-		return tx
-	})
+			return tx
+		})
+	}
 
 	var rows []Collection
 	if err := db.Find(&rows).Error; err != nil {
