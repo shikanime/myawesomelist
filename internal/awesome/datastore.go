@@ -157,7 +157,11 @@ func (ds *DataStore) SearchProjects(
 
 	// Basic text search on name/description
 	if q != "" {
-		db = db.Where("(projects.name ILIKE ? OR projects.description ILIKE ?)", "%"+q+"%", "%"+q+"%")
+		db = db.Where(
+			"(projects.name ILIKE ? OR projects.description ILIKE ?)",
+			"%"+q+"%",
+			"%"+q+"%",
+		)
 	}
 
 	var rows []Project
