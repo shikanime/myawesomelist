@@ -144,11 +144,6 @@ func (c *GitHubClient) ListCollections(
 	repos []*myawesomelistv1.Repository,
 	opts ...GetCollectionOption,
 ) ([]*myawesomelistv1.Collection, error) {
-	if len(repos) == 0 {
-		return []*myawesomelistv1.Collection{}, nil
-	}
-
-	// Load available collections in bulk from datastore
 	cols, err := c.d.ListCollections(ctx, repos)
 	if err != nil {
 		slog.Warn("Failed to list collections from datastore", "error", err)
