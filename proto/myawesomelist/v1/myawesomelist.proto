@@ -91,12 +91,6 @@ message SearchProjectsResponse {
   repeated Project projects = 1;
 }
 
-message LivenessRequest {}
-message LivenessResponse {}
-
-message ReadinessRequest {}
-message ReadinessResponse {}
-
 message GetProjectStatsRequest {
   Repository repo = 1;
 }
@@ -108,9 +102,6 @@ message GetProjectStatsResponse {
 // Service
 
 service AwesomeService {
-  rpc Liveness(LivenessRequest) returns (LivenessResponse);
-  rpc Readiness(ReadinessRequest) returns (ReadinessResponse);
-
   rpc ListCollections(ListCollectionsRequest) returns (ListCollectionsResponse);
   rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);
 
