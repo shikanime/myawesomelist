@@ -132,7 +132,7 @@ fabric.properties
 .AppleDouble
 .LSOverride
 
-# Icon must end with two 
+# Icon must end with two \r
 Icon
 
 # Thumbnails
@@ -501,3 +501,4 @@ go.work
 
 __debug_bin*
 .pre-commit-config.yaml
+buf.gen.yaml
