@@ -33,11 +33,6 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// AwesomeServiceLivenessProcedure is the fully-qualified name of the AwesomeService's Liveness RPC.
-	AwesomeServiceLivenessProcedure = "/myawesomelist.v1.AwesomeService/Liveness"
-	// AwesomeServiceReadinessProcedure is the fully-qualified name of the AwesomeService's Readiness
-	// RPC.
-	AwesomeServiceReadinessProcedure = "/myawesomelist.v1.AwesomeService/Readiness"
 	// AwesomeServiceListCollectionsProcedure is the fully-qualified name of the AwesomeService's
 	// ListCollections RPC.
 	AwesomeServiceListCollectionsProcedure = "/myawesomelist.v1.AwesomeService/ListCollections"
@@ -60,8 +55,6 @@ const (
 
 // AwesomeServiceClient is a client for the myawesomelist.v1.AwesomeService service.
 type AwesomeServiceClient interface {
-	Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error)
-	Readiness(context.Context, *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error)
 	ListCollections(context.Context, *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error)
 	GetCollection(context.Context, *connect.Request[v1.GetCollectionRequest]) (*connect.Response[v1.GetCollectionResponse], error)
 	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
@@ -81,18 +74,6 @@ func NewAwesomeServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	awesomeServiceMethods := v1.File_myawesomelist_v1_myawesomelist_proto.Services().ByName("AwesomeService").Methods()
 	return &awesomeServiceClient{
-		liveness: connect.NewClient[v1.LivenessRequest, v1.LivenessResponse](
-			httpClient,
-			baseURL+AwesomeServiceLivenessProcedure,
-			connect.WithSchema(awesomeServiceMethods.ByName("Liveness")),
-			connect.WithClientOptions(opts...),
-		),
-		readiness: connect.NewClient[v1.ReadinessRequest, v1.ReadinessResponse](
-			httpClient,
-			baseURL+AwesomeServiceReadinessProcedure,
-			connect.WithSchema(awesomeServiceMethods.ByName("Readiness")),
-			connect.WithClientOptions(opts...),
-		),
 		listCollections: connect.NewClient[v1.ListCollectionsRequest, v1.ListCollectionsResponse](
 			httpClient,
 			baseURL+AwesomeServiceListCollectionsProcedure,
@@ -134,24 +115,12 @@ func NewAwesomeServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // awesomeServiceClient implements AwesomeServiceClient.
 type awesomeServiceClient struct {
-	liveness        *connect.Client[v1.LivenessRequest, v1.LivenessResponse]
-	readiness       *connect.Client[v1.ReadinessRequest, v1.ReadinessResponse]
 	listCollections *connect.Client[v1.ListCollectionsRequest, v1.ListCollectionsResponse]
 	getCollection   *connect.Client[v1.GetCollectionRequest, v1.GetCollectionResponse]
 	listCategories  *connect.Client[v1.ListCategoriesRequest, v1.ListCategoriesResponse]
 	listProjects    *connect.Client[v1.ListProjectsRequest, v1.ListProjectsResponse]
 	searchProjects  *connect.Client[v1.SearchProjectsRequest, v1.SearchProjectsResponse]
 	getProjectStats *connect.Client[v1.GetProjectStatsRequest, v1.GetProjectStatsResponse]
-}
-
-// Liveness calls myawesomelist.v1.AwesomeService.Liveness.
-func (c *awesomeServiceClient) Liveness(ctx context.Context, req *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error) {
-	return c.liveness.CallUnary(ctx, req)
-}
-
-// Readiness calls myawesomelist.v1.AwesomeService.Readiness.
-func (c *awesomeServiceClient) Readiness(ctx context.Context, req *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error) {
-	return c.readiness.CallUnary(ctx, req)
 }
 
 // ListCollections calls myawesomelist.v1.AwesomeService.ListCollections.
@@ -186,8 +155,6 @@ func (c *awesomeServiceClient) GetProjectStats(ctx context.Context, req *connect
 
 // AwesomeServiceHandler is an implementation of the myawesomelist.v1.AwesomeService service.
 type AwesomeServiceHandler interface {
-	Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error)
-	Readiness(context.Context, *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error)
 	ListCollections(context.Context, *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error)
 	GetCollection(context.Context, *connect.Request[v1.GetCollectionRequest]) (*connect.Response[v1.GetCollectionResponse], error)
 	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
@@ -203,18 +170,6 @@ type AwesomeServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	awesomeServiceMethods := v1.File_myawesomelist_v1_myawesomelist_proto.Services().ByName("AwesomeService").Methods()
-	awesomeServiceLivenessHandler := connect.NewUnaryHandler(
-		AwesomeServiceLivenessProcedure,
-		svc.Liveness,
-		connect.WithSchema(awesomeServiceMethods.ByName("Liveness")),
-		connect.WithHandlerOptions(opts...),
-	)
-	awesomeServiceReadinessHandler := connect.NewUnaryHandler(
-		AwesomeServiceReadinessProcedure,
-		svc.Readiness,
-		connect.WithSchema(awesomeServiceMethods.ByName("Readiness")),
-		connect.WithHandlerOptions(opts...),
-	)
 	awesomeServiceListCollectionsHandler := connect.NewUnaryHandler(
 		AwesomeServiceListCollectionsProcedure,
 		svc.ListCollections,
@@ -253,10 +208,6 @@ func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.Handler
 	)
 	return "/myawesomelist.v1.AwesomeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case AwesomeServiceLivenessProcedure:
-			awesomeServiceLivenessHandler.ServeHTTP(w, r)
-		case AwesomeServiceReadinessProcedure:
-			awesomeServiceReadinessHandler.ServeHTTP(w, r)
 		case AwesomeServiceListCollectionsProcedure:
 			awesomeServiceListCollectionsHandler.ServeHTTP(w, r)
 		case AwesomeServiceGetCollectionProcedure:
@@ -277,14 +228,6 @@ func NewAwesomeServiceHandler(svc AwesomeServiceHandler, opts ...connect.Handler
 
 // UnimplementedAwesomeServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedAwesomeServiceHandler struct{}
-
-func (UnimplementedAwesomeServiceHandler) Liveness(context.Context, *connect.Request[v1.LivenessRequest]) (*connect.Response[v1.LivenessResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.Liveness is not implemented"))
-}
-
-func (UnimplementedAwesomeServiceHandler) Readiness(context.Context, *connect.Request[v1.ReadinessRequest]) (*connect.Response[v1.ReadinessResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.Readiness is not implemented"))
-}
 
 func (UnimplementedAwesomeServiceHandler) ListCollections(context.Context, *connect.Request[v1.ListCollectionsRequest]) (*connect.Response[v1.ListCollectionsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myawesomelist.v1.AwesomeService.ListCollections is not implemented"))

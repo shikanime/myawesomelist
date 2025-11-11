@@ -838,150 +838,6 @@ func (x *SearchProjectsResponse) GetProjects() []*Project {
 	return nil
 }
 
-type LivenessRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LivenessRequest) Reset() {
-	*x = LivenessRequest{}
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LivenessRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LivenessRequest) ProtoMessage() {}
-
-func (x *LivenessRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LivenessRequest.ProtoReflect.Descriptor instead.
-func (*LivenessRequest) Descriptor() ([]byte, []int) {
-	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{15}
-}
-
-type LivenessResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LivenessResponse) Reset() {
-	*x = LivenessResponse{}
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LivenessResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LivenessResponse) ProtoMessage() {}
-
-func (x *LivenessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LivenessResponse.ProtoReflect.Descriptor instead.
-func (*LivenessResponse) Descriptor() ([]byte, []int) {
-	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{16}
-}
-
-type ReadinessRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ReadinessRequest) Reset() {
-	*x = ReadinessRequest{}
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ReadinessRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ReadinessRequest) ProtoMessage() {}
-
-func (x *ReadinessRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ReadinessRequest.ProtoReflect.Descriptor instead.
-func (*ReadinessRequest) Descriptor() ([]byte, []int) {
-	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{17}
-}
-
-type ReadinessResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ReadinessResponse) Reset() {
-	*x = ReadinessResponse{}
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[18]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ReadinessResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ReadinessResponse) ProtoMessage() {}
-
-func (x *ReadinessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[18]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ReadinessResponse.ProtoReflect.Descriptor instead.
-func (*ReadinessResponse) Descriptor() ([]byte, []int) {
-	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{18}
-}
-
 type GetProjectStatsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Repo          *Repository            `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
@@ -991,7 +847,7 @@ type GetProjectStatsRequest struct {
 
 func (x *GetProjectStatsRequest) Reset() {
 	*x = GetProjectStatsRequest{}
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[19]
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1003,7 +859,7 @@ func (x *GetProjectStatsRequest) String() string {
 func (*GetProjectStatsRequest) ProtoMessage() {}
 
 func (x *GetProjectStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[19]
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1016,7 +872,7 @@ func (x *GetProjectStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProjectStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetProjectStatsRequest) Descriptor() ([]byte, []int) {
-	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{19}
+	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetProjectStatsRequest) GetRepo() *Repository {
@@ -1035,7 +891,7 @@ type GetProjectStatsResponse struct {
 
 func (x *GetProjectStatsResponse) Reset() {
 	*x = GetProjectStatsResponse{}
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[20]
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1047,7 +903,7 @@ func (x *GetProjectStatsResponse) String() string {
 func (*GetProjectStatsResponse) ProtoMessage() {}
 
 func (x *GetProjectStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[20]
+	mi := &file_myawesomelist_v1_myawesomelist_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1060,7 +916,7 @@ func (x *GetProjectStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProjectStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetProjectStatsResponse) Descriptor() ([]byte, []int) {
-	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{20}
+	return file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetProjectStatsResponse) GetStats() *ProjectStats {
@@ -1137,18 +993,12 @@ const file_myawesomelist_v1_myawesomelist_proto_rawDesc = "" +
 	"\x05limit\x18\x02 \x01(\rR\x05limit\x122\n" +
 	"\x05repos\x18\x03 \x03(\v2\x1c.myawesomelist.v1.RepositoryR\x05repos\"O\n" +
 	"\x16SearchProjectsResponse\x125\n" +
-	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"\x11\n" +
-	"\x0fLivenessRequest\"\x12\n" +
-	"\x10LivenessResponse\"\x12\n" +
-	"\x10ReadinessRequest\"\x13\n" +
-	"\x11ReadinessResponse\"J\n" +
+	"\bprojects\x18\x01 \x03(\v2\x19.myawesomelist.v1.ProjectR\bprojects\"J\n" +
 	"\x16GetProjectStatsRequest\x120\n" +
 	"\x04repo\x18\x01 \x01(\v2\x1c.myawesomelist.v1.RepositoryR\x04repo\"O\n" +
 	"\x17GetProjectStatsResponse\x124\n" +
-	"\x05stats\x18\x01 \x01(\v2\x1e.myawesomelist.v1.ProjectStatsR\x05stats2\x94\x06\n" +
-	"\x0eAwesomeService\x12Q\n" +
-	"\bLiveness\x12!.myawesomelist.v1.LivenessRequest\x1a\".myawesomelist.v1.LivenessResponse\x12T\n" +
-	"\tReadiness\x12\".myawesomelist.v1.ReadinessRequest\x1a#.myawesomelist.v1.ReadinessResponse\x12f\n" +
+	"\x05stats\x18\x01 \x01(\v2\x1e.myawesomelist.v1.ProjectStatsR\x05stats2\xeb\x04\n" +
+	"\x0eAwesomeService\x12f\n" +
 	"\x0fListCollections\x12(.myawesomelist.v1.ListCollectionsRequest\x1a).myawesomelist.v1.ListCollectionsResponse\x12`\n" +
 	"\rGetCollection\x12&.myawesomelist.v1.GetCollectionRequest\x1a'.myawesomelist.v1.GetCollectionResponse\x12c\n" +
 	"\x0eListCategories\x12'.myawesomelist.v1.ListCategoriesRequest\x1a(.myawesomelist.v1.ListCategoriesResponse\x12]\n" +
@@ -1168,7 +1018,7 @@ func file_myawesomelist_v1_myawesomelist_proto_rawDescGZIP() []byte {
 	return file_myawesomelist_v1_myawesomelist_proto_rawDescData
 }
 
-var file_myawesomelist_v1_myawesomelist_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_myawesomelist_v1_myawesomelist_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*ProjectStats)(nil),            // 0: myawesomelist.v1.ProjectStats
 	(*Project)(nil),                 // 1: myawesomelist.v1.Project
@@ -1185,23 +1035,19 @@ var file_myawesomelist_v1_myawesomelist_proto_goTypes = []any{
 	(*ListProjectsResponse)(nil),    // 12: myawesomelist.v1.ListProjectsResponse
 	(*SearchProjectsRequest)(nil),   // 13: myawesomelist.v1.SearchProjectsRequest
 	(*SearchProjectsResponse)(nil),  // 14: myawesomelist.v1.SearchProjectsResponse
-	(*LivenessRequest)(nil),         // 15: myawesomelist.v1.LivenessRequest
-	(*LivenessResponse)(nil),        // 16: myawesomelist.v1.LivenessResponse
-	(*ReadinessRequest)(nil),        // 17: myawesomelist.v1.ReadinessRequest
-	(*ReadinessResponse)(nil),       // 18: myawesomelist.v1.ReadinessResponse
-	(*GetProjectStatsRequest)(nil),  // 19: myawesomelist.v1.GetProjectStatsRequest
-	(*GetProjectStatsResponse)(nil), // 20: myawesomelist.v1.GetProjectStatsResponse
-	(*timestamppb.Timestamp)(nil),   // 21: google.protobuf.Timestamp
+	(*GetProjectStatsRequest)(nil),  // 15: myawesomelist.v1.GetProjectStatsRequest
+	(*GetProjectStatsResponse)(nil), // 16: myawesomelist.v1.GetProjectStatsResponse
+	(*timestamppb.Timestamp)(nil),   // 17: google.protobuf.Timestamp
 }
 var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
-	21, // 0: myawesomelist.v1.ProjectStats.updated_at:type_name -> google.protobuf.Timestamp
+	17, // 0: myawesomelist.v1.ProjectStats.updated_at:type_name -> google.protobuf.Timestamp
 	4,  // 1: myawesomelist.v1.Project.repo:type_name -> myawesomelist.v1.Repository
-	21, // 2: myawesomelist.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
+	17, // 2: myawesomelist.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
 	1,  // 3: myawesomelist.v1.Category.projects:type_name -> myawesomelist.v1.Project
-	21, // 4: myawesomelist.v1.Category.updated_at:type_name -> google.protobuf.Timestamp
+	17, // 4: myawesomelist.v1.Category.updated_at:type_name -> google.protobuf.Timestamp
 	4,  // 5: myawesomelist.v1.Collection.repo:type_name -> myawesomelist.v1.Repository
 	2,  // 6: myawesomelist.v1.Collection.categories:type_name -> myawesomelist.v1.Category
-	21, // 7: myawesomelist.v1.Collection.updated_at:type_name -> google.protobuf.Timestamp
+	17, // 7: myawesomelist.v1.Collection.updated_at:type_name -> google.protobuf.Timestamp
 	4,  // 8: myawesomelist.v1.ListCollectionsRequest.repos:type_name -> myawesomelist.v1.Repository
 	3,  // 9: myawesomelist.v1.ListCollectionsResponse.collections:type_name -> myawesomelist.v1.Collection
 	4,  // 10: myawesomelist.v1.GetCollectionRequest.repo:type_name -> myawesomelist.v1.Repository
@@ -1214,24 +1060,20 @@ var file_myawesomelist_v1_myawesomelist_proto_depIdxs = []int32{
 	1,  // 17: myawesomelist.v1.SearchProjectsResponse.projects:type_name -> myawesomelist.v1.Project
 	4,  // 18: myawesomelist.v1.GetProjectStatsRequest.repo:type_name -> myawesomelist.v1.Repository
 	0,  // 19: myawesomelist.v1.GetProjectStatsResponse.stats:type_name -> myawesomelist.v1.ProjectStats
-	15, // 20: myawesomelist.v1.AwesomeService.Liveness:input_type -> myawesomelist.v1.LivenessRequest
-	17, // 21: myawesomelist.v1.AwesomeService.Readiness:input_type -> myawesomelist.v1.ReadinessRequest
-	5,  // 22: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
-	7,  // 23: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
-	9,  // 24: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
-	11, // 25: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
-	13, // 26: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
-	19, // 27: myawesomelist.v1.AwesomeService.GetProjectStats:input_type -> myawesomelist.v1.GetProjectStatsRequest
-	16, // 28: myawesomelist.v1.AwesomeService.Liveness:output_type -> myawesomelist.v1.LivenessResponse
-	18, // 29: myawesomelist.v1.AwesomeService.Readiness:output_type -> myawesomelist.v1.ReadinessResponse
-	6,  // 30: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
-	8,  // 31: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
-	10, // 32: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
-	12, // 33: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
-	14, // 34: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
-	20, // 35: myawesomelist.v1.AwesomeService.GetProjectStats:output_type -> myawesomelist.v1.GetProjectStatsResponse
-	28, // [28:36] is the sub-list for method output_type
-	20, // [20:28] is the sub-list for method input_type
+	5,  // 20: myawesomelist.v1.AwesomeService.ListCollections:input_type -> myawesomelist.v1.ListCollectionsRequest
+	7,  // 21: myawesomelist.v1.AwesomeService.GetCollection:input_type -> myawesomelist.v1.GetCollectionRequest
+	9,  // 22: myawesomelist.v1.AwesomeService.ListCategories:input_type -> myawesomelist.v1.ListCategoriesRequest
+	11, // 23: myawesomelist.v1.AwesomeService.ListProjects:input_type -> myawesomelist.v1.ListProjectsRequest
+	13, // 24: myawesomelist.v1.AwesomeService.SearchProjects:input_type -> myawesomelist.v1.SearchProjectsRequest
+	15, // 25: myawesomelist.v1.AwesomeService.GetProjectStats:input_type -> myawesomelist.v1.GetProjectStatsRequest
+	6,  // 26: myawesomelist.v1.AwesomeService.ListCollections:output_type -> myawesomelist.v1.ListCollectionsResponse
+	8,  // 27: myawesomelist.v1.AwesomeService.GetCollection:output_type -> myawesomelist.v1.GetCollectionResponse
+	10, // 28: myawesomelist.v1.AwesomeService.ListCategories:output_type -> myawesomelist.v1.ListCategoriesResponse
+	12, // 29: myawesomelist.v1.AwesomeService.ListProjects:output_type -> myawesomelist.v1.ListProjectsResponse
+	14, // 30: myawesomelist.v1.AwesomeService.SearchProjects:output_type -> myawesomelist.v1.SearchProjectsResponse
+	16, // 31: myawesomelist.v1.AwesomeService.GetProjectStats:output_type -> myawesomelist.v1.GetProjectStatsResponse
+	26, // [26:32] is the sub-list for method output_type
+	20, // [20:26] is the sub-list for method input_type
 	20, // [20:20] is the sub-list for extension type_name
 	20, // [20:20] is the sub-list for extension extendee
 	0,  // [0:20] is the sub-list for field type_name
@@ -1249,7 +1091,7 @@ func file_myawesomelist_v1_myawesomelist_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_myawesomelist_v1_myawesomelist_proto_rawDesc), len(file_myawesomelist_v1_myawesomelist_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
