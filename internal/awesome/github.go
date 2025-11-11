@@ -188,6 +188,15 @@ func (c *GitHubClient) ListCollections(
 		colsByKey[key] = col
 	}
 
+	// Build output in the same order as input repos
+	cols = make([]*myawesomelistv1.Collection, 0, len(repos))
+	for _, r := range repos {
+		key, err := url.JoinPath(r.Hostname, r.Owner, r.Repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to join path for %s/%s: %w", r.Owner, r.Repo, err)
+		}
+		cols = append(cols, colsByKey[key])
+	}
 	return cols, nil
 }
 
