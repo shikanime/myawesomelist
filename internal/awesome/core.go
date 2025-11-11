@@ -25,3 +25,8 @@ func (c *Core) SearchProjects(
 ) ([]*myawesomelistv1.Project, error) {
 	return c.ds.SearchProjects(ctx, q, limit, repos)
 }
+
+// ListRepositories returns default repositories from datastore
+func (c *Core) ListRepositories(ctx context.Context) ([]*myawesomelistv1.Repository, error) {
+	return c.ds.ListRepositories(ctx)
+}
