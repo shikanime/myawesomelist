@@ -160,7 +160,12 @@ func (c *GitHubClient) ListCollections(
 		if col != nil {
 			key, err := url.JoinPath(col.Repo.Hostname, col.Repo.Owner, col.Repo.Repo)
 			if err != nil {
-				return nil, fmt.Errorf("failed to join path for %s/%s: %w", col.Repo.Owner, col.Repo.Repo, err)
+				return nil, fmt.Errorf(
+					"failed to join path for %s/%s: %w",
+					col.Repo.Owner,
+					col.Repo.Repo,
+					err,
+				)
 			}
 			colsByKey[key] = col
 		}

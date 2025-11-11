@@ -2,8 +2,16 @@
 // @generated from file myawesomelist/v1/myawesomelist.proto (package myawesomelist.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type {
+  GenFile,
+  GenMessage,
+  GenService,
+} from "@bufbuild/protobuf/codegenv2";
+import {
+  fileDesc,
+  messageDesc,
+  serviceDesc,
+} from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
@@ -11,8 +19,12 @@ import type { Message } from "@bufbuild/protobuf";
 /**
  * Describes the file myawesomelist/v1/myawesomelist.proto.
  */
-export const file_myawesomelist_v1_myawesomelist: GenFile = /*@__PURE__*/
-  fileDesc("CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEisgEKDFByb2plY3RTdGF0cxIKCgJpZBgBIAEoBBIdChBzdGFyZ2F6ZXJzX2NvdW50GAIgASgNSACIAQESHQoQb3Blbl9pc3N1ZV9jb3VudBgDIAEoDUgBiAEBEi4KCnVwZGF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQhMKEV9zdGFyZ2F6ZXJzX2NvdW50QhMKEV9vcGVuX2lzc3VlX2NvdW50IpQBCgdQcm9qZWN0EgoKAmlkGAEgASgEEgwKBG5hbWUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkSKgoEcmVwbxgEIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeRIuCgp1cGRhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKBAQoIQ2F0ZWdvcnkSCgoCaWQYASABKAQSDAoEbmFtZRgCIAEoCRIrCghwcm9qZWN0cxgDIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdBIuCgp1cGRhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCK2AQoKQ29sbGVjdGlvbhIKCgJpZBgBIAEoBBIQCghsYW5ndWFnZRgCIAEoCRIqCgRyZXBvGAMgASgLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5Ei4KCmNhdGVnb3JpZXMYBCADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5Ei4KCnVwZGF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjsKClJlcG9zaXRvcnkSEAoIaG9zdG5hbWUYASABKAkSDQoFb3duZXIYAiABKAkSDAoEcmVwbxgDIAEoCSJFChZMaXN0Q29sbGVjdGlvbnNSZXF1ZXN0EisKBXJlcG9zGAEgAygLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5IkwKF0xpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEjEKC2NvbGxlY3Rpb25zGAEgAygLMhwubXlhd2Vzb21lbGlzdC52MS5Db2xsZWN0aW9uIkIKFEdldENvbGxlY3Rpb25SZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiSQoVR2V0Q29sbGVjdGlvblJlc3BvbnNlEjAKCmNvbGxlY3Rpb24YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iQwoVTGlzdENhdGVnb3JpZXNSZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiSAoWTGlzdENhdGVnb3JpZXNSZXNwb25zZRIuCgpjYXRlZ29yaWVzGAEgAygLMhoubXlhd2Vzb21lbGlzdC52MS5DYXRlZ29yeSJYChNMaXN0UHJvamVjdHNSZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkSFQoNY2F0ZWdvcnlfbmFtZRgCIAEoCSJDChRMaXN0UHJvamVjdHNSZXNwb25zZRIrCghwcm9qZWN0cxgBIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdCJiChVTZWFyY2hQcm9qZWN0c1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SKwoFcmVwb3MYAyADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiRQoWU2VhcmNoUHJvamVjdHNSZXNwb25zZRIrCghwcm9qZWN0cxgBIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdCIRCg9MaXZlbmVzc1JlcXVlc3QiEgoQTGl2ZW5lc3NSZXNwb25zZSISChBSZWFkaW5lc3NSZXF1ZXN0IhMKEVJlYWRpbmVzc1Jlc3BvbnNlIkQKFkdldFByb2plY3RTdGF0c1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJIChdHZXRQcm9qZWN0U3RhdHNSZXNwb25zZRItCgVzdGF0cxgBIAEoCzIeLm15YXdlc29tZWxpc3QudjEuUHJvamVjdFN0YXRzMpQGCg5Bd2Vzb21lU2VydmljZRJRCghMaXZlbmVzcxIhLm15YXdlc29tZWxpc3QudjEuTGl2ZW5lc3NSZXF1ZXN0GiIubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1Jlc3BvbnNlElQKCVJlYWRpbmVzcxIiLm15YXdlc29tZWxpc3QudjEuUmVhZGluZXNzUmVxdWVzdBojLm15YXdlc29tZWxpc3QudjEuUmVhZGluZXNzUmVzcG9uc2USZgoPTGlzdENvbGxlY3Rpb25zEigubXlhd2Vzb21lbGlzdC52MS5MaXN0Q29sbGVjdGlvbnNSZXF1ZXN0GikubXlhd2Vzb21lbGlzdC52MS5MaXN0Q29sbGVjdGlvbnNSZXNwb25zZRJgCg1HZXRDb2xsZWN0aW9uEiYubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVxdWVzdBonLm15YXdlc29tZWxpc3QudjEuR2V0Q29sbGVjdGlvblJlc3BvbnNlEmMKDkxpc3RDYXRlZ29yaWVzEicubXlhd2Vzb21lbGlzdC52MS5MaXN0Q2F0ZWdvcmllc1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVzcG9uc2USXQoMTGlzdFByb2plY3RzEiUubXlhd2Vzb21lbGlzdC52MS5MaXN0UHJvamVjdHNSZXF1ZXN0GiYubXlhd2Vzb21lbGlzdC52MS5MaXN0UHJvamVjdHNSZXNwb25zZRJjCg5TZWFyY2hQcm9qZWN0cxInLm15YXdlc29tZWxpc3QudjEuU2VhcmNoUHJvamVjdHNSZXF1ZXN0GigubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEmYKD0dldFByb2plY3RTdGF0cxIoLm15YXdlc29tZWxpc3QudjEuR2V0UHJvamVjdFN0YXRzUmVxdWVzdBopLm15YXdlc29tZWxpc3QudjEuR2V0UHJvamVjdFN0YXRzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+export const file_myawesomelist_v1_myawesomelist: GenFile =
+  /*@__PURE__*/
+  fileDesc(
+    "CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEisgEKDFByb2plY3RTdGF0cxIKCgJpZBgBIAEoBBIdChBzdGFyZ2F6ZXJzX2NvdW50GAIgASgNSACIAQESHQoQb3Blbl9pc3N1ZV9jb3VudBgDIAEoDUgBiAEBEi4KCnVwZGF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQhMKEV9zdGFyZ2F6ZXJzX2NvdW50QhMKEV9vcGVuX2lzc3VlX2NvdW50IpQBCgdQcm9qZWN0EgoKAmlkGAEgASgEEgwKBG5hbWUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkSKgoEcmVwbxgEIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeRIuCgp1cGRhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKBAQoIQ2F0ZWdvcnkSCgoCaWQYASABKAQSDAoEbmFtZRgCIAEoCRIrCghwcm9qZWN0cxgDIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdBIuCgp1cGRhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCK2AQoKQ29sbGVjdGlvbhIKCgJpZBgBIAEoBBIQCghsYW5ndWFnZRgCIAEoCRIqCgRyZXBvGAMgASgLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5Ei4KCmNhdGVnb3JpZXMYBCADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5Ei4KCnVwZGF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjsKClJlcG9zaXRvcnkSEAoIaG9zdG5hbWUYASABKAkSDQoFb3duZXIYAiABKAkSDAoEcmVwbxgDIAEoCSJFChZMaXN0Q29sbGVjdGlvbnNSZXF1ZXN0EisKBXJlcG9zGAEgAygLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5IkwKF0xpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEjEKC2NvbGxlY3Rpb25zGAEgAygLMhwubXlhd2Vzb21lbGlzdC52MS5Db2xsZWN0aW9uIkIKFEdldENvbGxlY3Rpb25SZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiSQoVR2V0Q29sbGVjdGlvblJlc3BvbnNlEjAKCmNvbGxlY3Rpb24YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iQwoVTGlzdENhdGVnb3JpZXNSZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiSAoWTGlzdENhdGVnb3JpZXNSZXNwb25zZRIuCgpjYXRlZ29yaWVzGAEgAygLMhoubXlhd2Vzb21lbGlzdC52MS5DYXRlZ29yeSJYChNMaXN0UHJvamVjdHNSZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkSFQoNY2F0ZWdvcnlfbmFtZRgCIAEoCSJDChRMaXN0UHJvamVjdHNSZXNwb25zZRIrCghwcm9qZWN0cxgBIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdCJiChVTZWFyY2hQcm9qZWN0c1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SKwoFcmVwb3MYAyADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiRQoWU2VhcmNoUHJvamVjdHNSZXNwb25zZRIrCghwcm9qZWN0cxgBIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdCIRCg9MaXZlbmVzc1JlcXVlc3QiEgoQTGl2ZW5lc3NSZXNwb25zZSISChBSZWFkaW5lc3NSZXF1ZXN0IhMKEVJlYWRpbmVzc1Jlc3BvbnNlIkQKFkdldFByb2plY3RTdGF0c1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJIChdHZXRQcm9qZWN0U3RhdHNSZXNwb25zZRItCgVzdGF0cxgBIAEoCzIeLm15YXdlc29tZWxpc3QudjEuUHJvamVjdFN0YXRzMpQGCg5Bd2Vzb21lU2VydmljZRJRCghMaXZlbmVzcxIhLm15YXdlc29tZWxpc3QudjEuTGl2ZW5lc3NSZXF1ZXN0GiIubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1Jlc3BvbnNlElQKCVJlYWRpbmVzcxIiLm15YXdlc29tZWxpc3QudjEuUmVhZGluZXNzUmVxdWVzdBojLm15YXdlc29tZWxpc3QudjEuUmVhZGluZXNzUmVzcG9uc2USZgoPTGlzdENvbGxlY3Rpb25zEigubXlhd2Vzb21lbGlzdC52MS5MaXN0Q29sbGVjdGlvbnNSZXF1ZXN0GikubXlhd2Vzb21lbGlzdC52MS5MaXN0Q29sbGVjdGlvbnNSZXNwb25zZRJgCg1HZXRDb2xsZWN0aW9uEiYubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVxdWVzdBonLm15YXdlc29tZWxpc3QudjEuR2V0Q29sbGVjdGlvblJlc3BvbnNlEmMKDkxpc3RDYXRlZ29yaWVzEicubXlhd2Vzb21lbGlzdC52MS5MaXN0Q2F0ZWdvcmllc1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVzcG9uc2USXQoMTGlzdFByb2plY3RzEiUubXlhd2Vzb21lbGlzdC52MS5MaXN0UHJvamVjdHNSZXF1ZXN0GiYubXlhd2Vzb21lbGlzdC52MS5MaXN0UHJvamVjdHNSZXNwb25zZRJjCg5TZWFyY2hQcm9qZWN0cxInLm15YXdlc29tZWxpc3QudjEuU2VhcmNoUHJvamVjdHNSZXF1ZXN0GigubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEmYKD0dldFByb2plY3RTdGF0cxIoLm15YXdlc29tZWxpc3QudjEuR2V0UHJvamVjdFN0YXRzUmVxdWVzdBopLm15YXdlc29tZWxpc3QudjEuR2V0UHJvamVjdFN0YXRzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw",
+    [file_google_protobuf_timestamp],
+  );
 
 /**
  * Project represents a single project from an awesome list
@@ -45,7 +57,8 @@ export type ProjectStats = Message<"myawesomelist.v1.ProjectStats"> & {
  * Describes the message myawesomelist.v1.ProjectStats.
  * Use `create(ProjectStatsSchema)` to create a new message.
  */
-export const ProjectStatsSchema: GenMessage<ProjectStats> = /*@__PURE__*/
+export const ProjectStatsSchema: GenMessage<ProjectStats> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 0);
 
 /**
@@ -82,7 +95,8 @@ export type Project = Message<"myawesomelist.v1.Project"> & {
  * Describes the message myawesomelist.v1.Project.
  * Use `create(ProjectSchema)` to create a new message.
  */
-export const ProjectSchema: GenMessage<Project> = /*@__PURE__*/
+export const ProjectSchema: GenMessage<Project> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 1);
 
 /**
@@ -116,7 +130,8 @@ export type Category = Message<"myawesomelist.v1.Category"> & {
  * Describes the message myawesomelist.v1.Category.
  * Use `create(CategorySchema)` to create a new message.
  */
-export const CategorySchema: GenMessage<Category> = /*@__PURE__*/
+export const CategorySchema: GenMessage<Category> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 2);
 
 /**
@@ -155,7 +170,8 @@ export type Collection = Message<"myawesomelist.v1.Collection"> & {
  * Describes the message myawesomelist.v1.Collection.
  * Use `create(CollectionSchema)` to create a new message.
  */
-export const CollectionSchema: GenMessage<Collection> = /*@__PURE__*/
+export const CollectionSchema: GenMessage<Collection> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 3);
 
 /**
@@ -184,24 +200,27 @@ export type Repository = Message<"myawesomelist.v1.Repository"> & {
  * Describes the message myawesomelist.v1.Repository.
  * Use `create(RepositorySchema)` to create a new message.
  */
-export const RepositorySchema: GenMessage<Repository> = /*@__PURE__*/
+export const RepositorySchema: GenMessage<Repository> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 4);
 
 /**
  * @generated from message myawesomelist.v1.ListCollectionsRequest
  */
-export type ListCollectionsRequest = Message<"myawesomelist.v1.ListCollectionsRequest"> & {
-  /**
-   * @generated from field: repeated myawesomelist.v1.Repository repos = 1;
-   */
-  repos: Repository[];
-};
+export type ListCollectionsRequest =
+  Message<"myawesomelist.v1.ListCollectionsRequest"> & {
+    /**
+     * @generated from field: repeated myawesomelist.v1.Repository repos = 1;
+     */
+    repos: Repository[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListCollectionsRequest.
  * Use `create(ListCollectionsRequestSchema)` to create a new message.
  */
-export const ListCollectionsRequestSchema: GenMessage<ListCollectionsRequest> = /*@__PURE__*/
+export const ListCollectionsRequestSchema: GenMessage<ListCollectionsRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 5);
 
 /**
@@ -218,7 +237,8 @@ export type ListCollectionsResponse = Message<"myawesomelist.v1.ListCollectionsR
  * Describes the message myawesomelist.v1.ListCollectionsResponse.
  * Use `create(ListCollectionsResponseSchema)` to create a new message.
  */
-export const ListCollectionsResponseSchema: GenMessage<ListCollectionsResponse> = /*@__PURE__*/
+export const ListCollectionsResponseSchema: GenMessage<ListCollectionsResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 6);
 
 /**
@@ -235,41 +255,46 @@ export type GetCollectionRequest = Message<"myawesomelist.v1.GetCollectionReques
  * Describes the message myawesomelist.v1.GetCollectionRequest.
  * Use `create(GetCollectionRequestSchema)` to create a new message.
  */
-export const GetCollectionRequestSchema: GenMessage<GetCollectionRequest> = /*@__PURE__*/
+export const GetCollectionRequestSchema: GenMessage<GetCollectionRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 7);
 
 /**
  * @generated from message myawesomelist.v1.GetCollectionResponse
  */
-export type GetCollectionResponse = Message<"myawesomelist.v1.GetCollectionResponse"> & {
-  /**
-   * @generated from field: myawesomelist.v1.Collection collection = 1;
-   */
-  collection?: Collection;
-};
+export type GetCollectionResponse =
+  Message<"myawesomelist.v1.GetCollectionResponse"> & {
+    /**
+     * @generated from field: myawesomelist.v1.Collection collection = 1;
+     */
+    collection?: Collection;
+  };
 
 /**
  * Describes the message myawesomelist.v1.GetCollectionResponse.
  * Use `create(GetCollectionResponseSchema)` to create a new message.
  */
-export const GetCollectionResponseSchema: GenMessage<GetCollectionResponse> = /*@__PURE__*/
+export const GetCollectionResponseSchema: GenMessage<GetCollectionResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 8);
 
 /**
  * @generated from message myawesomelist.v1.ListCategoriesRequest
  */
-export type ListCategoriesRequest = Message<"myawesomelist.v1.ListCategoriesRequest"> & {
-  /**
-   * @generated from field: myawesomelist.v1.Repository repo = 1;
-   */
-  repo?: Repository;
-};
+export type ListCategoriesRequest =
+  Message<"myawesomelist.v1.ListCategoriesRequest"> & {
+    /**
+     * @generated from field: myawesomelist.v1.Repository repo = 1;
+     */
+    repo?: Repository;
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListCategoriesRequest.
  * Use `create(ListCategoriesRequestSchema)` to create a new message.
  */
-export const ListCategoriesRequestSchema: GenMessage<ListCategoriesRequest> = /*@__PURE__*/
+export const ListCategoriesRequestSchema: GenMessage<ListCategoriesRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 9);
 
 /**
@@ -286,7 +311,8 @@ export type ListCategoriesResponse = Message<"myawesomelist.v1.ListCategoriesRes
  * Describes the message myawesomelist.v1.ListCategoriesResponse.
  * Use `create(ListCategoriesResponseSchema)` to create a new message.
  */
-export const ListCategoriesResponseSchema: GenMessage<ListCategoriesResponse> = /*@__PURE__*/
+export const ListCategoriesResponseSchema: GenMessage<ListCategoriesResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 10);
 
 /**
@@ -298,17 +324,18 @@ export type ListProjectsRequest = Message<"myawesomelist.v1.ListProjectsRequest"
    */
   repo?: Repository;
 
-  /**
-   * @generated from field: string category_name = 2;
-   */
-  categoryName: string;
-};
+    /**
+     * @generated from field: string category_name = 2;
+     */
+    categoryName: string;
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListProjectsRequest.
  * Use `create(ListProjectsRequestSchema)` to create a new message.
  */
-export const ListProjectsRequestSchema: GenMessage<ListProjectsRequest> = /*@__PURE__*/
+export const ListProjectsRequestSchema: GenMessage<ListProjectsRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 11);
 
 /**
@@ -325,7 +352,8 @@ export type ListProjectsResponse = Message<"myawesomelist.v1.ListProjectsRespons
  * Describes the message myawesomelist.v1.ListProjectsResponse.
  * Use `create(ListProjectsResponseSchema)` to create a new message.
  */
-export const ListProjectsResponseSchema: GenMessage<ListProjectsResponse> = /*@__PURE__*/
+export const ListProjectsResponseSchema: GenMessage<ListProjectsResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 12);
 
 /**
@@ -337,22 +365,23 @@ export type SearchProjectsRequest = Message<"myawesomelist.v1.SearchProjectsRequ
    */
   query: string;
 
-  /**
-   * @generated from field: uint32 limit = 2;
-   */
-  limit: number;
+    /**
+     * @generated from field: uint32 limit = 2;
+     */
+    limit: number;
 
-  /**
-   * @generated from field: repeated myawesomelist.v1.Repository repos = 3;
-   */
-  repos: Repository[];
-};
+    /**
+     * @generated from field: repeated myawesomelist.v1.Repository repos = 3;
+     */
+    repos: Repository[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.SearchProjectsRequest.
  * Use `create(SearchProjectsRequestSchema)` to create a new message.
  */
-export const SearchProjectsRequestSchema: GenMessage<SearchProjectsRequest> = /*@__PURE__*/
+export const SearchProjectsRequestSchema: GenMessage<SearchProjectsRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 13);
 
 /**
@@ -369,76 +398,82 @@ export type SearchProjectsResponse = Message<"myawesomelist.v1.SearchProjectsRes
  * Describes the message myawesomelist.v1.SearchProjectsResponse.
  * Use `create(SearchProjectsResponseSchema)` to create a new message.
  */
-export const SearchProjectsResponseSchema: GenMessage<SearchProjectsResponse> = /*@__PURE__*/
+export const SearchProjectsResponseSchema: GenMessage<SearchProjectsResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 14);
 
 /**
  * @generated from message myawesomelist.v1.LivenessRequest
  */
-export type LivenessRequest = Message<"myawesomelist.v1.LivenessRequest"> & {
-};
+export type LivenessRequest = Message<"myawesomelist.v1.LivenessRequest"> & {};
 
 /**
  * Describes the message myawesomelist.v1.LivenessRequest.
  * Use `create(LivenessRequestSchema)` to create a new message.
  */
-export const LivenessRequestSchema: GenMessage<LivenessRequest> = /*@__PURE__*/
+export const LivenessRequestSchema: GenMessage<LivenessRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 15);
 
 /**
  * @generated from message myawesomelist.v1.LivenessResponse
  */
-export type LivenessResponse = Message<"myawesomelist.v1.LivenessResponse"> & {
-};
+export type LivenessResponse =
+  Message<"myawesomelist.v1.LivenessResponse"> & {};
 
 /**
  * Describes the message myawesomelist.v1.LivenessResponse.
  * Use `create(LivenessResponseSchema)` to create a new message.
  */
-export const LivenessResponseSchema: GenMessage<LivenessResponse> = /*@__PURE__*/
+export const LivenessResponseSchema: GenMessage<LivenessResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 16);
 
 /**
  * @generated from message myawesomelist.v1.ReadinessRequest
  */
-export type ReadinessRequest = Message<"myawesomelist.v1.ReadinessRequest"> & {
-};
+export type ReadinessRequest =
+  Message<"myawesomelist.v1.ReadinessRequest"> & {};
 
 /**
  * Describes the message myawesomelist.v1.ReadinessRequest.
  * Use `create(ReadinessRequestSchema)` to create a new message.
  */
-export const ReadinessRequestSchema: GenMessage<ReadinessRequest> = /*@__PURE__*/
+export const ReadinessRequestSchema: GenMessage<ReadinessRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 17);
 
 /**
  * @generated from message myawesomelist.v1.ReadinessResponse
  */
-export type ReadinessResponse = Message<"myawesomelist.v1.ReadinessResponse"> & {
-};
+export type ReadinessResponse =
+  Message<"myawesomelist.v1.ReadinessResponse"> & {};
 
 /**
  * Describes the message myawesomelist.v1.ReadinessResponse.
  * Use `create(ReadinessResponseSchema)` to create a new message.
  */
-export const ReadinessResponseSchema: GenMessage<ReadinessResponse> = /*@__PURE__*/
+export const ReadinessResponseSchema: GenMessage<ReadinessResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 18);
 
 /**
  * @generated from message myawesomelist.v1.GetProjectStatsRequest
  */
-export type GetProjectStatsRequest = Message<"myawesomelist.v1.GetProjectStatsRequest"> & {
-  /**
-   * @generated from field: myawesomelist.v1.Repository repo = 1;
-   */
-  repo?: Repository;
-};
+export type GetProjectStatsRequest =
+  Message<"myawesomelist.v1.GetProjectStatsRequest"> & {
+    /**
+     * @generated from field: myawesomelist.v1.Repository repo = 1;
+     */
+    repo?: Repository;
+  };
 
 /**
  * Describes the message myawesomelist.v1.GetProjectStatsRequest.
  * Use `create(GetProjectStatsRequestSchema)` to create a new message.
  */
-export const GetProjectStatsRequestSchema: GenMessage<GetProjectStatsRequest> = /*@__PURE__*/
+export const GetProjectStatsRequestSchema: GenMessage<GetProjectStatsRequest> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 19);
 
 /**
@@ -455,7 +490,8 @@ export type GetProjectStatsResponse = Message<"myawesomelist.v1.GetProjectStatsR
  * Describes the message myawesomelist.v1.GetProjectStatsResponse.
  * Use `create(GetProjectStatsResponseSchema)` to create a new message.
  */
-export const GetProjectStatsResponseSchema: GenMessage<GetProjectStatsResponse> = /*@__PURE__*/
+export const GetProjectStatsResponseSchema: GenMessage<GetProjectStatsResponse> =
+  /*@__PURE__*/
   messageDesc(file_myawesomelist_v1_myawesomelist, 20);
 
 /**
@@ -469,7 +505,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof LivenessRequestSchema;
     output: typeof LivenessResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.Readiness
    */
@@ -477,7 +513,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof ReadinessRequestSchema;
     output: typeof ReadinessResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.ListCollections
    */
@@ -485,7 +521,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof ListCollectionsRequestSchema;
     output: typeof ListCollectionsResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.GetCollection
    */
@@ -493,7 +529,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof GetCollectionRequestSchema;
     output: typeof GetCollectionResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.ListCategories
    */
@@ -501,7 +537,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof ListCategoriesRequestSchema;
     output: typeof ListCategoriesResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.ListProjects
    */
@@ -509,7 +545,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof ListProjectsRequestSchema;
     output: typeof ListProjectsResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.SearchProjects
    */
@@ -517,7 +553,7 @@ export const AwesomeService: GenService<{
     methodKind: "unary";
     input: typeof SearchProjectsRequestSchema;
     output: typeof SearchProjectsResponseSchema;
-  },
+  };
   /**
    * @generated from rpc myawesomelist.v1.AwesomeService.GetProjectStats
    */
