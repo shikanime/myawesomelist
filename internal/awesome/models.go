@@ -8,7 +8,7 @@ import (
 )
 
 type Collection struct {
-	ID         uint       `gorm:"primaryKey"`
+	ID         uint64     `gorm:"primaryKey"`
 	Hostname   string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
 	Owner      string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
 	Repo       string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
@@ -22,6 +22,7 @@ func (Collection) TableName() string { return "collections" }
 
 func (m *Collection) ToProto() *myawesomelistv1.Collection {
 	pc := &myawesomelistv1.Collection{
+		Id:        m.ID,
 		Language:  m.Language,
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
@@ -32,8 +33,8 @@ func (m *Collection) ToProto() *myawesomelistv1.Collection {
 }
 
 type Category struct {
-	ID           uint      `gorm:"primaryKey"`
-	CollectionID uint      `gorm:"not null;index;uniqueIndex:uq_categories_collection_name"`
+	ID           uint64    `gorm:"primaryKey"`
+	CollectionID uint64    `gorm:"not null;index;uniqueIndex:uq_categories_collection_name"`
 	Name         string    `gorm:"size:255;not null;index;uniqueIndex:uq_categories_collection_name"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
@@ -44,6 +45,7 @@ func (Category) TableName() string { return "categories" }
 
 func (m *Category) ToProto() *myawesomelistv1.Category {
 	pc := &myawesomelistv1.Category{
+		Id:        m.ID,
 		Name:      m.Name,
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
@@ -54,8 +56,8 @@ func (m *Category) ToProto() *myawesomelistv1.Category {
 }
 
 type Project struct {
-	ID           uint      `gorm:"primaryKey"`
-	CategoryID   uint      `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
+	ID           uint64    `gorm:"primaryKey"`
+	CategoryID   uint64    `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
 	Name         string    `gorm:"size:255;not null;index"`
 	Description  string    `gorm:"type:text"`
 	RepoHostname string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
@@ -69,6 +71,7 @@ func (Project) TableName() string { return "projects" }
 
 func (m *Project) ToProto() *myawesomelistv1.Project {
 	return &myawesomelistv1.Project{
+		Id:          m.ID,
 		Name:        m.Name,
 		Description: m.Description,
 		Repo: &myawesomelistv1.Repository{
@@ -81,7 +84,7 @@ func (m *Project) ToProto() *myawesomelistv1.Project {
 }
 
 type ProjectStats struct {
-	ID              uint   `gorm:"primaryKey"`
+	ID              uint64 `gorm:"primaryKey"`
 	Hostname        string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
 	Owner           string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
 	Repo            string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
@@ -95,6 +98,7 @@ func (ProjectStats) TableName() string { return "project_stats" }
 
 func (m *ProjectStats) ToProto() *myawesomelistv1.ProjectStats {
 	return &myawesomelistv1.ProjectStats{
+		Id:              m.ID,
 		StargazersCount: m.StargazersCount,
 		OpenIssueCount:  m.OpenIssueCount,
 		UpdatedAt:       timestamppb.New(m.UpdatedAt),
