@@ -53,16 +53,7 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[myawesomelistv1.ListCollectionsResponse],
 	error,
 ) {
-	// Default to repositories from datastore if none provided
 	repos := req.Msg.GetRepos()
-	if len(repos) == 0 {
-		var err error
-		repos, err = s.cs.Core().ListRepositories(ctx)
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, err)
-		}
-	}
-
 	cols, err := s.cs.GitHub().ListCollections(ctx, repos)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -181,20 +172,10 @@ func (s *AwesomeService) SearchProjects(
 	q := req.Msg.GetQuery()
 	limit := req.Msg.GetLimit()
 	repos := req.Msg.GetRepos()
-
-	if len(repos) == 0 {
-		var err error
-		repos, err = s.cs.Core().ListRepositories(ctx)
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, err)
-		}
-	}
-
 	projects, err := s.cs.Core().SearchProjects(ctx, q, limit, repos)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-
 	return connect.NewResponse(&myawesomelistv1.SearchProjectsResponse{Projects: projects}), nil
 }
 
