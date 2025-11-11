@@ -12,9 +12,9 @@ type Server struct {
 	cs *awesome.ClientSet
 }
 
-func NewServer(ds *awesome.DataStore, opts ...awesome.ClientSetOption) *Server {
+func NewServer(cs *awesome.ClientSet) *Server {
 	return &Server{
-		cs: awesome.NewClientSet(ds, opts...),
+		cs: cs,
 	}
 }
 

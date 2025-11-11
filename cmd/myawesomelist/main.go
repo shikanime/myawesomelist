@@ -130,8 +130,8 @@ func runMigrateDown(cmd *cobra.Command, args []string) error {
 	return mg.Down()
 }
 
-// newServerFromEnv creates a new Server instance with options from environment variables.
-func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
+// newClientSetFromEnv creates a ClientSet with options from environment variables.
+func newClientSetFromEnv(ds *awesome.DataStore) *awesome.ClientSet {
 	var opts []awesome.ClientSetOption
 	if token := awesome.GetGitHubToken(); token != "" {
 		opts = append(
@@ -142,7 +142,13 @@ func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
 			),
 		)
 	}
-	return app.NewServer(ds, opts...), nil
+	return awesome.NewClientSet(ds, opts...)
+}
+
+// newServerFromEnv creates a new Server instance using a ClientSet built from env.
+func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
+	cs := newClientSetFromEnv(ds)
+	return app.NewServer(cs), nil
 }
 
 // openDataStoreFromEnv opens a connection to the database and constructs a DataStore.
