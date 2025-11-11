@@ -260,8 +260,9 @@ func (c *GitHubClient) GetCollection(
 			err,
 		)
 	}
+	col.Repo = repo
 
-	if err := c.d.UpSertCollection(ctx, repo, col); err != nil {
+	if err := c.d.UpSertCollection(ctx, col); err != nil {
 		slog.Warn("Failed to upsert collection",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,

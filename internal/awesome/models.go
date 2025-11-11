@@ -7,11 +7,15 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
+type Repository struct {
+	Hostname string `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
+	Owner    string `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
+	Repo     string `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
+}
+
 type Collection struct {
 	ID         uint64     `gorm:"primaryKey"`
-	Hostname   string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
-	Owner      string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
-	Repo       string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
+	Repo       Repository `gorm:"embedded"`
 	Language   string     `gorm:"size:100;not null;index"`
 	CreatedAt  time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt  time.Time  `gorm:"autoUpdateTime"`

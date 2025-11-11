@@ -101,7 +101,6 @@ func (ds *DataStore) GetCollection(
 // UpSertCollection stores a collection in the database
 func (ds *DataStore) UpSertCollection(
 	ctx context.Context,
-	repo *myawesomelistv1.Repository,
 	col *myawesomelistv1.Collection,
 ) error {
 	if ds.db == nil {
@@ -110,9 +109,11 @@ func (ds *DataStore) UpSertCollection(
 
 	return ds.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		colm := Collection{
-			Hostname: repo.Hostname,
-			Owner:    repo.Owner,
-			Repo:     repo.Repo,
+			Repo: Repository{
+				Hostname: col.Repo.Hostname,
+				Owner:    col.Repo.Owner,
+				Repo:     col.Repo.Repo,
+			},
 			Language: col.Language,
 		}
 		if err := tx.Clauses(clause.OnConflict{

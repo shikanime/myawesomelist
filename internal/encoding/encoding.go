@@ -35,7 +35,7 @@ func WithEndSection(section string) Option {
 	}
 }
 
-// New: treat H3 headings as separate categories under the current H2
+// Treat H3 headings as separate categories under the current H2
 func WithSubsectionAsCategory() Option {
 	return func(o *options) {
 		o.subsectionAsCategory = true
