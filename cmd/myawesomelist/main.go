@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"log"
 	"net/url"
@@ -10,11 +9,11 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"myawesomelist.shikanime.studio/cmd/myawesomelist/app"
 	"myawesomelist.shikanime.studio/internal/awesome"
-
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
@@ -47,11 +46,6 @@ var (
 		Short: "Revert all applied migrations",
 		RunE:  runMigrateDown,
 	}
-	dropCmd = &cobra.Command{
-		Use:   "drop",
-		Short: "Drop all migrations",
-		RunE:  runMigrateDrop,
-	}
 
 	// Flags
 	addr string
@@ -63,7 +57,7 @@ func init() {
 		StringVar(&addr, "addr", "", "Address to run the server on (host:port). If empty, uses HOST and PORT environment variables")
 	rootCmd.PersistentFlags().
 		StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
-	migrateCmd.AddCommand(upCmd, downCmd, dropCmd)
+	migrateCmd.AddCommand(upCmd, downCmd)
 	rootCmd.AddCommand(serveCmd, migrateCmd)
 }
 
@@ -109,51 +103,31 @@ func runServer(cmd *cobra.Command, args []string) error {
 }
 
 func runMigrateUp(cmd *cobra.Command, args []string) error {
-	db, err := openDbFromEnv()
+	db, err := openGormDbFromEnv()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	mg, err := app.NewMigrator(db)
 	if err != nil {
 		return err
 	}
-	defer mg.Close()
 
 	return mg.Up()
 }
 
 func runMigrateDown(cmd *cobra.Command, args []string) error {
-	db, err := openDbFromEnv()
+	db, err := openGormDbFromEnv()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	mg, err := app.NewMigrator(db)
 	if err != nil {
 		return err
 	}
-	defer mg.Close()
 
 	return mg.Down()
-}
-
-func runMigrateDrop(cmd *cobra.Command, args []string) error {
-	db, err := openDbFromEnv()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	mg, err := app.NewMigrator(db)
-	if err != nil {
-		return err
-	}
-	defer mg.Close()
-
-	return mg.Drop()
 }
 
 // newServerFromEnv creates a new Server instance with options from environment variables.
@@ -173,7 +147,7 @@ func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
 
 // openDataStoreFromEnv opens a connection to the database and constructs a DataStore.
 func openDataStoreFromEnv() (*awesome.DataStore, error) {
-	db, err := openDbFromEnv()
+	db, err := openGormDbFromEnv()
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +155,7 @@ func openDataStoreFromEnv() (*awesome.DataStore, error) {
 }
 
 // openDbFromEnv opens a connection to the database using the provided DSN or falls back to the environment variable.
-func openDbFromEnv() (*sql.DB, error) {
+func openGormDbFromEnv() (*gorm.DB, error) {
 	var dsnUrl *url.URL
 	var err error
 	if dsn == "" {
@@ -199,9 +173,12 @@ func openDbFromEnv() (*sql.DB, error) {
 		return nil, errors.New("invalid DSN: must be in format driver://dataSourceName")
 	}
 
-	db, err := sql.Open(dsnUrl.Scheme, dsnUrl.String())
-	if err != nil {
-		return nil, err
+	switch dsnUrl.Scheme {
+	case "postgres", "postgresql":
+		return gorm.Open(postgres.Open(dsnUrl.String()), &gorm.Config{})
+	case "sqlite", "sqlite3":
+		return gorm.Open(sqlite.Open(dsnUrl.String()), &gorm.Config{})
+	default:
+		return nil, errors.New("unsupported driver for gorm: " + dsnUrl.Scheme)
 	}
-	return db, nil
 }
