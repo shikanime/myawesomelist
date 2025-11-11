@@ -109,11 +109,9 @@ func (ds *DataStore) UpSertCollection(
 
 	return ds.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		colm := Collection{
-			Repo: Repository{
-				Hostname: col.Repo.Hostname,
-				Owner:    col.Repo.Owner,
-				Repo:     col.Repo.Repo,
-			},
+			Hostname: col.Repo.Hostname,
+			Owner:    col.Repo.Owner,
+			Repo:     col.Repo.Repo,
 			Language: col.Language,
 		}
 		if err := tx.Clauses(clause.OnConflict{
@@ -141,12 +139,12 @@ func (ds *DataStore) UpSertCollection(
 
 			for _, p := range cat.Projects {
 				pm := Project{
-					CategoryID:   cm.ID,
-					Name:         p.Name,
-					Description:  p.Description,
-					RepoHostname: p.Repo.Hostname,
-					RepoOwner:    p.Repo.Owner,
-					RepoRepo:     p.Repo.Repo,
+					CategoryID:  cm.ID,
+					Name:        p.Name,
+					Description: p.Description,
+					Hostname:    p.Repo.Hostname,
+					Owner:       p.Repo.Owner,
+					Repo:        p.Repo.Repo,
 				}
 				if err := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{

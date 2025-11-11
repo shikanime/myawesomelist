@@ -7,15 +7,11 @@ import (
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
-type Repository struct {
-	Hostname string `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
-	Owner    string `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
-	Repo     string `gorm:"size:255;not null;index;uniqueIndex:uq_repositories_hostname_owner_repo"`
-}
-
 type Collection struct {
 	ID         uint64     `gorm:"primaryKey"`
-	Repo       Repository `gorm:"embedded"`
+	Hostname   string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
+	Owner      string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
+	Repo       string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
 	Language   string     `gorm:"size:100;not null;index"`
 	CreatedAt  time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt  time.Time  `gorm:"autoUpdateTime"`
@@ -60,15 +56,15 @@ func (m *Category) ToProto() *myawesomelistv1.Category {
 }
 
 type Project struct {
-	ID           uint64    `gorm:"primaryKey"`
-	CategoryID   uint64    `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
-	Name         string    `gorm:"size:255;not null;index"`
-	Description  string    `gorm:"type:text"`
-	RepoHostname string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	RepoOwner    string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	RepoRepo     string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+	ID          uint64    `gorm:"primaryKey"`
+	CategoryID  uint64    `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
+	Hostname    string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
+	Owner       string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
+	Repo        string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
+	Name        string    `gorm:"size:255;not null;index"`
+	Description string    `gorm:"type:text"`
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }
 
 func (Project) TableName() string { return "projects" }
@@ -79,9 +75,9 @@ func (m *Project) ToProto() *myawesomelistv1.Project {
 		Name:        m.Name,
 		Description: m.Description,
 		Repo: &myawesomelistv1.Repository{
-			Hostname: m.RepoHostname,
-			Owner:    m.RepoOwner,
-			Repo:     m.RepoRepo,
+			Hostname: m.Hostname,
+			Owner:    m.Owner,
+			Repo:     m.Repo,
 		},
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
