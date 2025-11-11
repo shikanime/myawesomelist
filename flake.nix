@@ -63,6 +63,34 @@
               devlib.devenvModule
             ];
             shells.default = {
+              buf = {
+                enable = true;
+                generate = {
+                  version = "v2";
+                  clean = true;
+                  plugins = [
+                    {
+                      package = pkgs.protoc-gen-es;
+                      out = "www/app/proto";
+                      include_imports = true;
+                      opt = "target=ts";
+                    }
+                    {
+                      package = pkgs.protoc-gen-go;
+                      out = "pkgs/proto";
+                      opt = "paths=source_relative";
+                    }
+                    {
+                      package = pkgs.protoc-gen-connect-go;
+                      out = "pkgs/proto";
+                      opt = "paths=source_relative";
+                    }
+                  ];
+                  inputs = [
+                    { directory = "proto"; }
+                  ];
+                };
+              };
               cachix = {
                 enable = true;
                 push = "shikanime";
