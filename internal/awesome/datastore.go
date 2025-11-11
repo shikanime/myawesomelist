@@ -148,7 +148,7 @@ func (ds *DataStore) UpSertCollection(
 				}
 				if err := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{
-						{Name: "category_id"}, {Name: "repo_hostname"}, {Name: "repo_owner"}, {Name: "repo_repo"},
+						{Name: "category_id"}, {Name: "hostname"}, {Name: "owner"}, {Name: "repo"},
 					},
 					DoUpdates: clause.Assignments(map[string]interface{}{
 						"name":        pm.Name,

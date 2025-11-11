@@ -22,7 +22,12 @@ func (Collection) TableName() string { return "collections" }
 
 func (m *Collection) ToProto() *myawesomelistv1.Collection {
 	pc := &myawesomelistv1.Collection{
-		Id:        m.ID,
+		Id: m.ID,
+		Repo: &myawesomelistv1.Repository{
+			Hostname: m.Hostname,
+			Owner:    m.Owner,
+			Repo:     m.Repo,
+		},
 		Language:  m.Language,
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}

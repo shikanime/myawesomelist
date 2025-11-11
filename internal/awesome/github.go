@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v75/github"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 	"k8s.io/utils/ptr"
 	"myawesomelist.shikanime.studio/internal/encoding"
@@ -156,7 +157,7 @@ func (c *GitHubClient) ListCollections(
 	// Index datastore results by repository key
 	colsByKey := make(map[string]*myawesomelistv1.Collection, len(cols))
 	for _, col := range cols {
-		if col != nil && col.Repo != nil {
+		if col != nil {
 			key, err := url.JoinPath(col.Repo.Hostname, col.Repo.Owner, col.Repo.Repo)
 			if err != nil {
 				return nil, fmt.Errorf("failed to join path for %s/%s: %w", col.Repo.Owner, col.Repo.Repo, err)
@@ -165,27 +166,35 @@ func (c *GitHubClient) ListCollections(
 		}
 	}
 
-	// Build output in the same order as input repos, fetching missing via GetCollection
+	// Build output in the same order as input repos, fetching missing via
+	// GetCollection
+	wg := errgroup.Group{}
 	for _, r := range repos {
-		key, err := url.JoinPath(r.Hostname, r.Owner, r.Repo)
-		if err != nil {
-			return nil, fmt.Errorf("failed to join path for %s/%s: %w", r.Owner, r.Repo, err)
-		}
+		wg.Go(func() error {
+			key, err := url.JoinPath(r.Hostname, r.Owner, r.Repo)
+			if err != nil {
+				return fmt.Errorf("failed to join path for %s/%s: %w", r.Owner, r.Repo, err)
+			}
 
-		if _, ok := colsByKey[key]; ok {
-			continue
-		}
+			if _, ok := colsByKey[key]; ok {
+				return nil
+			}
 
-		col, getErr := c.GetCollection(ctx, r, opts...)
-		if getErr != nil {
-			slog.Warn("Failed to get collection",
-				"hostname", r.Hostname,
-				"owner", r.Owner,
-				"repo", r.Repo,
-				"error", getErr)
-			continue
-		}
-		cols = append(cols, col)
+			col, getErr := c.GetCollection(ctx, r, opts...)
+			if getErr != nil {
+				slog.Warn("Failed to get collection",
+					"hostname", r.Hostname,
+					"owner", r.Owner,
+					"repo", r.Repo,
+					"error", getErr)
+				return nil
+			}
+			cols = append(cols, col)
+			return nil
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		return nil, err
 	}
 
 	return cols, nil
