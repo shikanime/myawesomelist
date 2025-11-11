@@ -53,11 +53,13 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[myawesomelistv1.ListCollectionsResponse],
 	error,
 ) {
-	// Default to configured repos if none provided
+	// Default to repositories from datastore if none provided
 	repos := req.Msg.GetRepos()
 	if len(repos) == 0 {
-		for _, rr := range awesome.DefaultGitHubRepos {
-			repos = append(repos, rr.Repo)
+		var err error
+		repos, err = s.cs.Core().ListRepositories(ctx)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 	}
 
@@ -181,8 +183,10 @@ func (s *AwesomeService) SearchProjects(
 	repos := req.Msg.GetRepos()
 
 	if len(repos) == 0 {
-		for _, rr := range awesome.DefaultGitHubRepos {
-			repos = append(repos, rr.Repo)
+		var err error
+		repos, err = s.cs.Core().ListRepositories(ctx)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 	}
 
