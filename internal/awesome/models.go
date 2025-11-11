@@ -8,10 +8,10 @@ import (
 )
 
 type Collection struct {
-	ID         uint       `gorm:"primaryKey"`
-	Hostname   string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
-	Owner      string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
-	Repo       string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_repo"`
+	ID         uint64     `gorm:"primaryKey"`
+	Hostname   string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
+	Owner      string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
+	Repo       string     `gorm:"size:255;not null;index;uniqueIndex:uq_collections_hostname_owner_repo"`
 	Language   string     `gorm:"size:100;not null;index"`
 	CreatedAt  time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt  time.Time  `gorm:"autoUpdateTime"`
@@ -22,6 +22,12 @@ func (Collection) TableName() string { return "collections" }
 
 func (m *Collection) ToProto() *myawesomelistv1.Collection {
 	pc := &myawesomelistv1.Collection{
+		Id: m.ID,
+		Repo: &myawesomelistv1.Repository{
+			Hostname: m.Hostname,
+			Owner:    m.Owner,
+			Repo:     m.Repo,
+		},
 		Language:  m.Language,
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
@@ -32,8 +38,8 @@ func (m *Collection) ToProto() *myawesomelistv1.Collection {
 }
 
 type Category struct {
-	ID           uint      `gorm:"primaryKey"`
-	CollectionID uint      `gorm:"not null;index;uniqueIndex:uq_categories_collection_name"`
+	ID           uint64    `gorm:"primaryKey"`
+	CollectionID uint64    `gorm:"not null;index;uniqueIndex:uq_categories_collection_name"`
 	Name         string    `gorm:"size:255;not null;index;uniqueIndex:uq_categories_collection_name"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
@@ -44,6 +50,7 @@ func (Category) TableName() string { return "categories" }
 
 func (m *Category) ToProto() *myawesomelistv1.Category {
 	pc := &myawesomelistv1.Category{
+		Id:        m.ID,
 		Name:      m.Name,
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
@@ -54,34 +61,35 @@ func (m *Category) ToProto() *myawesomelistv1.Category {
 }
 
 type Project struct {
-	ID           uint      `gorm:"primaryKey"`
-	CategoryID   uint      `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
-	Name         string    `gorm:"size:255;not null;index"`
-	Description  string    `gorm:"type:text"`
-	RepoHostname string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	RepoOwner    string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	RepoRepo     string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+	ID          uint64    `gorm:"primaryKey"`
+	CategoryID  uint64    `gorm:"not null;index;uniqueIndex:uq_projects_category_repo"`
+	Hostname    string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
+	Owner       string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
+	Repo        string    `gorm:"size:255;not null;uniqueIndex:uq_projects_category_repo"`
+	Name        string    `gorm:"size:255;not null;index"`
+	Description string    `gorm:"type:text"`
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }
 
 func (Project) TableName() string { return "projects" }
 
 func (m *Project) ToProto() *myawesomelistv1.Project {
 	return &myawesomelistv1.Project{
+		Id:          m.ID,
 		Name:        m.Name,
 		Description: m.Description,
 		Repo: &myawesomelistv1.Repository{
-			Hostname: m.RepoHostname,
-			Owner:    m.RepoOwner,
-			Repo:     m.RepoRepo,
+			Hostname: m.Hostname,
+			Owner:    m.Owner,
+			Repo:     m.Repo,
 		},
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
 }
 
 type ProjectStats struct {
-	ID              uint   `gorm:"primaryKey"`
+	ID              uint64 `gorm:"primaryKey"`
 	Hostname        string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
 	Owner           string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
 	Repo            string `gorm:"size:255;not null;index;uniqueIndex:uq_project_stats_repo"`
@@ -95,6 +103,7 @@ func (ProjectStats) TableName() string { return "project_stats" }
 
 func (m *ProjectStats) ToProto() *myawesomelistv1.ProjectStats {
 	return &myawesomelistv1.ProjectStats{
+		Id:              m.ID,
 		StargazersCount: m.StargazersCount,
 		OpenIssueCount:  m.OpenIssueCount,
 		UpdatedAt:       timestamppb.New(m.UpdatedAt),

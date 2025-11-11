@@ -33,6 +33,47 @@ func (ds *DataStore) Ping(ctx context.Context) error {
 	return db.PingContext(ctx)
 }
 
+// ListCollections retrieves collections for the provided repos from the database
+func (ds *DataStore) ListCollections(
+	ctx context.Context,
+	repos []*myawesomelistv1.Repository,
+) ([]*myawesomelistv1.Collection, error) {
+	if ds.db == nil {
+		return nil, fmt.Errorf("database connection not available")
+	}
+
+	// Build OR predicates for target repos
+	db := ds.db.WithContext(ctx).
+		Preload("Categories").
+		Preload("Categories.Projects").
+		Model(&Collection{})
+
+	if len(repos) == 0 {
+		db = db.Scopes(func(tx *gorm.DB) *gorm.DB {
+			for i, r := range repos {
+				cond := "(hostname = ? AND owner = ? AND repo = ?)"
+				if i == 0 {
+					tx = tx.Where(cond, r.Hostname, r.Owner, r.Repo)
+				} else {
+					tx = tx.Or(cond, r.Hostname, r.Owner, r.Repo)
+				}
+			}
+			return tx
+		})
+	}
+
+	var rows []Collection
+	if err := db.Find(&rows).Error; err != nil {
+		return nil, fmt.Errorf("list collections query failed: %w", err)
+	}
+
+	var out []*myawesomelistv1.Collection
+	for _, r := range rows {
+		out = append(out, r.ToProto())
+	}
+	return out, nil
+}
+
 // GetCollection retrieves a collection from the database
 func (ds *DataStore) GetCollection(
 	ctx context.Context,
@@ -60,7 +101,6 @@ func (ds *DataStore) GetCollection(
 // UpSertCollection stores a collection in the database
 func (ds *DataStore) UpSertCollection(
 	ctx context.Context,
-	repo *myawesomelistv1.Repository,
 	col *myawesomelistv1.Collection,
 ) error {
 	if ds.db == nil {
@@ -69,9 +109,9 @@ func (ds *DataStore) UpSertCollection(
 
 	return ds.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		colm := Collection{
-			Hostname: repo.Hostname,
-			Owner:    repo.Owner,
-			Repo:     repo.Repo,
+			Hostname: col.Repo.Hostname,
+			Owner:    col.Repo.Owner,
+			Repo:     col.Repo.Repo,
 			Language: col.Language,
 		}
 		if err := tx.Clauses(clause.OnConflict{
@@ -99,16 +139,16 @@ func (ds *DataStore) UpSertCollection(
 
 			for _, p := range cat.Projects {
 				pm := Project{
-					CategoryID:   cm.ID,
-					Name:         p.Name,
-					Description:  p.Description,
-					RepoHostname: p.Repo.Hostname,
-					RepoOwner:    p.Repo.Owner,
-					RepoRepo:     p.Repo.Repo,
+					CategoryID:  cm.ID,
+					Name:        p.Name,
+					Description: p.Description,
+					Hostname:    p.Repo.Hostname,
+					Owner:       p.Repo.Owner,
+					Repo:        p.Repo.Repo,
 				}
 				if err := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{
-						{Name: "category_id"}, {Name: "repo_hostname"}, {Name: "repo_owner"}, {Name: "repo_repo"},
+						{Name: "category_id"}, {Name: "hostname"}, {Name: "owner"}, {Name: "repo"},
 					},
 					DoUpdates: clause.Assignments(map[string]interface{}{
 						"name":        pm.Name,

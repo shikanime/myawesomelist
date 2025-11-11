@@ -22,7 +22,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_myawesomelist_v1_myawesomelist: GenFile =
   /*@__PURE__*/
   fileDesc(
-    "CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEipgEKDFByb2plY3RTdGF0cxIdChBzdGFyZ2F6ZXJzX2NvdW50GAEgASgNSACIAQESHQoQb3Blbl9pc3N1ZV9jb3VudBgCIAEoDUgBiAEBEi4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQhMKEV9zdGFyZ2F6ZXJzX2NvdW50QhMKEV9vcGVuX2lzc3VlX2NvdW50IogBCgdQcm9qZWN0EgwKBG5hbWUYASABKAkSEwoLZGVzY3JpcHRpb24YAiABKAkSKgoEcmVwbxgDIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeRIuCgp1cGRhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ1CghDYXRlZ29yeRIMCgRuYW1lGAEgASgJEisKCHByb2plY3RzGAIgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0Ei4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIn4KCkNvbGxlY3Rpb24SEAoIbGFuZ3VhZ2UYASABKAkSLgoKY2F0ZWdvcmllcxgCIAMoCzIaLm15YXdlc29tZWxpc3QudjEuQ2F0ZWdvcnkSLgoKdXBkYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiOwoKUmVwb3NpdG9yeRIQCghob3N0bmFtZRgBIAEoCRINCgVvd25lchgCIAEoCRIMCgRyZXBvGAMgASgJIhgKFkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QiTAoXTGlzdENvbGxlY3Rpb25zUmVzcG9uc2USMQoLY29sbGVjdGlvbnMYASADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iQgoUR2V0Q29sbGVjdGlvblJlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJJChVHZXRDb2xsZWN0aW9uUmVzcG9uc2USMAoKY29sbGVjdGlvbhgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuQ29sbGVjdGlvbiJDChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJIChZMaXN0Q2F0ZWdvcmllc1Jlc3BvbnNlEi4KCmNhdGVnb3JpZXMYASADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5IlgKE0xpc3RQcm9qZWN0c1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeRIVCg1jYXRlZ29yeV9uYW1lGAIgASgJIkMKFExpc3RQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0ImIKFVNlYXJjaFByb2plY3RzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoDRIrCgVyZXBvcxgDIAMoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJFChZTZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEisKCHByb2plY3RzGAEgAygLMhkubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0IhEKD0xpdmVuZXNzUmVxdWVzdCISChBMaXZlbmVzc1Jlc3BvbnNlIhIKEFJlYWRpbmVzc1JlcXVlc3QiEwoRUmVhZGluZXNzUmVzcG9uc2UiRAoWR2V0UHJvamVjdFN0YXRzUmVxdWVzdBIqCgRyZXBvGAEgASgLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5IkgKF0dldFByb2plY3RTdGF0c1Jlc3BvbnNlEi0KBXN0YXRzGAEgASgLMh4ubXlhd2Vzb21lbGlzdC52MS5Qcm9qZWN0U3RhdHMylAYKDkF3ZXNvbWVTZXJ2aWNlElEKCExpdmVuZXNzEiEubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1JlcXVlc3QaIi5teWF3ZXNvbWVsaXN0LnYxLkxpdmVuZXNzUmVzcG9uc2USVAoJUmVhZGluZXNzEiIubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXF1ZXN0GiMubXlhd2Vzb21lbGlzdC52MS5SZWFkaW5lc3NSZXNwb25zZRJmCg9MaXN0Q29sbGVjdGlvbnMSKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1JlcXVlc3QaKS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEmAKDUdldENvbGxlY3Rpb24SJi5teWF3ZXNvbWVsaXN0LnYxLkdldENvbGxlY3Rpb25SZXF1ZXN0GicubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVzcG9uc2USYwoOTGlzdENhdGVnb3JpZXMSJy5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBooLm15YXdlc29tZWxpc3QudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJdCgxMaXN0UHJvamVjdHMSJS5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1JlcXVlc3QaJi5teWF3ZXNvbWVsaXN0LnYxLkxpc3RQcm9qZWN0c1Jlc3BvbnNlEmMKDlNlYXJjaFByb2plY3RzEicubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLlNlYXJjaFByb2plY3RzUmVzcG9uc2USZgoPR2V0UHJvamVjdFN0YXRzEigubXlhd2Vzb21lbGlzdC52MS5HZXRQcm9qZWN0U3RhdHNSZXF1ZXN0GikubXlhd2Vzb21lbGlzdC52MS5HZXRQcm9qZWN0U3RhdHNSZXNwb25zZUJMWkpteWF3ZXNvbWVsaXN0LnNoaWthbmltZS5zdHVkaW8vcGtncy9wcm90by9teWF3ZXNvbWVsaXN0L3YxO215YXdlc29tZWxpc3R2MWIGcHJvdG8z",
+    "CiRteWF3ZXNvbWVsaXN0L3YxL215YXdlc29tZWxpc3QucHJvdG8SEG15YXdlc29tZWxpc3QudjEisgEKDFByb2plY3RTdGF0cxIKCgJpZBgBIAEoBBIdChBzdGFyZ2F6ZXJzX2NvdW50GAIgASgNSACIAQESHQoQb3Blbl9pc3N1ZV9jb3VudBgDIAEoDUgBiAEBEi4KCnVwZGF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQhMKEV9zdGFyZ2F6ZXJzX2NvdW50QhMKEV9vcGVuX2lzc3VlX2NvdW50IpQBCgdQcm9qZWN0EgoKAmlkGAEgASgEEgwKBG5hbWUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkSKgoEcmVwbxgEIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeRIuCgp1cGRhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKBAQoIQ2F0ZWdvcnkSCgoCaWQYASABKAQSDAoEbmFtZRgCIAEoCRIrCghwcm9qZWN0cxgDIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdBIuCgp1cGRhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCK2AQoKQ29sbGVjdGlvbhIKCgJpZBgBIAEoBBIQCghsYW5ndWFnZRgCIAEoCRIqCgRyZXBvGAMgASgLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5Ei4KCmNhdGVnb3JpZXMYBCADKAsyGi5teWF3ZXNvbWVsaXN0LnYxLkNhdGVnb3J5Ei4KCnVwZGF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjsKClJlcG9zaXRvcnkSEAoIaG9zdG5hbWUYASABKAkSDQoFb3duZXIYAiABKAkSDAoEcmVwbxgDIAEoCSJFChZMaXN0Q29sbGVjdGlvbnNSZXF1ZXN0EisKBXJlcG9zGAEgAygLMhwubXlhd2Vzb21lbGlzdC52MS5SZXBvc2l0b3J5IkwKF0xpc3RDb2xsZWN0aW9uc1Jlc3BvbnNlEjEKC2NvbGxlY3Rpb25zGAEgAygLMhwubXlhd2Vzb21lbGlzdC52MS5Db2xsZWN0aW9uIkIKFEdldENvbGxlY3Rpb25SZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiSQoVR2V0Q29sbGVjdGlvblJlc3BvbnNlEjAKCmNvbGxlY3Rpb24YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLkNvbGxlY3Rpb24iQwoVTGlzdENhdGVnb3JpZXNSZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiSAoWTGlzdENhdGVnb3JpZXNSZXNwb25zZRIuCgpjYXRlZ29yaWVzGAEgAygLMhoubXlhd2Vzb21lbGlzdC52MS5DYXRlZ29yeSJYChNMaXN0UHJvamVjdHNSZXF1ZXN0EioKBHJlcG8YASABKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkSFQoNY2F0ZWdvcnlfbmFtZRgCIAEoCSJDChRMaXN0UHJvamVjdHNSZXNwb25zZRIrCghwcm9qZWN0cxgBIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdCJiChVTZWFyY2hQcm9qZWN0c1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SKwoFcmVwb3MYAyADKAsyHC5teWF3ZXNvbWVsaXN0LnYxLlJlcG9zaXRvcnkiRQoWU2VhcmNoUHJvamVjdHNSZXNwb25zZRIrCghwcm9qZWN0cxgBIAMoCzIZLm15YXdlc29tZWxpc3QudjEuUHJvamVjdCIRCg9MaXZlbmVzc1JlcXVlc3QiEgoQTGl2ZW5lc3NSZXNwb25zZSISChBSZWFkaW5lc3NSZXF1ZXN0IhMKEVJlYWRpbmVzc1Jlc3BvbnNlIkQKFkdldFByb2plY3RTdGF0c1JlcXVlc3QSKgoEcmVwbxgBIAEoCzIcLm15YXdlc29tZWxpc3QudjEuUmVwb3NpdG9yeSJIChdHZXRQcm9qZWN0U3RhdHNSZXNwb25zZRItCgVzdGF0cxgBIAEoCzIeLm15YXdlc29tZWxpc3QudjEuUHJvamVjdFN0YXRzMpQGCg5Bd2Vzb21lU2VydmljZRJRCghMaXZlbmVzcxIhLm15YXdlc29tZWxpc3QudjEuTGl2ZW5lc3NSZXF1ZXN0GiIubXlhd2Vzb21lbGlzdC52MS5MaXZlbmVzc1Jlc3BvbnNlElQKCVJlYWRpbmVzcxIiLm15YXdlc29tZWxpc3QudjEuUmVhZGluZXNzUmVxdWVzdBojLm15YXdlc29tZWxpc3QudjEuUmVhZGluZXNzUmVzcG9uc2USZgoPTGlzdENvbGxlY3Rpb25zEigubXlhd2Vzb21lbGlzdC52MS5MaXN0Q29sbGVjdGlvbnNSZXF1ZXN0GikubXlhd2Vzb21lbGlzdC52MS5MaXN0Q29sbGVjdGlvbnNSZXNwb25zZRJgCg1HZXRDb2xsZWN0aW9uEiYubXlhd2Vzb21lbGlzdC52MS5HZXRDb2xsZWN0aW9uUmVxdWVzdBonLm15YXdlc29tZWxpc3QudjEuR2V0Q29sbGVjdGlvblJlc3BvbnNlEmMKDkxpc3RDYXRlZ29yaWVzEicubXlhd2Vzb21lbGlzdC52MS5MaXN0Q2F0ZWdvcmllc1JlcXVlc3QaKC5teWF3ZXNvbWVsaXN0LnYxLkxpc3RDYXRlZ29yaWVzUmVzcG9uc2USXQoMTGlzdFByb2plY3RzEiUubXlhd2Vzb21lbGlzdC52MS5MaXN0UHJvamVjdHNSZXF1ZXN0GiYubXlhd2Vzb21lbGlzdC52MS5MaXN0UHJvamVjdHNSZXNwb25zZRJjCg5TZWFyY2hQcm9qZWN0cxInLm15YXdlc29tZWxpc3QudjEuU2VhcmNoUHJvamVjdHNSZXF1ZXN0GigubXlhd2Vzb21lbGlzdC52MS5TZWFyY2hQcm9qZWN0c1Jlc3BvbnNlEmYKD0dldFByb2plY3RTdGF0cxIoLm15YXdlc29tZWxpc3QudjEuR2V0UHJvamVjdFN0YXRzUmVxdWVzdBopLm15YXdlc29tZWxpc3QudjEuR2V0UHJvamVjdFN0YXRzUmVzcG9uc2VCTFpKbXlhd2Vzb21lbGlzdC5zaGlrYW5pbWUuc3R1ZGlvL3BrZ3MvcHJvdG8vbXlhd2Vzb21lbGlzdC92MTtteWF3ZXNvbWVsaXN0djFiBnByb3RvMw",
     [file_google_protobuf_timestamp],
   );
 
@@ -33,17 +33,22 @@ export const file_myawesomelist_v1_myawesomelist: GenFile =
  */
 export type ProjectStats = Message<"myawesomelist.v1.ProjectStats"> & {
   /**
-   * @generated from field: optional uint32 stargazers_count = 1;
+   * @generated from field: uint64 id = 1;
+   */
+  id: bigint;
+
+  /**
+   * @generated from field: optional uint32 stargazers_count = 2;
    */
   stargazersCount?: number;
 
   /**
-   * @generated from field: optional uint32 open_issue_count = 2;
+   * @generated from field: optional uint32 open_issue_count = 3;
    */
   openIssueCount?: number;
 
   /**
-   * @generated from field: google.protobuf.Timestamp updated_at = 3;
+   * @generated from field: google.protobuf.Timestamp updated_at = 4;
    */
   updatedAt?: Timestamp;
 };
@@ -61,22 +66,27 @@ export const ProjectStatsSchema: GenMessage<ProjectStats> =
  */
 export type Project = Message<"myawesomelist.v1.Project"> & {
   /**
-   * @generated from field: string name = 1;
+   * @generated from field: uint64 id = 1;
+   */
+  id: bigint;
+
+  /**
+   * @generated from field: string name = 2;
    */
   name: string;
 
   /**
-   * @generated from field: string description = 2;
+   * @generated from field: string description = 3;
    */
   description: string;
 
   /**
-   * @generated from field: myawesomelist.v1.Repository repo = 3;
+   * @generated from field: myawesomelist.v1.Repository repo = 4;
    */
   repo?: Repository;
 
   /**
-   * @generated from field: google.protobuf.Timestamp updated_at = 4;
+   * @generated from field: google.protobuf.Timestamp updated_at = 5;
    */
   updatedAt?: Timestamp;
 };
@@ -96,17 +106,22 @@ export const ProjectSchema: GenMessage<Project> =
  */
 export type Category = Message<"myawesomelist.v1.Category"> & {
   /**
-   * @generated from field: string name = 1;
+   * @generated from field: uint64 id = 1;
+   */
+  id: bigint;
+
+  /**
+   * @generated from field: string name = 2;
    */
   name: string;
 
   /**
-   * @generated from field: repeated myawesomelist.v1.Project projects = 2;
+   * @generated from field: repeated myawesomelist.v1.Project projects = 3;
    */
   projects: Project[];
 
   /**
-   * @generated from field: google.protobuf.Timestamp updated_at = 3;
+   * @generated from field: google.protobuf.Timestamp updated_at = 4;
    */
   updatedAt?: Timestamp;
 };
@@ -126,17 +141,27 @@ export const CategorySchema: GenMessage<Category> =
  */
 export type Collection = Message<"myawesomelist.v1.Collection"> & {
   /**
-   * @generated from field: string language = 1;
+   * @generated from field: uint64 id = 1;
+   */
+  id: bigint;
+
+  /**
+   * @generated from field: string language = 2;
    */
   language: string;
 
   /**
-   * @generated from field: repeated myawesomelist.v1.Category categories = 2;
+   * @generated from field: myawesomelist.v1.Repository repo = 3;
+   */
+  repo?: Repository;
+
+  /**
+   * @generated from field: repeated myawesomelist.v1.Category categories = 4;
    */
   categories: Category[];
 
   /**
-   * @generated from field: google.protobuf.Timestamp updated_at = 3;
+   * @generated from field: google.protobuf.Timestamp updated_at = 5;
    */
   updatedAt?: Timestamp;
 };
@@ -183,7 +208,12 @@ export const RepositorySchema: GenMessage<Repository> =
  * @generated from message myawesomelist.v1.ListCollectionsRequest
  */
 export type ListCollectionsRequest =
-  Message<"myawesomelist.v1.ListCollectionsRequest"> & {};
+  Message<"myawesomelist.v1.ListCollectionsRequest"> & {
+    /**
+     * @generated from field: repeated myawesomelist.v1.Repository repos = 1;
+     */
+    repos: Repository[];
+  };
 
 /**
  * Describes the message myawesomelist.v1.ListCollectionsRequest.

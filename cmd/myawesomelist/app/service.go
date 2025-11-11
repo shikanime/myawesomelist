@@ -53,14 +53,19 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[myawesomelistv1.ListCollectionsResponse],
 	error,
 ) {
-	cols := make([]*myawesomelistv1.Collection, 0, len(awesome.DefaultGitHubRepos))
-	for _, rr := range awesome.DefaultGitHubRepos {
-		coll, err := s.cs.GitHub().GetCollection(ctx, rr.Repo, rr.Options...)
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, err)
+	// Default to configured repos if none provided
+	repos := req.Msg.GetRepos()
+	if len(repos) == 0 {
+		for _, rr := range awesome.DefaultGitHubRepos {
+			repos = append(repos, rr.Repo)
 		}
-		cols = append(cols, coll)
 	}
+
+	cols, err := s.cs.GitHub().ListCollections(ctx, repos)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
 	return connect.NewResponse(
 		&myawesomelistv1.ListCollectionsResponse{Collections: cols},
 	), nil
