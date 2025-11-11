@@ -46,6 +46,31 @@ func (s *AwesomeService) Readiness(
 	return connect.NewResponse(&myawesomelistv1.ReadinessResponse{}), nil
 }
 
+func (s *AwesomeService) ListCollections(
+	ctx context.Context,
+	req *connect.Request[myawesomelistv1.ListCollectionsRequest],
+) (
+	*connect.Response[myawesomelistv1.ListCollectionsResponse],
+	error,
+) {
+	// Default to configured repos if none provided
+	repos := req.Msg.GetRepos()
+	if len(repos) == 0 {
+		for _, rr := range awesome.DefaultGitHubRepos {
+			repos = append(repos, rr.Repo)
+		}
+	}
+
+	cols, err := s.cs.GitHub().ListCollections(ctx, repos)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(
+		&myawesomelistv1.ListCollectionsResponse{Collections: cols},
+	), nil
+}
+
 func (s *AwesomeService) GetCollection(
 	ctx context.Context,
 	req *connect.Request[myawesomelistv1.GetCollectionRequest],
@@ -198,29 +223,4 @@ func (s *AwesomeService) GetProjectStats(
 			connect.NewError(connect.CodeUnimplemented, errors.New("hostname is not supported")),
 		)
 	}
-}
-
-func (s *AwesomeService) ListCollections(
-	ctx context.Context,
-	req *connect.Request[myawesomelistv1.ListCollectionsRequest],
-) (
-	*connect.Response[myawesomelistv1.ListCollectionsResponse],
-	error,
-) {
-	// Default to configured repos if none provided
-	repos := req.Msg.GetRepos()
-	if len(repos) == 0 {
-		for _, rr := range awesome.DefaultGitHubRepos {
-			repos = append(repos, rr.Repo)
-		}
-	}
-
-	cols, err := s.cs.GitHub().ListCollections(ctx, repos)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-
-	return connect.NewResponse(
-		&myawesomelistv1.ListCollectionsResponse{Collections: cols},
-	), nil
 }
