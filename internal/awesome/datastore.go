@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/openai/openai-go/v3"
+	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"k8s.io/utils/ptr"
@@ -204,7 +205,7 @@ func (ds *DataStore) UpSertCollection(
 					return fmt.Errorf("upsert project failed: %w", err)
 				}
 
-				embedding, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
+				embeddingRes, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
 					Input: openai.EmbeddingNewParamsInputUnion{
 						OfString: openai.String(p.Name + " " + p.Description),
 					},
@@ -213,9 +214,14 @@ func (ds *DataStore) UpSertCollection(
 				if err != nil {
 					return fmt.Errorf("generate project embedding failed: %w", err)
 				}
+
+				embedding := make([]float32, len(embeddingRes.Data[0].Embedding))
+				for i := range embedding {
+					embedding[i] = float32(embeddingRes.Data[0].Embedding[i])
+				}
 				pe := ProjectEmbeddings{
 					ProjectID: pm.ID,
-					Embedding: embedding.Data[0].Embedding,
+					Embedding: pgvector.NewVector(embedding),
 				}
 				if err := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{{Name: "project_id"}},
