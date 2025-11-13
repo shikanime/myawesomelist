@@ -341,3 +341,39 @@ func (ds *DataStore) UpSertProjectStats(
 		}),
 	}).Create(&ps).Error
 }
+
+func (ds *DataStore) UpSertProjectMetadata(
+	ctx context.Context,
+	repo *myawesomelistv1.Repository,
+	readme []byte,
+) error {
+	var r Repository
+	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+		DoNothing: true,
+	}).Create(&Repository{
+		Hostname: repo.Hostname,
+		Owner:    repo.Owner,
+		Repo:     repo.Repo,
+	}).Error; err != nil {
+		return fmt.Errorf("upsert repository failed: %w", err)
+	}
+	if err := ds.db.WithContext(ctx).
+		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+		First(&r).Error; err != nil {
+		return fmt.Errorf("load repository failed: %w", err)
+	}
+
+	pm := ProjectMetadata{
+		RepositoryID: r.ID,
+		Readme:       string(readme),
+	}
+
+	return ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "repository_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"readme":     pm.Readme,
+			"updated_at": gorm.Expr("NOW()"),
+		}),
+	}).Create(&pm).Error
+}

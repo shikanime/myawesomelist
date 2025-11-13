@@ -30,6 +30,7 @@ func (mg *Migrator) Up() error {
 		&awesome.Category{},
 		&awesome.Project{},
 		&awesome.ProjectStats{},
+		&awesome.ProjectMetadata{},
 	); err != nil {
 		return fmt.Errorf("auto-migrate failed: %w", err)
 	}
@@ -111,6 +112,7 @@ func (mg *Migrator) Down() error {
 		&awesome.Project{},
 		&awesome.Category{},
 		&awesome.ProjectStats{},
+		&awesome.ProjectMetadata{},
 		&awesome.Collection{},
 		&awesome.Repository{},
 	); err != nil {

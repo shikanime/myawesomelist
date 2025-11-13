@@ -107,6 +107,17 @@ func (m *ProjectStats) ToProto() *myawesomelistv1.ProjectStats {
 	}
 }
 
+type ProjectMetadata struct {
+	ID           uint64     `gorm:"primaryKey"`
+	RepositoryID uint64     `gorm:"not null;index;uniqueIndex:uq_project_metadata_repository"`
+	Repository   Repository `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Readme       string     `gorm:"type:text"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt    time.Time  `gorm:"autoUpdateTime"`
+}
+
+func (ProjectMetadata) TableName() string { return "project_metadata" }
+
 // Repository GORM model and helpers
 type Repository struct {
 	ID        uint64    `gorm:"primaryKey"`

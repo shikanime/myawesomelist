@@ -260,6 +260,14 @@ func (c *GitHubClient) GetCollection(
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
+	if err = c.d.UpSertProjectMetadata(ctx, repo, content); err != nil {
+		slog.Warn("Failed to upsert project metadata",
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
+			"error", err)
+	}
+
 	encCol, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
 		return nil, fmt.Errorf(
