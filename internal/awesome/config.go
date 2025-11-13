@@ -18,6 +18,52 @@ type GitHubRepoConfig struct {
 	Options []GetCollectionOption
 }
 
+// DefaultGitHubRepos contains the default list of awesome repositories to fetch
+var DefaultGitHubRepos = []GitHubRepoConfig{
+	{
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "avelino",
+			Repo:     "awesome-go",
+		},
+		Options: []GetCollectionOption{
+			WithStartSection("Actor Model"),
+			WithSubsectionAsCategory(),
+		},
+	},
+	{
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "h4cc",
+			Repo:     "awesome-elixir",
+		},
+		Options: []GetCollectionOption{
+			WithStartSection("Actors"),
+		},
+	},
+	{
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "sorrycc",
+			Repo:     "awesome-javascript",
+		},
+		Options: []GetCollectionOption{
+			WithStartSection("Package Managers"),
+			WithEndSection("Worth Reading"),
+		},
+	},
+	{
+		Repo: &myawesomelistv1.Repository{
+			Hostname: "github.com",
+			Owner:    "gostor",
+			Repo:     "awesome-go-storage",
+		},
+		Options: []GetCollectionOption{
+			WithStartSection("Storage Server"),
+		},
+	},
+}
+
 // GetDsn resolves the final DSN using env vars
 func GetDsn() (*url.URL, error) {
 	source := os.Getenv("DSN")

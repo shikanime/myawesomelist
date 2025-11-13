@@ -305,57 +305,39 @@ func (ds *DataStore) GetProjectStats(
 
 // UpSertProjectStats stores project stats in the datastore
 func (ds *DataStore) UpSertProjectStats(
-	ctx context.Context,
-	repo *myawesomelistv1.Repository,
-	stats *myawesomelistv1.ProjectStats,
+    ctx context.Context,
+    repo *myawesomelistv1.Repository,
+    stats *myawesomelistv1.ProjectStats,
 ) error {
-	var r Repository
-	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
-		DoNothing: true,
-	}).Create(&Repository{
-		Hostname: repo.Hostname,
-		Owner:    repo.Owner,
-		Repo:     repo.Repo,
-	}).Error; err != nil {
-		return fmt.Errorf("upsert repository failed: %w", err)
-	}
-	if err := ds.db.WithContext(ctx).
-		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
-		First(&r).Error; err != nil {
-		return fmt.Errorf("load repository failed: %w", err)
-	}
+    var r Repository
+    if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+        Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+        DoNothing: true,
+    }).Create(&Repository{
+        Hostname: repo.Hostname,
+        Owner:    repo.Owner,
+        Repo:     repo.Repo,
+    }).Error; err != nil {
+        return fmt.Errorf("upsert repository failed: %w", err)
+    }
+    if err := ds.db.WithContext(ctx).
+        Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
+        First(&r).Error; err != nil {
+        return fmt.Errorf("load repository failed: %w", err)
+    }
 
-	ps := ProjectStats{
-		RepositoryID:    r.ID,
-		StargazersCount: ptr.To(stats.GetStargazersCount()),
-		OpenIssueCount:  ptr.To(stats.GetOpenIssueCount()),
-	}
+    ps := ProjectStats{
+        RepositoryID:    r.ID,
+        StargazersCount: ptr.To(stats.GetStargazersCount()),
+        OpenIssueCount:  ptr.To(stats.GetOpenIssueCount()),
+    }
 
-	return ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "repository_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"stargazers_count": ps.StargazersCount,
-			"open_issue_count": ps.OpenIssueCount,
-			"updated_at":       gorm.Expr("NOW()"),
-		}),
-	}).Create(&ps).Error
-}
-
-// ListRepositories returns all repositories from the datastore
-func (ds *DataStore) ListRepositories(ctx context.Context) ([]*myawesomelistv1.Repository, error) {
-	if ds.db == nil {
-		return nil, fmt.Errorf("database connection not available")
-	}
-
-	var rows []Repository
-	if err := ds.db.WithContext(ctx).Find(&rows).Error; err != nil {
-		return nil, fmt.Errorf("list repositories query failed: %w", err)
-	}
-
-	out := make([]*myawesomelistv1.Repository, 0, len(rows))
-	for _, r := range rows {
-		out = append(out, r.ToProto())
-	}
-	return out, nil
+    return ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+        Columns: []clause.Column{{Name: "repository_id"}},
+        DoUpdates: clause.Assignments(map[string]interface{}{
+            "stargazers_count": ps.StargazersCount,
+            "open_issue_count": ps.OpenIssueCount,
+            "updated_at":       gorm.Expr("NOW()"),
+        }),
+    }).Create(&ps).Error
 }

@@ -28,6 +28,12 @@ func (s *AwesomeService) ListCollections(
 	error,
 ) {
 	repos := req.Msg.GetRepos()
+	if len(repos) == 0 {
+		for _, rr := range awesome.DefaultGitHubRepos {
+			repos = append(repos, rr.Repo)
+		}
+	}
+
 	cols, err := s.cs.GitHub().ListCollections(ctx, repos)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
