@@ -49,7 +49,10 @@ func (mg *Migrator) Up() error {
 		if err := mg.db.Where("hostname = ? AND owner = ? AND repo = ?", c.Repository.Hostname, c.Repository.Owner, c.Repository.Repo).First(&r).Error; err != nil {
 			return fmt.Errorf("backfill load repo for collection failed: %w", err)
 		}
-		_ = mg.db.Model(&awesome.Collection{}).Where("id = ?", c.ID).Update("repository_id", r.ID).Error
+		_ = mg.db.Model(&awesome.Collection{}).
+			Where("id = ?", c.ID).
+			Update("repository_id", r.ID).
+			Error
 	}
 
 	// Projects -> Repository
@@ -68,7 +71,10 @@ func (mg *Migrator) Up() error {
 		if err := mg.db.Where("hostname = ? AND owner = ? AND repo = ?", p.Repository.Hostname, p.Repository.Owner, p.Repository.Repo).First(&r).Error; err != nil {
 			return fmt.Errorf("backfill load repo for project failed: %w", err)
 		}
-		_ = mg.db.Model(&awesome.Project{}).Where("id = ?", p.ID).Update("repository_id", r.ID).Error
+		_ = mg.db.Model(&awesome.Project{}).
+			Where("id = ?", p.ID).
+			Update("repository_id", r.ID).
+			Error
 	}
 
 	// ProjectStats -> Repository
@@ -87,7 +93,10 @@ func (mg *Migrator) Up() error {
 		if err := mg.db.Where("hostname = ? AND owner = ? AND repo = ?", s.Repository.Hostname, s.Repository.Owner, s.Repository.Repo).First(&r).Error; err != nil {
 			return fmt.Errorf("backfill load repo for project_stats failed: %w", err)
 		}
-		_ = mg.db.Model(&awesome.ProjectStats{}).Where("id = ?", s.ID).Update("repository_id", r.ID).Error
+		_ = mg.db.Model(&awesome.ProjectStats{}).
+			Where("id = ?", s.ID).
+			Update("repository_id", r.ID).
+			Error
 	}
 
 	return nil
