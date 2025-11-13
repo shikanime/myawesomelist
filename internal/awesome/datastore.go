@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/openai/openai-go/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"k8s.io/utils/ptr"
@@ -14,11 +15,12 @@ import (
 // DataStore wraps a SQL database and provides typed operations for cols.
 type DataStore struct {
 	db *gorm.DB
+	ai *openai.Client
 }
 
 // NewDataStore constructs a DataStore using the provided sql.DB connection.
-func NewDataStore(db *gorm.DB) *DataStore {
-	return &DataStore{db: db}
+func NewDataStore(db *gorm.DB, ai *openai.Client) *DataStore {
+	return &DataStore{db: db, ai: ai}
 }
 
 // Ping verifies the provided database connection is available
@@ -200,6 +202,29 @@ func (ds *DataStore) UpSertCollection(
 					}),
 				}).Create(&pm).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
 					return fmt.Errorf("upsert project failed: %w", err)
+				}
+
+				embedding, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
+					Input: openai.EmbeddingNewParamsInputUnion{
+						OfString: openai.String(p.Name + " " + p.Description),
+					},
+					Model: openai.EmbeddingModel(GetEmbeddingModel()),
+				})
+				if err != nil {
+					return fmt.Errorf("generate project embedding failed: %w", err)
+				}
+				pe := ProjectEmbeddings{
+					ProjectID: pm.ID,
+					Embedding: embedding.Data[0].Embedding,
+				}
+				if err := tx.Clauses(clause.OnConflict{
+					Columns: []clause.Column{{Name: "project_id"}},
+					DoUpdates: clause.Assignments(map[string]interface{}{
+						"embedding":  pe.Embedding,
+						"updated_at": gorm.Expr("NOW()"),
+					}),
+				}).Create(&pe).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
+					return fmt.Errorf("upsert project embedding failed: %w", err)
 				}
 			}
 		}

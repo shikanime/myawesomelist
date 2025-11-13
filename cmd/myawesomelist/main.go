@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -62,12 +64,17 @@ func init() {
 }
 
 func runServer(cmd *cobra.Command, args []string) error {
-	ds, err := openDataStoreFromEnv()
+	ai, err := newOpenAIAPIClientFromEnv()
 	if err != nil {
 		return err
 	}
 
-	srv, err := newServerFromEnv(ds)
+	ds, err := openDataStoreFromEnv(ai)
+	if err != nil {
+		return err
+	}
+
+	srv, err := newServerFromEnv(ds, ai)
 	if err != nil {
 		return err
 	}
@@ -146,18 +153,18 @@ func newClientSetFromEnv(ds *awesome.DataStore) *awesome.ClientSet {
 }
 
 // newServerFromEnv creates a new Server instance using a ClientSet built from env.
-func newServerFromEnv(ds *awesome.DataStore) (*app.Server, error) {
+func newServerFromEnv(ds *awesome.DataStore, ai *openai.Client) (*app.Server, error) {
 	cs := newClientSetFromEnv(ds)
-	return app.NewServer(cs), nil
+	return app.NewServer(cs, ai), nil
 }
 
 // openDataStoreFromEnv opens a connection to the database and constructs a DataStore.
-func openDataStoreFromEnv() (*awesome.DataStore, error) {
+func openDataStoreFromEnv(ai *openai.Client) (*awesome.DataStore, error) {
 	db, err := openGormDbFromEnv()
 	if err != nil {
 		return nil, err
 	}
-	return awesome.NewDataStore(db), nil
+	return awesome.NewDataStore(db, ai), nil
 }
 
 // openDbFromEnv opens a connection to the database using the provided DSN or falls back to the environment variable.
@@ -187,4 +194,11 @@ func openGormDbFromEnv() (*gorm.DB, error) {
 	default:
 		return nil, errors.New("unsupported driver for gorm: " + dsnUrl.Scheme)
 	}
+}
+
+func newOpenAIAPIClientFromEnv() (*openai.Client, error) {
+	c := openai.NewClient(
+		option.WithAPIKey(awesome.GetOpenAIAPIKey()),
+	)
+	return &c, nil
 }

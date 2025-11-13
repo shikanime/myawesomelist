@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/openai/openai-go/v3 v3.8.1
 	github.com/spf13/cobra v1.10.1
 	golang.org/x/sync v0.12.0
 	google.golang.org/protobuf v1.36.9
@@ -32,6 +33,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 )

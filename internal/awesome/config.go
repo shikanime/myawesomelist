@@ -170,3 +170,19 @@ func GetProjectStatsTTL() time.Duration {
 	}
 	return def
 }
+
+// GetOpenAIAPIBaseURL returns the OpenAI API base URL from env var OPENAI_API_BASE_URL.
+// Defaults to "https://api.openai.com/v1".
+func GetOpenAIBaseURL() string {
+	return os.Getenv("OPENAI_BASE_URL")
+}
+
+// GetOpenAIAPIKey returns the OpenAI API key from env var OPENAI_API_KEY.
+func GetOpenAIAPIKey() string {
+	return os.Getenv("OPENAI_API_KEY")
+}
+
+// GetEmbeddingModel returns the OpenAI embedding model from env var EMBEDDING_MODEL.
+func GetEmbeddingModel() string {
+	return os.Getenv("EMBEDDING_MODEL")
+}

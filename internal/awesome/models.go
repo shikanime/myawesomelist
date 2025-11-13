@@ -86,6 +86,17 @@ func (m *Project) ToProto() *myawesomelistv1.Project {
 	}
 }
 
+type ProjectEmbeddings struct {
+	ID        uint64    `gorm:"primaryKey"`
+	ProjectID uint64    `gorm:"not null;index;uniqueIndex:uq_project_embeddings_project_id"`
+	Project   Project   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Embedding []float64 `gorm:"type:vector(3584)"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+}
+
+func (ProjectEmbeddings) TableName() string { return "project_embeddings" }
+
 type ProjectStats struct {
 	ID              uint64     `gorm:"primaryKey"`
 	RepositoryID    uint64     `gorm:"not null;index;uniqueIndex:uq_project_stats_repository"`
