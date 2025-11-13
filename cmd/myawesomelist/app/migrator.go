@@ -34,8 +34,6 @@ func (mg *Migrator) Up() error {
 		return fmt.Errorf("auto-migrate failed: %w", err)
 	}
 
-	// Backfill repositories and repository_id references
-	// Collections -> Repository
 	var cols []awesome.Collection
 	if err := mg.db.Find(&cols).Error; err != nil {
 		return fmt.Errorf("backfill load collections failed: %w", err)
