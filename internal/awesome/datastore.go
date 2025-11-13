@@ -271,15 +271,25 @@ func (ds *DataStore) SearchProjects(
 
 	// Basic text search on name/description
 	if q != "" {
-		db = db.Where(
-			"(projects.name ILIKE ? OR projects.description ILIKE ?)",
-			"%"+q+"%",
-			"%"+q+"%",
-		)
+		embeddingRes, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
+			Input: openai.EmbeddingNewParamsInputUnion{
+				OfString: openai.String(q),
+			},
+			Model: openai.EmbeddingModel(GetEmbeddingModel()),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("generate query embedding failed: %w", err)
+		}
+		queryVec := make([]float32, len(embeddingRes.Data[0].Embedding))
+		for i := range queryVec {
+			queryVec[i] = float32(embeddingRes.Data[0].Embedding[i])
+		}
+		db = db.Joins("JOIN project_embeddings pe ON pe.project_id = projects.id").
+			Order(clause.Expr{SQL: "pe.embedding <-> ?", Vars: []interface{}{pgvector.NewVector(queryVec)}})
 	}
 
 	var rows []Project
-	if err := db.Limit(int(limit)).Order("projects.updated_at DESC").Find(&rows).Error; err != nil {
+	if err := db.Limit(int(limit)).Find(&rows).Error; err != nil {
 		return nil, fmt.Errorf("search projects failed: %w", err)
 	}
 
