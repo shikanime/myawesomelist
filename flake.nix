@@ -41,6 +41,9 @@
         { pkgs, ... }:
         {
           devenv.shells.default = {
+            imports = [
+              devlib.devenvModules.shikanime-studio
+            ];
             buf = {
               enable = true;
               generate = {
@@ -69,23 +72,10 @@
                 version = "v2";
               };
             };
-            cachix = {
-              enable = true;
-              push = "shikanime";
-            };
-            containers = pkgs.lib.mkForce { };
-            docker.enable = true;
-            github.enable = true;
-            gitignore = {
-              enable = true;
-              enableDefaultTemplates = true;
-            };
             languages = {
               go.enable = true;
               javascript.enable = true;
-              nix.enable = true;
               opentofu.enable = true;
-              shell.enable = true;
             };
             packages = [
               pkgs.ko
@@ -94,16 +84,9 @@
               pkgs.skaffold
             ];
             services.postgres.enable = true;
-            treefmt = {
-              enable = true;
-              config = {
-                enableDefaultExcludes = true;
-                programs.prettier.enable = true;
-                settings.global.excludes = [
-                  "public/**"
-                ];
-              };
-            };
+            treefmt.config.settings.global.excludes = [
+              "public/**"
+            ];
           };
         };
       systems = [
