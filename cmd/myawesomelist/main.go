@@ -95,9 +95,9 @@ func RunMigrateDownWithConf(cfg *config.Config) error {
 }
 
 // NewServeCmdForConf returns a new cobra.Command for running the API server with the given configuration.
-func NewServeCmdForConf(cfg *config.Config) *cobra.Command {
+func NewServerStartCmdForConf(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "serve",
+		Use:   "start",
 		Short: "Run the API server",
 		RunE:  func(_ *cobra.Command, _ []string) error { return RunServerWithConf(cfg) },
 	}
@@ -106,10 +106,16 @@ func NewServeCmdForConf(cfg *config.Config) *cobra.Command {
 	return c
 }
 
+func NewServerCmdForConf(cfg *config.Config) *cobra.Command {
+	c := &cobra.Command{Use: "server", Short: "Server commands"}
+	c.AddCommand(NewServerStartCmdForConf(cfg))
+	return c
+}
+
 // NewMigrateUpCmdForConf returns a new cobra.Command for applying all pending migrations with the given configuration.
 func NewMigrateUpCmdForConf(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "up",
+		Use:   "apply",
 		Short: "Apply all pending migrations",
 		RunE:  func(_ *cobra.Command, _ []string) error { return RunMigrateUpWithConf(cfg) },
 	}
@@ -118,7 +124,7 @@ func NewMigrateUpCmdForConf(cfg *config.Config) *cobra.Command {
 // NewMigrateDownCmdForConf returns a new cobra.Command for reverting all applied migrations with the given configuration.
 func NewMigrateDownCmdForConf(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "down",
+		Use:   "delete",
 		Short: "Revert all applied migrations",
 		RunE:  func(_ *cobra.Command, _ []string) error { return RunMigrateDownWithConf(cfg) },
 	}
@@ -126,7 +132,7 @@ func NewMigrateDownCmdForConf(cfg *config.Config) *cobra.Command {
 
 // NewMigrateCmdForConf returns a new cobra.Command for database migrations with the given configuration.
 func NewMigrateCmdForConf(cfg *config.Config) *cobra.Command {
-	c := &cobra.Command{Use: "migrate", Short: "Database migrations"}
+	c := &cobra.Command{Use: "migrations", Short: "Database migrations"}
 	c.AddCommand(NewMigrateUpCmdForConf(cfg), NewMigrateDownCmdForConf(cfg))
 	return c
 }
@@ -136,6 +142,6 @@ func NewCmdForConf(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{Use: "myawesomelist", Short: "Awesome list server and utilities"}
 	c.PersistentFlags().
 		StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
-	c.AddCommand(NewServeCmdForConf(cfg), NewMigrateCmdForConf(cfg))
+	c.AddCommand(NewServerCmdForConf(cfg), NewMigrateCmdForConf(cfg))
 	return c
 }
