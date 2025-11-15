@@ -8,6 +8,7 @@ import (
     "myawesomelist.shikanime.studio/internal/agent/openai"
     "myawesomelist.shikanime.studio/internal/config"
     myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
+    "log/slog"
 )
 
 // Embeddings generates vector embeddings for projects using an OpenAI client.
@@ -33,7 +34,9 @@ func NewEmbeddingsWithOpenAI(cfg *config.Config, c *sdk.Client, opts ...Embeddin
     for _, opt := range opts {
         opt(&o)
     }
-    return &Embeddings{c: c, model: cfg.GetEmbeddingModel(), l: o.limiter}
+    e := &Embeddings{c: c, model: cfg.GetEmbeddingModel(), l: o.limiter}
+    slog.Debug("embeddings configured", "model", e.model, "limiter", e.l != nil)
+    return e
 }
 
 // EmbedProjects returns embeddings for a slice of projects.
@@ -48,6 +51,7 @@ func (e *Embeddings) EmbedProjects(
                 return nil, err
             }
         }
+        slog.DebugContext(ctx, "embedding request", "index", i, "model", e.model, "name_len", len(inputs[i].Name), "desc_len", len(inputs[i].Description))
         res, err := e.c.Embeddings.New(ctx, sdk.EmbeddingNewParams{
             Input: sdk.EmbeddingNewParamsInputUnion{
                 OfString: sdk.String(inputs[i].Name + " " + inputs[i].Description),
@@ -62,6 +66,7 @@ func (e *Embeddings) EmbedProjects(
             v[j] = float32(res.Data[0].Embedding[j])
         }
         out[i] = v
+        slog.DebugContext(ctx, "embedding response", "index", i, "dim", len(v))
     }
     return out, nil
 }

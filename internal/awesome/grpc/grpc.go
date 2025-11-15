@@ -1,8 +1,9 @@
 package grpc
 
 import (
-	"context"
-	"errors"
+    "context"
+    "errors"
+    "log/slog"
 
 	"connectrpc.com/connect"
 	"myawesomelist.shikanime.studio/internal/awesome"
@@ -150,20 +151,22 @@ func (s *AwesomeService) ListProjects(
 }
 
 func (s *AwesomeService) SearchProjects(
-	ctx context.Context,
-	req *connect.Request[myawesomelistv1.SearchProjectsRequest],
+    ctx context.Context,
+    req *connect.Request[myawesomelistv1.SearchProjectsRequest],
 ) (
-	*connect.Response[myawesomelistv1.SearchProjectsResponse],
-	error,
+    *connect.Response[myawesomelistv1.SearchProjectsResponse],
+    error,
 ) {
-	q := req.Msg.GetQuery()
-	limit := req.Msg.GetLimit()
-	repos := req.Msg.GetRepos()
-	projects, err := s.clients.Core().SearchProjects(ctx, q, limit, repos)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-	return connect.NewResponse(&myawesomelistv1.SearchProjectsResponse{Projects: projects}), nil
+    q := req.Msg.GetQuery()
+    limit := req.Msg.GetLimit()
+    repos := req.Msg.GetRepos()
+    slog.DebugContext(ctx, "search projects request", "query", q, "limit", limit, "repos", len(repos))
+    projects, err := s.clients.Core().SearchProjects(ctx, q, limit, repos)
+    if err != nil {
+        return nil, connect.NewError(connect.CodeInternal, err)
+    }
+    slog.DebugContext(ctx, "search projects response", "count", len(projects))
+    return connect.NewResponse(&myawesomelistv1.SearchProjectsResponse{Projects: projects}), nil
 }
 
 // GetProjectStats returns per-repo stats (stars, open issues) persisted in datastore.
