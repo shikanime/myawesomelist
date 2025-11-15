@@ -83,7 +83,55 @@
               pkgs.scaleway-cli
               pkgs.skaffold
             ];
-            services.postgres.enable = true;
+            services = {
+              postgres = {
+                enable = true;
+                extensions = extensions: [
+                  extensions.pgvector
+                ];
+              };
+              opentelemetry-collector = {
+                enable = true;
+                settings = {
+                  receivers = {
+                    otlp = {
+                      protocols = {
+                        http = {
+                          endpoint = "0.0.0.0:4318";
+                        };
+                      };
+                    };
+                  };
+                  processors = {
+                    batch = { };
+                  };
+                  exporters = {
+                    debug = {
+                      verbosity = "normal";
+                    };
+                  };
+                  service = {
+                    pipelines = {
+                      traces = {
+                        receivers = [ "otlp" ];
+                        processors = [ "batch" ];
+                        exporters = [ "debug" ];
+                      };
+                      metrics = {
+                        receivers = [ "otlp" ];
+                        processors = [ "batch" ];
+                        exporters = [ "debug" ];
+                      };
+                      logs = {
+                        receivers = [ "otlp" ];
+                        processors = [ "batch" ];
+                        exporters = [ "debug" ];
+                      };
+                    };
+                  };
+                };
+              };
+            };
             treefmt.config.settings.global.excludes = [
               "public/**"
             ];

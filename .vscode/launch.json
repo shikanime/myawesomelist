@@ -15,7 +15,10 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/myawesomelist",
-      "args": ["serve"]
+      "args": ["serve"],
+      "env": {
+        "LOG_LEVEL": "debug"
+      }
     }
   ]
 }
