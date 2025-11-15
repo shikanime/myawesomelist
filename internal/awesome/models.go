@@ -36,14 +36,29 @@ func (m *Collection) ToProto() *myawesomelistv1.Collection {
 	}
 	return pc
 }
+func CollectionFromProto(pc *myawesomelistv1.Collection) Collection {
+	var m Collection
+	if pc == nil {
+		return m
+	}
+	m.ID = pc.Id
+	if pc.Repo != nil {
+		m.Repository = RepositoryFromProto(pc.Repo)
+	}
+	m.Language = pc.Language
+	for _, c := range pc.Categories {
+		m.Categories = append(m.Categories, CategoryFromProto(c))
+	}
+	return m
+}
 
 type Category struct {
 	ID           uint64    `gorm:"primaryKey"`
 	CollectionID uint64    `gorm:"not null;index;uniqueIndex:uq_categories_collection_name"`
 	Name         string    `gorm:"size:255;not null;index;uniqueIndex:uq_categories_collection_name"`
+	Projects     []Project `gorm:"constraint:OnDelete:CASCADE"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
-	Projects     []Project `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 func (Category) TableName() string { return "categories" }
@@ -58,6 +73,18 @@ func (m *Category) ToProto() *myawesomelistv1.Category {
 		pc.Projects = append(pc.Projects, p.ToProto())
 	}
 	return pc
+}
+func CategoryFromProto(pc *myawesomelistv1.Category) Category {
+	var m Category
+	if pc == nil {
+		return m
+	}
+	m.ID = pc.Id
+	m.Name = pc.Name
+	for _, p := range pc.Projects {
+		m.Projects = append(m.Projects, ProjectFromProto(p))
+	}
+	return m
 }
 
 type Project struct {
@@ -85,6 +112,19 @@ func (m *Project) ToProto() *myawesomelistv1.Project {
 		},
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
 	}
+}
+func ProjectFromProto(pp *myawesomelistv1.Project) Project {
+	var m Project
+	if pp == nil {
+		return m
+	}
+	m.ID = pp.Id
+	m.Name = pp.Name
+	m.Description = pp.Description
+	if pp.Repo != nil {
+		m.Repository = RepositoryFromProto(pp.Repo)
+	}
+	return m
 }
 
 type ProjectEmbeddings struct {
@@ -118,6 +158,16 @@ func (m *ProjectStats) ToProto() *myawesomelistv1.ProjectStats {
 		UpdatedAt:       timestamppb.New(m.UpdatedAt),
 	}
 }
+func ProjectStatsFromProto(ps *myawesomelistv1.ProjectStats) ProjectStats {
+	var m ProjectStats
+	if ps == nil {
+		return m
+	}
+	m.ID = ps.Id
+	m.StargazersCount = ps.StargazersCount
+	m.OpenIssueCount = ps.OpenIssueCount
+	return m
+}
 
 type ProjectMetadata struct {
 	ID           uint64     `gorm:"primaryKey"`
@@ -148,4 +198,10 @@ func (m *Repository) ToProto() *myawesomelistv1.Repository {
 		Owner:    m.Owner,
 		Repo:     m.Repo,
 	}
+}
+func RepositoryFromProto(pr *myawesomelistv1.Repository) Repository {
+	if pr == nil {
+		return Repository{}
+	}
+	return Repository{Hostname: pr.Hostname, Owner: pr.Owner, Repo: pr.Repo}
 }
