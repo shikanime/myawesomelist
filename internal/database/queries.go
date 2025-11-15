@@ -100,18 +100,24 @@ var tmplFuncs = template.FuncMap{
 
 var listCollectionsQueryTmpl = template.Must(
 	template.New("listCollections").Funcs(tmplFuncs).Parse(strings.Join([]string{
-		"SELECT c.id, c.repository_id, c.language, c.updated_at, r.hostname, r.owner, r.repo FROM collections c JOIN repositories r ON r.id = c.repository_id",
-		"{{if gt (len .Repos) 0}} WHERE {{range $i, $rp := .Repos}}{{if ne $i 0}} OR {{end}}(r.hostname = ${{add (mul $i 3) 1}} AND r.owner = ${{add (mul $i 3) 2}} AND r.repo = ${{add (mul $i 3) 3}}){{end}}{{end}}",
+		"SELECT c.id, c.repository_id, c.language, c.updated_at, r.hostname, r.owner, r.repo",
+		"FROM collections c",
+		"JOIN repositories r ON r.id = c.repository_id",
+		"{{if gt (len .Repos) 0}}",
+		"WHERE {{range $i, $rp := .Repos}}{{if ne $i 0}} OR {{end}}(r.hostname = ${{add (mul $i 3) 1}} AND r.owner = ${{add (mul $i 3) 2}} AND r.repo = ${{add (mul $i 3) 3}}){{end}}",
+		"{{end}}",
 	}, " ")),
 )
 
 var searchProjectsQueryTmpl = template.Must(
 	template.New("searchProjects").Funcs(tmplFuncs).Parse(strings.Join([]string{
-		"SELECT p.id, p.name, p.description, p.updated_at, r.hostname, r.owner, r.repo FROM projects p JOIN repositories r ON r.id = p.repository_id",
-		"JOIN categories c ON c.id = p.category_id JOIN collections col ON col.id = c.collection_id JOIN repositories cr ON cr.id = col.repository_id",
-		"{{if gt (len .Repos) 0}} WHERE {{range $i, $rp := .Repos}}{{if ne $i 0}} OR {{end}}(cr.hostname = ${{add (mul $i 3) 1}} AND cr.owner = ${{add (mul $i 3) 2}} AND cr.repo = ${{add (mul $i 3) 3}}){{end}}{{end}}",
-		"{{if .OrderPlaceholder}} ORDER BY (SELECT embedding FROM project_embeddings pe WHERE pe.project_id = p.id) <-> {{.OrderPlaceholder}}{{end}}",
-		"LIMIT {{.LimitPlaceholder}}",
+		"SELECT p.id, p.name, p.description, p.updated_at, r.hostname, r.owner, r.repo",
+		"FROM projects p",
+		"JOIN repositories r ON r.id = p.repository_id",
+		"JOIN project_embeddings pe ON pe.project_id = p.id",
+		"{{if gt (len .Repos) 0}} WHERE {{range $i, $rp := .Repos}}{{if ne $i 0}} OR {{end}}(r.hostname = ${{add (mul $i 3) 1}} AND r.owner = ${{add (mul $i 3) 2}} AND r.repo = ${{add (mul $i 3) 3}}){{end}}{{end}}",
+		"{{if .OrderPlaceholder}} ORDER BY pe.embedding <-> {{.OrderPlaceholder}}{{end}}",
+		"{{if .LimitPlaceholder}} LIMIT {{.LimitPlaceholder}}{{end}}",
 	}, " ")),
 )
 

@@ -401,7 +401,7 @@ func (db *Database) SearchProjects(
 	if q != "" {
 		vecs, err := db.emb.EmbedProjects(
 			ctx,
-			[]*myawesomelistv1.Project{{Name: q, Description: ""}},
+			[]*myawesomelistv1.Project{{Name: q, Description: q}},
 		)
 		if err != nil {
 			return nil, fmt.Errorf("generate query embedding failed: %w", err)
