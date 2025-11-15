@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/openai/openai-go/v3"
+	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"k8s.io/utils/ptr"
@@ -14,11 +16,12 @@ import (
 // DataStore wraps a SQL database and provides typed operations for cols.
 type DataStore struct {
 	db *gorm.DB
+	ai *openai.Client
 }
 
 // NewDataStore constructs a DataStore using the provided sql.DB connection.
-func NewDataStore(db *gorm.DB) *DataStore {
-	return &DataStore{db: db}
+func NewDataStore(db *gorm.DB, ai *openai.Client) *DataStore {
+	return &DataStore{db: db, ai: ai}
 }
 
 // Ping verifies the provided database connection is available
@@ -201,6 +204,34 @@ func (ds *DataStore) UpSertCollection(
 				}).Create(&pm).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
 					return fmt.Errorf("upsert project failed: %w", err)
 				}
+
+				embeddingRes, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
+					Input: openai.EmbeddingNewParamsInputUnion{
+						OfString: openai.String(p.Name + " " + p.Description),
+					},
+					Model: openai.EmbeddingModel(GetEmbeddingModel()),
+				})
+				if err != nil {
+					return fmt.Errorf("generate project embedding failed: %w", err)
+				}
+
+				embedding := make([]float32, len(embeddingRes.Data[0].Embedding))
+				for i := range embedding {
+					embedding[i] = float32(embeddingRes.Data[0].Embedding[i])
+				}
+				pe := ProjectEmbeddings{
+					ProjectID: pm.ID,
+					Embedding: pgvector.NewVector(embedding),
+				}
+				if err := tx.Clauses(clause.OnConflict{
+					Columns: []clause.Column{{Name: "project_id"}},
+					DoUpdates: clause.Assignments(map[string]interface{}{
+						"embedding":  pe.Embedding,
+						"updated_at": gorm.Expr("NOW()"),
+					}),
+				}).Create(&pe).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
+					return fmt.Errorf("upsert project embedding failed: %w", err)
+				}
 			}
 		}
 		return nil
@@ -240,15 +271,25 @@ func (ds *DataStore) SearchProjects(
 
 	// Basic text search on name/description
 	if q != "" {
-		db = db.Where(
-			"(projects.name ILIKE ? OR projects.description ILIKE ?)",
-			"%"+q+"%",
-			"%"+q+"%",
-		)
+		embeddingRes, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
+			Input: openai.EmbeddingNewParamsInputUnion{
+				OfString: openai.String(q),
+			},
+			Model: openai.EmbeddingModel(GetEmbeddingModel()),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("generate query embedding failed: %w", err)
+		}
+		queryVec := make([]float32, len(embeddingRes.Data[0].Embedding))
+		for i := range queryVec {
+			queryVec[i] = float32(embeddingRes.Data[0].Embedding[i])
+		}
+		db = db.Joins("JOIN project_embeddings pe ON pe.project_id = projects.id").
+			Order(clause.Expr{SQL: "pe.embedding <-> ?", Vars: []interface{}{pgvector.NewVector(queryVec)}})
 	}
 
 	var rows []Project
-	if err := db.Limit(int(limit)).Order("projects.updated_at DESC").Find(&rows).Error; err != nil {
+	if err := db.Limit(int(limit)).Find(&rows).Error; err != nil {
 		return nil, fmt.Errorf("search projects failed: %w", err)
 	}
 

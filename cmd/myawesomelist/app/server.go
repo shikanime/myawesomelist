@@ -4,17 +4,20 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/openai/openai-go/v3"
 	"myawesomelist.shikanime.studio/internal/awesome"
 	myawesomelistv1connect "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1/myawesomelistv1connect"
 )
 
 type Server struct {
 	cs *awesome.ClientSet
+	ai *openai.Client
 }
 
-func NewServer(cs *awesome.ClientSet) *Server {
+func NewServer(cs *awesome.ClientSet, ai *openai.Client) *Server {
 	return &Server{
 		cs: cs,
+		ai: ai,
 	}
 }
 

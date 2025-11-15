@@ -33,6 +33,7 @@ func (mg *Migrator) Up() error {
 		&awesome.Category{},
 		&awesome.Project{},
 		&awesome.ProjectStats{},
+		&awesome.ProjectEmbeddings{},
 		&awesome.ProjectMetadata{},
 	); err != nil {
 		return fmt.Errorf("auto-migrate failed: %w", err)
@@ -46,19 +47,20 @@ func (mg *Migrator) Down() error {
 		return fmt.Errorf("migrator not initialized")
 	}
 
-	if err := mg.db.Exec("DROP EXTENSION IF EXISTS vector;").Error; err != nil {
-		return fmt.Errorf("drop vector extension failed: %w", err)
-	}
-
 	if err := mg.db.Migrator().DropTable(
-		&awesome.Project{},
-		&awesome.Category{},
-		&awesome.ProjectStats{},
-		&awesome.ProjectMetadata{},
-		&awesome.Collection{},
 		&awesome.Repository{},
+		&awesome.Collection{},
+		&awesome.Category{},
+		&awesome.Project{},
+		&awesome.ProjectStats{},
+		&awesome.ProjectEmbeddings{},
+		&awesome.ProjectMetadata{},
 	); err != nil {
 		return fmt.Errorf("drop tables failed: %w", err)
+	}
+
+	if err := mg.db.Exec("DROP EXTENSION IF EXISTS vector;").Error; err != nil {
+		return fmt.Errorf("drop vector extension failed: %w", err)
 	}
 
 	return nil
