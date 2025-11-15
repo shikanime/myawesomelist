@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"myawesomelist.shikanime.studio/internal/ai"
+	"myawesomelist.shikanime.studio/internal/ai/openai"
 	"myawesomelist.shikanime.studio/internal/awesome/github"
 	"myawesomelist.shikanime.studio/internal/config"
 	"myawesomelist.shikanime.studio/internal/database"
@@ -12,13 +14,13 @@ import (
 // Awesome aggregates external clients used by the application.
 type Awesome struct {
 	db   *database.Database
-	cfg  *config.Config
 	opts ClientSetOptions
 }
 
 // ClientSetOptions holds configuration for initializing Awesome.
 type ClientSetOptions struct {
-	github []github.GitHubClientOption
+	github     []github.GitHubClientOption
+	embeddings []ai.EmbeddingsOption
 }
 
 // ClientSetOption applies a configuration to ClientSetOptions.
@@ -29,8 +31,21 @@ func WithGitHubOptions(opts ...github.GitHubClientOption) ClientSetOption {
 	return func(o *ClientSetOptions) { o.github = append(o.github, opts...) }
 }
 
+// WithEmbeddingsOptions forwards OpenAI embeddings options into the Awesome configuration.
+func WithEmbeddingsOptions(opts ...ai.EmbeddingsOption) ClientSetOption {
+	return func(o *ClientSetOptions) { o.embeddings = append(o.embeddings, opts...) }
+}
+
 func NewForConfig(cfg *config.Config) (*Awesome, error) {
 	var opts []ClientSetOption
+	if token := cfg.GetOpenAIAPIKey(); token != "" {
+		opts = append(
+			opts,
+			WithEmbeddingsOptions(
+				ai.WithLimiter(openai.NewOpenAIScalewayLimiter(cfg.GetScalewayVerified())),
+			),
+		)
+	}
 	if token := cfg.GetGitHubToken(); token != "" {
 		opts = append(
 			opts,
@@ -46,16 +61,29 @@ func NewForConfig(cfg *config.Config) (*Awesome, error) {
 	if err != nil {
 		return nil, err
 	}
-	return New(db, cfg, opts...), nil
+	return New(db, opts...), nil
 }
 
-// New constructs an Awesome with the given database and options.
-func New(db *database.Database, cfg *config.Config, opts ...ClientSetOption) *Awesome {
+// NewForConfigWithOptions builds Awesome with cfg and forwards embeddings options to the database.
+func NewForConfigWithOptions(cfg *config.Config, opts ...ClientSetOption) (*Awesome, error) {
 	var o ClientSetOptions
 	for _, opt := range opts {
 		opt(&o)
 	}
-	return &Awesome{db: db, cfg: cfg, opts: o}
+	db, err := database.NewForConfigWithEmbeddingsOptions(cfg, o.embeddings...)
+	if err != nil {
+		return nil, err
+	}
+	return New(db, opts...), nil
+}
+
+// New constructs an Awesome with the given database and options.
+func New(db *database.Database, opts ...ClientSetOption) *Awesome {
+	var o ClientSetOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return &Awesome{db: db, opts: o}
 }
 
 // GitHub returns the configured GitHub client, or nil if not set.

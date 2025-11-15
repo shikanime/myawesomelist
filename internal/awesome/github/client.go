@@ -19,9 +19,8 @@ import (
 
 // NewGitHubLimiter returns a rate limiter tuned for authenticated or unauthenticated GitHub API usage.
 func NewGitHubLimiter(authenticated bool) *rate.Limiter {
-	var limiter *rate.Limiter
 	if authenticated {
-		limiter = rate.NewLimiter(rate.Every(time.Hour), 5000)
+		l := rate.NewLimiter(rate.Every(time.Hour), 5000)
 		slog.Info(
 			"Created authenticated GitHub rate limiter",
 			"rate",
@@ -29,11 +28,11 @@ func NewGitHubLimiter(authenticated bool) *rate.Limiter {
 			"burst",
 			10,
 		)
-	} else {
-		limiter = rate.NewLimiter(rate.Every(time.Hour), 60)
-		slog.Info("Created unauthenticated GitHub rate limiter", "rate", "60 requests/hour", "burst", 1)
+		return l
 	}
-	return limiter
+	l := rate.NewLimiter(rate.Every(time.Hour), 60)
+	slog.Info("Created unauthenticated GitHub rate limiter", "rate", "60 requests/hour", "burst", 1)
+	return l
 }
 
 // Client wraps the GitHub API client with rate limiting and datastore access.
@@ -282,7 +281,7 @@ func (c *Client) GetCollection(
 			"error",
 			idErr,
 		)
-	} else if err = c.d.UpsertProjectMetadata(ctx, []*database.ProjectMetadata{{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
+	} else if err = c.d.UpsertProjectMetadata(ctx, rms[0].ID, string(content)); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project metadata", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo, "error", err)
 	}
 	encCol, err := encoding.UnmarshallCollection(content, options.eopts...)
@@ -385,7 +384,7 @@ func (c *Client) GetProjectStats(
 			"error",
 			idErr,
 		)
-	} else if err := c.d.UpsertProjectStats(ctx, []*database.ProjectStats{{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}}); err != nil {
+	} else if err := c.d.UpsertProjectStats(ctx, rms[0].ID, stats); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project stats", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo, "error", err)
 	}
 	return stats, nil

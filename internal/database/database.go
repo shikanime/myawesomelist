@@ -26,8 +26,16 @@ func NewForConfig(cfg *config.Config) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	emb := ai.NewEmbeddingsWithOpenAI(cfg)
-	return NewClientWithPgxAndEmbedding(pg, emb), nil
+	return NewClientWithPgxAndEmbedding(pg, ai.NewEmbeddingsForConfig(cfg)), nil
+}
+
+// NewForConfigWithEmbeddingsOptions constructs a Database using cfg and forwards embeddings options.
+func NewForConfigWithEmbeddingsOptions(cfg *config.Config, opts ...ai.EmbeddingsOption) (*Database, error) {
+	pg, err := dbpgx.NewClientForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return NewClientWithPgxAndEmbedding(pg, ai.NewEmbeddingsForConfig(cfg, opts...)), nil
 }
 
 // NewClientWithPgxAndEmbedding constructs a Database using the provided pgx pool and embeddings.
@@ -50,8 +58,6 @@ func (db *Database) Close() error {
 	db.pg.Close()
 	return nil
 }
-
-// Deprecated: gorm-based upsert helper removed
 
 func (db *Database) UpsertRepositories(
 	ctx context.Context,
@@ -422,23 +428,15 @@ func (db *Database) GetProjectsStats(
 // UpsertProjectStats stores project stats in the datastore
 func (db *Database) UpsertProjectStats(
 	ctx context.Context,
-	stats []*ProjectStats,
+	repoID uint64,
+	stats *myawesomelistv1.ProjectStats,
 ) error {
 	b := &pgx.Batch{}
-	for i := range stats {
-		b.Queue(
-			UpsertProjectStatsQuery,
-			stats[i].RepositoryID,
-			stats[i].StargazersCount,
-			stats[i].OpenIssueCount,
-		)
-	}
+	b.Queue(UpsertProjectStatsQuery, repoID, stats.StargazersCount, stats.OpenIssueCount)
 	br := db.pg.SendBatch(ctx, b)
 	defer br.Close()
-	for range stats {
-		if _, err := br.Exec(); err != nil {
-			return fmt.Errorf("upsert project stats failed: %w", err)
-		}
+	if _, err := br.Exec(); err != nil {
+		return fmt.Errorf("upsert project stats failed: %w", err)
 	}
 	return nil
 }
@@ -540,18 +538,15 @@ func (db *Database) UpsertProjects(
 
 func (db *Database) UpsertProjectMetadata(
 	ctx context.Context,
-	metas []*ProjectMetadata,
+	repoID uint64,
+	readme string,
 ) error {
 	b := &pgx.Batch{}
-	for _, meta := range metas {
-		b.Queue(UpsertProjectMetadataQuery, meta.RepositoryID, meta.Readme)
-	}
+	b.Queue(UpsertProjectMetadataQuery, repoID, readme)
 	br := db.pg.SendBatch(ctx, b)
 	defer br.Close()
-	for range metas {
-		if _, err := br.Exec(); err != nil {
-			return fmt.Errorf("upsert project metadata failed: %w", err)
-		}
+	if _, err := br.Exec(); err != nil {
+		return fmt.Errorf("upsert project metadata failed: %w", err)
 	}
 	return nil
 }

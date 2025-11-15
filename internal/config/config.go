@@ -165,8 +165,8 @@ func (c *Config) OnLogLevelChange(fn func(slog.Level)) {
 	c.v.OnConfigChange(func(e fsnotify.Event) { apply() })
 }
 
-// BindFlags binds all flags in the given FlagSet to this config's Viper instance.
-// Flag binding helpers removed
+// GetScalewayVerified returns the Scaleway verified flag from env var SCALEWAY_VERIFIED.
+func (c *Config) GetScalewayVerified() bool { return c.v.GetBool("SCALEWAY_VERIFIED") }
 
 // Watch watches for changes in the config file and env vars.
 func (c *Config) Watch(ctx context.Context) {
