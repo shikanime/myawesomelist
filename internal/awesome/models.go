@@ -10,7 +10,7 @@ import (
 
 type Collection struct {
 	ID           uint64     `gorm:"primaryKey"`
-	RepositoryID uint64     `gorm:"index;uniqueIndex:uq_collections_repository_id"`
+	RepositoryID uint64     `gorm:"index"`
 	Repository   Repository `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	Language     string     `gorm:"size:100;not null;index"`
 	CreatedAt    time.Time  `gorm:"autoCreateTime"`
@@ -54,8 +54,8 @@ func CollectionFromProto(pc *myawesomelistv1.Collection) Collection {
 
 type Category struct {
 	ID           uint64    `gorm:"primaryKey"`
-	CollectionID uint64    `gorm:"not null;index;uniqueIndex:uq_categories_collection_name"`
-	Name         string    `gorm:"size:255;not null;index;uniqueIndex:uq_categories_collection_name"`
+	CollectionID uint64    `gorm:"not null;index"`
+	Name         string    `gorm:"size:255;not null;index"`
 	Projects     []Project `gorm:"constraint:OnDelete:CASCADE"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
