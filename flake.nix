@@ -83,7 +83,12 @@
               pkgs.scaleway-cli
               pkgs.skaffold
             ];
-            services.postgres.enable = true;
+            services.postgres = {
+              enable = true;
+              extensions = extensions: [
+                extensions.pgvector
+              ];
+            };
             treefmt.config.settings.global.excludes = [
               "public/**"
             ];
