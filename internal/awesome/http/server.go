@@ -8,6 +8,8 @@ import (
 
 	"connectrpc.com/connect"
 	grpchealth "connectrpc.com/grpchealth"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"myawesomelist.shikanime.studio/internal/awesome"
 	"myawesomelist.shikanime.studio/internal/awesome/grpc"
 	"myawesomelist.shikanime.studio/internal/config"
@@ -55,7 +57,7 @@ func (s *Server) Close() error {
 // ListenAndServe starts the HTTP server on addr using the internal mux.
 func (s *Server) ListenAndServe(addr string) error {
 	slog.Info("server starting", "addr", addr)
-	return stdhttp.ListenAndServe(addr, s.mux)
+	return stdhttp.ListenAndServe(addr, otelhttp.NewHandler(s.mux, "http.server"))
 }
 
 // HealthChecker reports health based on database connectivity.
@@ -66,6 +68,9 @@ func (c HealthChecker) Check(
 	ctx context.Context,
 	req *grpchealth.CheckRequest,
 ) (*grpchealth.CheckResponse, error) {
+	tracer := otel.Tracer("myawesomelist/http")
+	ctx, span := tracer.Start(ctx, "HealthChecker.Check")
+	defer span.End()
 	switch req.Service {
 	case "":
 		return &grpchealth.CheckResponse{Status: grpchealth.StatusNotServing}, nil

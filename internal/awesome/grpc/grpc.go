@@ -1,11 +1,14 @@
 package grpc
 
 import (
-    "context"
-    "errors"
-    "log/slog"
+	"context"
+	"errors"
+	"log/slog"
 
 	"connectrpc.com/connect"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"myawesomelist.shikanime.studio/internal/awesome"
 	"myawesomelist.shikanime.studio/internal/awesome/github"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
@@ -32,6 +35,10 @@ func (s *AwesomeService) ListCollections(
 	*connect.Response[myawesomelistv1.ListCollectionsResponse],
 	error,
 ) {
+	tracer := otel.Tracer("myawesomelist/grpc")
+	ctx, span := tracer.Start(ctx, "AwesomeService.ListCollections")
+	span.SetAttributes(attribute.Int("repos_len", len(req.Msg.GetRepos())))
+	defer span.End()
 	repos := req.Msg.GetRepos()
 	if len(repos) == 0 {
 		for _, rr := range github.DefaultGitHubRepos {
@@ -41,6 +48,8 @@ func (s *AwesomeService) ListCollections(
 
 	cols, err := s.clients.GitHub().ListCollections(ctx, repos)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
@@ -57,6 +66,9 @@ func (s *AwesomeService) GetCollection(
 	*connect.Response[myawesomelistv1.GetCollectionResponse],
 	error,
 ) {
+	tracer := otel.Tracer("myawesomelist/grpc")
+	ctx, span := tracer.Start(ctx, "AwesomeService.GetCollection")
+	defer span.End()
 	repo := req.Msg.GetRepo()
 	if repo == nil {
 		return nil, connect.NewError(
@@ -68,6 +80,8 @@ func (s *AwesomeService) GetCollection(
 	case "github.com":
 		coll, err := s.clients.GitHub().GetCollection(ctx, repo)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 		return connect.NewResponse(
@@ -89,6 +103,9 @@ func (s *AwesomeService) ListCategories(
 	*connect.Response[myawesomelistv1.ListCategoriesResponse],
 	error,
 ) {
+	tracer := otel.Tracer("myawesomelist/grpc")
+	ctx, span := tracer.Start(ctx, "AwesomeService.ListCategories")
+	defer span.End()
 	repo := req.Msg.GetRepo()
 	if repo == nil {
 		return nil, connect.NewError(
@@ -100,6 +117,8 @@ func (s *AwesomeService) ListCategories(
 	case "github.com":
 		coll, err := s.clients.GitHub().GetCollection(ctx, repo)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 		return connect.NewResponse(
@@ -121,6 +140,9 @@ func (s *AwesomeService) ListProjects(
 	*connect.Response[myawesomelistv1.ListProjectsResponse],
 	error,
 ) {
+	tracer := otel.Tracer("myawesomelist/grpc")
+	ctx, span := tracer.Start(ctx, "AwesomeService.ListProjects")
+	defer span.End()
 	repo := req.Msg.GetRepo()
 	if repo == nil {
 		return nil, connect.NewError(
@@ -132,6 +154,8 @@ func (s *AwesomeService) ListProjects(
 	case "github.com":
 		coll, err := s.clients.GitHub().GetCollection(ctx, repo)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 		var projects []*myawesomelistv1.Project
@@ -151,22 +175,36 @@ func (s *AwesomeService) ListProjects(
 }
 
 func (s *AwesomeService) SearchProjects(
-    ctx context.Context,
-    req *connect.Request[myawesomelistv1.SearchProjectsRequest],
+	ctx context.Context,
+	req *connect.Request[myawesomelistv1.SearchProjectsRequest],
 ) (
-    *connect.Response[myawesomelistv1.SearchProjectsResponse],
-    error,
+	*connect.Response[myawesomelistv1.SearchProjectsResponse],
+	error,
 ) {
-    q := req.Msg.GetQuery()
-    limit := req.Msg.GetLimit()
-    repos := req.Msg.GetRepos()
-    slog.DebugContext(ctx, "search projects request", "query", q, "limit", limit, "repos", len(repos))
-    projects, err := s.clients.Core().SearchProjects(ctx, q, limit, repos)
-    if err != nil {
-        return nil, connect.NewError(connect.CodeInternal, err)
-    }
-    slog.DebugContext(ctx, "search projects response", "count", len(projects))
-    return connect.NewResponse(&myawesomelistv1.SearchProjectsResponse{Projects: projects}), nil
+	tracer := otel.Tracer("myawesomelist/grpc")
+	ctx, span := tracer.Start(ctx, "AwesomeService.SearchProjects")
+	defer span.End()
+	q := req.Msg.GetQuery()
+	limit := req.Msg.GetLimit()
+	repos := req.Msg.GetRepos()
+	slog.DebugContext(
+		ctx,
+		"search projects request",
+		"query",
+		q,
+		"limit",
+		limit,
+		"repos",
+		len(repos),
+	)
+	projects, err := s.clients.Core().SearchProjects(ctx, q, limit, repos)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	slog.DebugContext(ctx, "search projects response", "count", len(projects))
+	return connect.NewResponse(&myawesomelistv1.SearchProjectsResponse{Projects: projects}), nil
 }
 
 // GetProjectStats returns per-repo stats (stars, open issues) persisted in datastore.
@@ -177,6 +215,9 @@ func (s *AwesomeService) GetProjectStats(
 	*connect.Response[myawesomelistv1.GetProjectStatsResponse],
 	error,
 ) {
+	tracer := otel.Tracer("myawesomelist/grpc")
+	ctx, span := tracer.Start(ctx, "AwesomeService.GetProjectStats")
+	defer span.End()
 	repo := req.Msg.GetRepo()
 	if repo == nil {
 		return nil, connect.NewError(
@@ -189,6 +230,8 @@ func (s *AwesomeService) GetProjectStats(
 	case "github.com":
 		stats, err := s.clients.GitHub().GetProjectStats(ctx, repo)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 		return connect.NewResponse(&myawesomelistv1.GetProjectStatsResponse{Stats: stats}), nil

@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/google/go-github/v75/github"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 	"k8s.io/utils/ptr"
@@ -97,11 +100,19 @@ func NewClient(db *database.Database, opts ...GitHubClientOption) *Client {
 
 // GetReadme retrieves and decodes the README.md file for the given repository.
 func (c *Client) GetReadme(ctx context.Context, repo *myawesomelistv1.Repository) ([]byte, error) {
+	tracer := otel.Tracer("myawesomelist/github")
+	ctx, span := tracer.Start(ctx, "GitHub.GetReadme")
+	span.SetAttributes(attribute.String("owner", repo.Owner), attribute.String("repo", repo.Repo))
+	defer span.End()
 	if err := c.l.Wait(ctx); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
 	file, _, _, err := c.c.Repositories.GetContents(ctx, repo.Owner, repo.Repo, "README.md", nil)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("failed to get file content: %v", err)
 	}
 	return base64.StdEncoding.DecodeString(*file.Content)
@@ -127,6 +138,10 @@ func (c *Client) ListCollections(
 	repos []*myawesomelistv1.Repository,
 	opts ...GetCollectionOption,
 ) ([]*myawesomelistv1.Collection, error) {
+	tracer := otel.Tracer("myawesomelist/github")
+	ctx, span := tracer.Start(ctx, "GitHub.ListCollections")
+	span.SetAttributes(attribute.Int("repos_len", len(repos)))
+	defer span.End()
 	cols, err := c.d.ListCollections(ctx, repos)
 	if err != nil {
 		slog.WarnContext(ctx, "Failed to list collections from datastore", "error", err)
@@ -149,17 +164,22 @@ func (c *Client) ListCollections(
 	wg := errgroup.Group{}
 	for _, r := range repos {
 		wg.Go(func() error {
+			igctx, cspan := tracer.Start(ctx, "GitHub.GetCollectionConcurrent")
 			key, err := url.JoinPath(r.Hostname, r.Owner, r.Repo)
 			if err != nil {
+				cspan.RecordError(err)
+				cspan.SetStatus(codes.Error, err.Error())
+				cspan.End()
 				return fmt.Errorf("failed to join path for %s/%s: %w", r.Owner, r.Repo, err)
 			}
 			if _, ok := colsByKey[key]; ok {
+				cspan.End()
 				return nil
 			}
-			col, getErr := c.GetCollection(ctx, r, opts...)
+			col, getErr := c.GetCollection(igctx, r, opts...)
 			if getErr != nil {
 				slog.WarnContext(
-					ctx,
+					igctx,
 					"Failed to get collection",
 					"hostname",
 					r.Hostname,
@@ -170,13 +190,19 @@ func (c *Client) ListCollections(
 					"error",
 					getErr,
 				)
+				cspan.RecordError(getErr)
+				cspan.SetStatus(codes.Error, getErr.Error())
+				cspan.End()
 				return nil
 			}
 			cols = append(cols, col)
+			cspan.End()
 			return nil
 		})
 	}
 	if err := wg.Wait(); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	return cols, nil
@@ -188,6 +214,10 @@ func (c *Client) GetCollection(
 	repo *myawesomelistv1.Repository,
 	opts ...GetCollectionOption,
 ) (*myawesomelistv1.Collection, error) {
+	tracer := otel.Tracer("myawesomelist/github")
+	ctx, span := tracer.Start(ctx, "GitHub.GetCollection")
+	span.SetAttributes(attribute.String("owner", repo.Owner), attribute.String("repo", repo.Repo))
+	defer span.End()
 	options := &getCollectionOptions{}
 	for _, opt := range opts {
 		opt(options)
@@ -211,6 +241,7 @@ func (c *Client) GetCollection(
 		ttl := c.cttl
 		if ttl > 0 {
 			if time.Since(col.UpdatedAt.AsTime()) < ttl {
+				span.SetAttributes(attribute.String("cache", "fresh"))
 				slog.InfoContext(
 					ctx,
 					"Collection cache fresh; skip GitHub fetch",
@@ -223,6 +254,7 @@ func (c *Client) GetCollection(
 				)
 				return col, nil
 			}
+			span.SetAttributes(attribute.String("cache", "stale"))
 			slog.InfoContext(
 				ctx,
 				"Collection cache stale; refetching from GitHub",
@@ -265,6 +297,8 @@ func (c *Client) GetCollection(
 	)
 	content, err := c.GetReadme(ctx, repo)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 	rms, idErr := c.d.UpsertRepositories(ctx, []*myawesomelistv1.Repository{repo})
@@ -283,9 +317,13 @@ func (c *Client) GetCollection(
 		)
 	} else if err = c.d.UpsertProjectMetadata(ctx, rms[0].ID, string(content)); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project metadata", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo, "error", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 	encCol, err := encoding.UnmarshallCollection(content, options.eopts...)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf(
 			"failed to parse collection for %s/%s: %v",
 			repo.Owner,
@@ -307,6 +345,8 @@ func (c *Client) GetCollection(
 			"error",
 			err,
 		)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 	return col, nil
 }
@@ -316,6 +356,10 @@ func (c *Client) GetProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
 ) (*myawesomelistv1.ProjectStats, error) {
+	tracer := otel.Tracer("myawesomelist/github")
+	ctx, span := tracer.Start(ctx, "GitHub.GetProjectStats")
+	span.SetAttributes(attribute.String("owner", repo.Owner), attribute.String("repo", repo.Repo))
+	defer span.End()
 	stats, err := c.d.GetProjectStats(ctx, repo)
 	if err != nil {
 		slog.WarnContext(
@@ -360,10 +404,14 @@ func (c *Client) GetProjectStats(
 		}
 	}
 	if err = c.l.Wait(ctx); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
 	ghRepo, _, err := c.c.Repositories.Get(ctx, repo.Owner, repo.Repo)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", repo.Owner, repo.Repo, err)
 	}
 	stats = &myawesomelistv1.ProjectStats{
@@ -386,6 +434,8 @@ func (c *Client) GetProjectStats(
 		)
 	} else if err := c.d.UpsertProjectStats(ctx, rms[0].ID, stats); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project stats", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo, "error", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 	return stats, nil
 }

@@ -16,6 +16,12 @@ import (
 func main() {
 	ctx := context.Background()
 	cfg := config.New()
+	cleanup, err := config.SetupTelemetry(ctx, cfg)
+	if err != nil {
+		slog.WarnContext(ctx, "telemetry setup failed", "error", err)
+	} else {
+		defer cleanup()
+	}
 	config.SetupLog(cfg)
 	if err := NewCmdForConf(cfg).Execute(); err != nil {
 		slog.ErrorContext(ctx, "command execution failed", "error", err)

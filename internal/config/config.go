@@ -160,9 +160,7 @@ func (c *Config) GetLogLevel() slog.Level {
 // OnLogLevelChange calls fn with the slog.Level whenever it changes.
 // The initial call is made immediately.
 func (c *Config) OnLogLevelChange(fn func(slog.Level)) {
-	apply := func() { fn(c.GetLogLevel()) }
-	apply()
-	c.v.OnConfigChange(func(e fsnotify.Event) { apply() })
+	c.v.OnConfigChange(func(e fsnotify.Event) { fn(c.GetLogLevel()) })
 }
 
 // GetScalewayVerified returns the Scaleway verified flag from env var SCALEWAY_VERIFIED.
@@ -172,4 +170,14 @@ func (c *Config) GetScalewayVerified() bool { return c.v.GetBool("SCALEWAY_VERIF
 func (c *Config) Watch(ctx context.Context) {
 	c.v.WatchConfig()
 	go func() { <-ctx.Done() }()
+}
+
+func (c *Config) GetServiceName() string {
+	if v := c.v.GetString("OTEL_SERVICE_NAME"); v != "" {
+		return v
+	}
+	if v := c.v.GetString("SERVICE_NAME"); v != "" {
+		return v
+	}
+	return "myawesomelist"
 }
