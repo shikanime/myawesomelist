@@ -1,14 +1,15 @@
 package awesome
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"myawesomelist.shikanime.studio/internal/ai"
-	"myawesomelist.shikanime.studio/internal/ai/openai"
-	"myawesomelist.shikanime.studio/internal/awesome/github"
-	"myawesomelist.shikanime.studio/internal/config"
-	"myawesomelist.shikanime.studio/internal/database"
+    "myawesomelist.shikanime.studio/internal/agent"
+    "myawesomelist.shikanime.studio/internal/agent/openai"
+    "myawesomelist.shikanime.studio/internal/awesome/github"
+    "myawesomelist.shikanime.studio/internal/config"
+    "myawesomelist.shikanime.studio/internal/database"
+    myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
 // Awesome aggregates external clients used by the application.
@@ -19,8 +20,8 @@ type Awesome struct {
 
 // ClientSetOptions holds configuration for initializing Awesome.
 type ClientSetOptions struct {
-	github     []github.GitHubClientOption
-	embeddings []ai.EmbeddingsOption
+    github     []github.GitHubClientOption
+    embeddings []agent.EmbeddingsOption
 }
 
 // ClientSetOption applies a configuration to ClientSetOptions.
@@ -32,18 +33,19 @@ func WithGitHubOptions(opts ...github.GitHubClientOption) ClientSetOption {
 }
 
 // WithEmbeddingsOptions forwards OpenAI embeddings options into the Awesome configuration.
-func WithEmbeddingsOptions(opts ...ai.EmbeddingsOption) ClientSetOption {
-	return func(o *ClientSetOptions) { o.embeddings = append(o.embeddings, opts...) }
+func WithEmbeddingsOptions(opts ...agent.EmbeddingsOption) ClientSetOption {
+    return func(o *ClientSetOptions) { o.embeddings = append(o.embeddings, opts...) }
 }
 
+// NewForConfig initializes Awesome with the given config.
 func NewForConfig(cfg *config.Config) (*Awesome, error) {
 	var opts []ClientSetOption
 	if token := cfg.GetOpenAIAPIKey(); token != "" {
 		opts = append(
 			opts,
-			WithEmbeddingsOptions(
-				ai.WithLimiter(openai.NewOpenAIScalewayLimiter(cfg.GetScalewayVerified())),
-			),
+            WithEmbeddingsOptions(
+                agent.WithLimiter(openai.NewOpenAIScalewayLimiter(cfg.GetScalewayVerified())),
+            ),
 		)
 	}
 	if token := cfg.GetGitHubToken(); token != "" {
@@ -88,12 +90,21 @@ func New(db *database.Database, opts ...ClientSetOption) *Awesome {
 
 // GitHub returns the configured GitHub client, or nil if not set.
 func (aw *Awesome) GitHub() *github.Client {
-	return github.NewClient(aw.db, aw.opts.github...)
+    return github.NewClient(aw.db, aw.opts.github...)
 }
 
-// Core returns the core datastore-backed API, or nil if not set.
-func (aw *Awesome) Core() *Core {
-	return NewCoreClient(aw.db)
+// Core returns a core client backed by the datastore.
+type Core struct{ db *database.Database }
+func NewCoreClient(db *database.Database) *Core { return &Core{db: db} }
+func (aw *Awesome) Core() *Core { return NewCoreClient(aw.db) }
+
+func (c *Core) SearchProjects(
+    ctx context.Context,
+    q string,
+    limit uint32,
+    repos []*myawesomelistv1.Repository,
+) ([]*myawesomelistv1.Project, error) {
+    return c.db.SearchProjects(ctx, q, limit, repos)
 }
 
 func (aw *Awesome) Close() error {

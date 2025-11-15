@@ -8,39 +8,39 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pgvector/pgvector-go"
-	"myawesomelist.shikanime.studio/internal/ai"
+    "myawesomelist.shikanime.studio/internal/agent"
 	"myawesomelist.shikanime.studio/internal/config"
 	dbpgx "myawesomelist.shikanime.studio/internal/database/pgx"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
 type Database struct {
-	pg  *pgxpool.Pool
-	emb *ai.Embeddings
+    pg  *pgxpool.Pool
+    emb *agent.Embeddings
 }
 
 // NewForConfig constructs a Database using the provided config.
 // It initializes the pgx pool and embeddings internally.
 func NewForConfig(cfg *config.Config) (*Database, error) {
-	pg, err := dbpgx.NewClientForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return NewClientWithPgxAndEmbedding(pg, ai.NewEmbeddingsForConfig(cfg)), nil
+    pg, err := dbpgx.NewClientForConfig(cfg)
+    if err != nil {
+        return nil, err
+    }
+    return NewClientWithPgxAndEmbedding(pg, agent.NewEmbeddingsForConfig(cfg)), nil
 }
 
 // NewForConfigWithEmbeddingsOptions constructs a Database using cfg and forwards embeddings options.
-func NewForConfigWithEmbeddingsOptions(cfg *config.Config, opts ...ai.EmbeddingsOption) (*Database, error) {
-	pg, err := dbpgx.NewClientForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return NewClientWithPgxAndEmbedding(pg, ai.NewEmbeddingsForConfig(cfg, opts...)), nil
+func NewForConfigWithEmbeddingsOptions(cfg *config.Config, opts ...agent.EmbeddingsOption) (*Database, error) {
+    pg, err := dbpgx.NewClientForConfig(cfg)
+    if err != nil {
+        return nil, err
+    }
+    return NewClientWithPgxAndEmbedding(pg, agent.NewEmbeddingsForConfig(cfg, opts...)), nil
 }
 
 // NewClientWithPgxAndEmbedding constructs a Database using the provided pgx pool and embeddings.
-func NewClientWithPgxAndEmbedding(pg *pgxpool.Pool, emb *ai.Embeddings) *Database {
-	return &Database{pg: pg, emb: emb}
+func NewClientWithPgxAndEmbedding(pg *pgxpool.Pool, emb *agent.Embeddings) *Database {
+    return &Database{pg: pg, emb: emb}
 }
 
 // Ping verifies the provided database connection is available
