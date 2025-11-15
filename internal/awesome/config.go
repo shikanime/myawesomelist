@@ -2,6 +2,7 @@ package awesome
 
 import (
 	"errors"
+	"log/slog"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -145,6 +146,23 @@ func GetAddr() string {
 		host = "localhost"
 	}
 	return host + ":" + port
+}
+
+func GetLogLevel() *slog.LevelVar {
+	lv := new(slog.LevelVar)
+	switch strings.ToLower(os.Getenv("LOG_LEVEL")) {
+	case "debug":
+		lv.Set(slog.LevelDebug)
+	case "warn", "warning":
+		lv.Set(slog.LevelWarn)
+	case "error":
+		lv.Set(slog.LevelError)
+	case "info", "":
+		lv.Set(slog.LevelInfo)
+	default:
+		lv.Set(slog.LevelInfo)
+	}
+	return lv
 }
 
 // GetCollectionCacheTTL returns the TTL for collection cache entries.
