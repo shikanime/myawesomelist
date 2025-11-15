@@ -92,6 +92,7 @@ func (c *GitHubClient) GetReadme(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
 ) ([]byte, error) {
+	slog.DebugContext(ctx, "GetReadme", "owner", repo.Owner, "repo", repo.Repo)
 	if err := c.l.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
@@ -105,7 +106,12 @@ func (c *GitHubClient) GetReadme(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file content: %v", err)
 	}
-	return base64.StdEncoding.DecodeString(*file.Content)
+	content, derr := base64.StdEncoding.DecodeString(*file.Content)
+	if derr != nil {
+		return nil, derr
+	}
+	slog.DebugContext(ctx, "GetReadme decoded", "bytes", len(content))
+	return content, nil
 }
 
 // getCollectionOptions represents configuration getCollectionOptions for fetching data
@@ -146,8 +152,9 @@ func (c *GitHubClient) ListCollections(
 ) ([]*myawesomelistv1.Collection, error) {
 	cols, err := c.d.ListCollections(ctx, repos)
 	if err != nil {
-		slog.Warn("Failed to list collections from datastore", "error", err)
+		slog.WarnContext(ctx, "Failed to list collections from datastore", "error", err)
 	}
+	slog.DebugContext(ctx, "ListCollections datastore results", "count", len(cols))
 
 	// Index datastore results by repository key
 	colsByKey := make(map[string]*myawesomelistv1.Collection, len(cols))
@@ -177,18 +184,28 @@ func (c *GitHubClient) ListCollections(
 			}
 
 			if _, ok := colsByKey[key]; ok {
+				slog.DebugContext(ctx, "ListCollections cache hit", "key", key)
 				return nil
 			}
 
+			slog.DebugContext(ctx, "ListCollections cache miss; fetching", "key", key)
 			col, getErr := c.GetCollection(ctx, r, opts...)
 			if getErr != nil {
-				slog.Warn("Failed to get collection",
+				slog.WarnContext(ctx, "Failed to get collection",
 					"hostname", r.Hostname,
 					"owner", r.Owner,
 					"repo", r.Repo,
 					"error", getErr)
 				return nil
 			}
+			slog.DebugContext(
+				ctx,
+				"ListCollections fetched",
+				"key",
+				key,
+				"categories",
+				len(col.Categories),
+			)
 			cols = append(cols, col)
 			return nil
 		})
@@ -210,11 +227,21 @@ func (c *GitHubClient) GetCollection(
 	for _, opt := range opts {
 		opt(options)
 	}
+	slog.DebugContext(
+		ctx,
+		"GetCollection",
+		"hostname",
+		repo.Hostname,
+		"owner",
+		repo.Owner,
+		"repo",
+		repo.Repo,
+	)
 
 	// First, try to get the collection from the datastore with its last update time
 	col, err := c.d.GetCollection(ctx, repo)
 	if err != nil {
-		slog.Warn("Failed to query datastore for collection",
+		slog.WarnContext(ctx, "Failed to query datastore for collection",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -222,8 +249,16 @@ func (c *GitHubClient) GetCollection(
 	}
 	if col != nil {
 		ttl := GetCollectionCacheTTL()
+		slog.DebugContext(
+			ctx,
+			"GetCollection cache check",
+			"updated_at",
+			col.UpdatedAt.AsTime(),
+			"ttl",
+			ttl,
+		)
 		if time.Since(col.UpdatedAt.AsTime()) < ttl {
-			slog.Info("Collection cache fresh; skip GitHub fetch",
+			slog.InfoContext(ctx, "Collection cache fresh; skip GitHub fetch",
 				"hostname", repo.Hostname,
 				"owner", repo.Owner,
 				"repo", repo.Repo,
@@ -232,7 +267,7 @@ func (c *GitHubClient) GetCollection(
 				"ttl", ttl)
 			return col, nil
 		}
-		slog.Info("Collection cache stale; refetching from GitHub",
+		slog.InfoContext(ctx, "Collection cache stale; refetching from GitHub",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -240,7 +275,7 @@ func (c *GitHubClient) GetCollection(
 			"ttl", ttl)
 	}
 	if col != nil {
-		slog.Info("Retrieved collection from datastore cache",
+		slog.InfoContext(ctx, "Retrieved collection from datastore cache",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -250,7 +285,7 @@ func (c *GitHubClient) GetCollection(
 	}
 
 	// Collection not found in datastore or is stale, fetch from GitHub API
-	slog.Info("Fetching collection from GitHub API",
+	slog.InfoContext(ctx, "Fetching collection from GitHub API",
 		"hostname", repo.Hostname,
 		"owner", repo.Owner,
 		"repo", repo.Repo)
@@ -259,16 +294,17 @@ func (c *GitHubClient) GetCollection(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
+	slog.DebugContext(ctx, "GetCollection readme loaded", "bytes", len(content))
 
 	rms, idErr := c.d.UpsertRepositories(ctx, []*myawesomelistv1.Repository{repo})
 	if idErr != nil {
-		slog.Warn("Failed to resolve repository id",
+		slog.WarnContext(ctx, "Failed to resolve repository id",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
 			"error", idErr)
 	} else if err = c.d.UpsertProjectMetadata(ctx, []*ProjectMetadata{&ProjectMetadata{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
-		slog.Warn("Failed to upsert project metadata",
+		slog.WarnContext(ctx, "Failed to upsert project metadata",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -285,9 +321,10 @@ func (c *GitHubClient) GetCollection(
 		)
 	}
 	col = encCol.ToProto(repo)
+	slog.DebugContext(ctx, "GetCollection parsed", "categories", len(col.Categories))
 
 	if err := c.d.UpsertCollections(ctx, []*myawesomelistv1.Collection{col}); err != nil {
-		slog.Warn("Failed to upsert collection",
+		slog.WarnContext(ctx, "Failed to upsert collection",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -302,9 +339,10 @@ func (c *GitHubClient) GetProjectStats(
 	ctx context.Context,
 	repo *myawesomelistv1.Repository,
 ) (*myawesomelistv1.ProjectStats, error) {
+	slog.DebugContext(ctx, "GetProjectStats", "owner", repo.Owner, "repo", repo.Repo)
 	stats, err := c.d.GetProjectStats(ctx, repo)
 	if err != nil {
-		slog.Warn("Failed to query project stats from datastore",
+		slog.WarnContext(ctx, "Failed to query project stats from datastore",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -312,8 +350,16 @@ func (c *GitHubClient) GetProjectStats(
 	}
 	if stats != nil {
 		ttl := GetProjectStatsTTL()
+		slog.DebugContext(
+			ctx,
+			"GetProjectStats cache check",
+			"updated_at",
+			stats.UpdatedAt.AsTime(),
+			"ttl",
+			ttl,
+		)
 		if time.Since(stats.UpdatedAt.AsTime()) < ttl {
-			slog.Info("Project stats cache fresh; skip GitHub fetch",
+			slog.InfoContext(ctx, "Project stats cache fresh; skip GitHub fetch",
 				"hostname", repo.Hostname,
 				"owner", repo.Owner,
 				"repo", repo.Repo,
@@ -321,7 +367,7 @@ func (c *GitHubClient) GetProjectStats(
 				"ttl", ttl)
 			return stats, nil
 		}
-		slog.Info("Project stats cache stale; refetching from GitHub",
+		slog.InfoContext(ctx, "Project stats cache stale; refetching from GitHub",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
@@ -333,6 +379,14 @@ func (c *GitHubClient) GetProjectStats(
 	if err = c.l.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter wait failed: %w", err)
 	}
+	slog.DebugContext(
+		ctx,
+		"GetProjectStats fetching GitHub API",
+		"owner",
+		repo.Owner,
+		"repo",
+		repo.Repo,
+	)
 	ghRepo, _, err := c.c.Repositories.Get(ctx, repo.Owner, repo.Repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo info for %s/%s: %w", repo.Owner, repo.Repo, err)
@@ -342,17 +396,25 @@ func (c *GitHubClient) GetProjectStats(
 		StargazersCount: ptr.To(uint32(ptr.Deref(ghRepo.StargazersCount, 0))),
 		OpenIssueCount:  ptr.To(uint32(ptr.Deref(ghRepo.OpenIssuesCount, 0))),
 	}
+	slog.DebugContext(
+		ctx,
+		"GetProjectStats fetched",
+		"stars",
+		ptr.Deref(stats.StargazersCount, 0),
+		"open_issues",
+		ptr.Deref(stats.OpenIssueCount, 0),
+	)
 
 	// Persist stats
 	rms, idErr := c.d.UpsertRepositories(ctx, []*myawesomelistv1.Repository{repo})
 	if idErr != nil {
-		slog.Warn("Failed to resolve repository id",
+		slog.WarnContext(ctx, "Failed to resolve repository id",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
 			"error", idErr)
 	} else if err := c.d.UpsertProjectStats(ctx, []*ProjectStats{&ProjectStats{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}}); err != nil {
-		slog.Warn("Failed to upsert project stats",
+		slog.WarnContext(ctx, "Failed to upsert project stats",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
 			"repo", repo.Repo,
