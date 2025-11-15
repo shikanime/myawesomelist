@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
@@ -217,6 +218,7 @@ func (ds *DataStore) SearchProjects(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "SearchProjects", "query", q, "limit", limit, "repos", len(repos))
 	db := ds.db.WithContext(ctx).Model(&Project{}).
 		Preload("Repository").
 		Joins("JOIN categories ON categories.id = projects.category_id").
@@ -239,6 +241,7 @@ func (ds *DataStore) SearchProjects(
 
 	// Basic text search on name/description
 	if q != "" {
+		slog.DebugContext(ctx, "SearchProjects embedding query")
 		queryVec, err := ds.emb.EmbedProject(ctx, q, "")
 		if err != nil {
 			return nil, fmt.Errorf("generate query embedding failed: %w", err)
@@ -251,6 +254,7 @@ func (ds *DataStore) SearchProjects(
 	if err := db.Limit(int(limit)).Find(&rows).Error; err != nil {
 		return nil, fmt.Errorf("search projects failed: %w", err)
 	}
+	slog.DebugContext(ctx, "SearchProjects results", "count", len(rows))
 
 	var out []*myawesomelistv1.Project
 	for _, r := range rows {
@@ -269,6 +273,7 @@ func (ds *DataStore) GetProjectStats(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "GetProjectStats", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo)
 	var r Repository
 	if err := ds.db.WithContext(ctx).
 		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
@@ -289,6 +294,7 @@ func (ds *DataStore) GetProjectStats(
 		}
 		return nil, fmt.Errorf("query project stats failed: %w", err)
 	}
+	slog.DebugContext(ctx, "GetProjectStats hit", "repository_id", r.ID)
 	return ps.ToProto(), nil
 }
 
@@ -299,6 +305,7 @@ func (ds *DataStore) GetProjectsStats(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "GetProjectsStats", "repos", len(repos))
 	out := make([]*myawesomelistv1.ProjectStats, 0, len(repos))
 	for _, repo := range repos {
 		var r Repository
@@ -322,6 +329,7 @@ func (ds *DataStore) GetProjectsStats(
 		}
 		out = append(out, ps.ToProto())
 	}
+	slog.DebugContext(ctx, "GetProjectsStats hits", "count", len(out))
 	return out, nil
 }
 
@@ -330,6 +338,7 @@ func (ds *DataStore) UpsertProjectStats(
 	ctx context.Context,
 	stats []*ProjectStats,
 ) error {
+	slog.DebugContext(ctx, "UpsertProjectStats", "count", len(stats))
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
@@ -346,6 +355,7 @@ func (ds *DataStore) UpsertProjectStats(
 	}).Create(&stats).Error; err != nil {
 		return fmt.Errorf("upsert project stats failed: %w", err)
 	}
+	slog.DebugContext(ctx, "UpsertProjectStats complete", "count", len(stats))
 	return nil
 }
 
@@ -408,6 +418,7 @@ func (ds *DataStore) UpsertProjects(
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "UpsertProjects", "count", len(projects))
 	if len(projects) == 0 {
 		return nil
 	}
@@ -422,6 +433,7 @@ func (ds *DataStore) UpsertProjects(
 		return fmt.Errorf("upsert project failed: %w", err)
 	}
 
+	slog.DebugContext(ctx, "UpsertProjects embeddings", "count", len(projects))
 	inputs := make([]ProjectInput, len(projects))
 	for i := range projects {
 		inputs[i] = ProjectInput{Name: projects[i].Name, Description: projects[i].Description}
@@ -434,6 +446,7 @@ func (ds *DataStore) UpsertProjects(
 	for i := range projects {
 		pes[i] = ProjectEmbeddings{ProjectID: projects[i].ID, Embedding: pgvector.NewVector(vecs[i])}
 	}
+	slog.DebugContext(ctx, "UpsertProjects upserting embeddings", "count", len(pes))
 	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "project_id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
@@ -453,6 +466,7 @@ func (ds *DataStore) UpsertProjectMetadata(
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "UpsertProjectMetadata", "count", len(metas))
 	if len(metas) == 0 {
 		return nil
 	}
@@ -465,5 +479,6 @@ func (ds *DataStore) UpsertProjectMetadata(
 	}).Create(&metas).Error; err != nil {
 		return fmt.Errorf("upsert project metadata failed: %w", err)
 	}
+	slog.DebugContext(ctx, "UpsertProjectMetadata complete", "count", len(metas))
 	return nil
 }
