@@ -1,7 +1,7 @@
 package app
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/openai/openai-go/v3"
@@ -42,7 +42,7 @@ func (s *Server) Livez(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("ok"))
 	if err != nil {
-		log.Printf("Error writing response: %v", err)
+		slog.WarnContext(r.Context(), "error writing response", "error", err)
 	}
 }
 
@@ -59,7 +59,7 @@ func (s *Server) Readyz(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("ok"))
 	if err != nil {
-		log.Printf("Error writing response: %v", err)
+		slog.WarnContext(r.Context(), "error writing response", "error", err)
 	}
 }
 
@@ -71,7 +71,7 @@ func (s *Server) ListenAndServe(addr string) error {
 	http.HandleFunc("/livez", s.Livez)
 	http.HandleFunc("/readyz", s.Readyz)
 
-	log.Printf("Server starting on %s", addr)
-	log.Printf("gRPC (Connect/gRPC-Web) mounted at %s", path)
+	slog.Info("server starting", "addr", addr)
+	slog.Info("grpc/connect mounted", "path", path)
 	return http.ListenAndServe(addr, nil)
 }

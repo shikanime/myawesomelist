@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
@@ -208,6 +209,7 @@ func (ds *DataStore) SearchProjects(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "SearchProjects", "query", q, "limit", limit, "repos", len(repos))
 	db := ds.db.WithContext(ctx).Model(&Project{}).
 		Preload("Repository").
 		Joins("JOIN categories ON categories.id = projects.category_id").
@@ -230,6 +232,7 @@ func (ds *DataStore) SearchProjects(
 
 	// Basic text search on name/description
 	if q != "" {
+		slog.DebugContext(ctx, "SearchProjects embedding query")
 		queryVec, err := ds.emb.EmbedProject(ctx, q, "")
 		if err != nil {
 			return nil, fmt.Errorf("generate query embedding failed: %w", err)
@@ -242,6 +245,7 @@ func (ds *DataStore) SearchProjects(
 	if err := db.Limit(int(limit)).Find(&rows).Error; err != nil {
 		return nil, fmt.Errorf("search projects failed: %w", err)
 	}
+	slog.DebugContext(ctx, "SearchProjects results", "count", len(rows))
 
 	var out []*myawesomelistv1.Project
 	for _, r := range rows {
@@ -260,6 +264,16 @@ func (ds *DataStore) GetProjectStats(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(
+		ctx,
+		"GetProjectStats",
+		"hostname",
+		repo.Hostname,
+		"owner",
+		repo.Owner,
+		"repo",
+		repo.Repo,
+	)
 	var r Repository
 	if err := ds.db.WithContext(ctx).
 		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
@@ -280,6 +294,7 @@ func (ds *DataStore) GetProjectStats(
 		}
 		return nil, fmt.Errorf("query project stats failed: %w", err)
 	}
+	slog.DebugContext(ctx, "GetProjectStats hit", "repository_id", r.ID)
 	return ps.ToProto(), nil
 }
 
@@ -290,6 +305,7 @@ func (ds *DataStore) GetProjectsStats(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "GetProjectsStats", "repos", len(repos))
 	out := make([]*myawesomelistv1.ProjectStats, 0, len(repos))
 	for _, repo := range repos {
 		var r Repository
@@ -313,6 +329,7 @@ func (ds *DataStore) GetProjectsStats(
 		}
 		out = append(out, ps.ToProto())
 	}
+	slog.DebugContext(ctx, "GetProjectsStats hits", "count", len(out))
 	return out, nil
 }
 
@@ -322,6 +339,14 @@ func (ds *DataStore) UpsertProjectStats(
 	stats []*ProjectStats,
 ) error {
 	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+	slog.DebugContext(ctx, "UpsertProjectStats", "count", len(stats))
+	if ds.db == nil {
+		return fmt.Errorf("database connection not available")
+	}
+	if len(stats) == 0 {
+		return nil
+	}
+	if err := ds.Upsert(ctx, &stats, clause.OnConflict{
 		Columns: []clause.Column{{Name: "repository_id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
 			"stargazers_count": gorm.Expr("EXCLUDED.stargazers_count"),
@@ -331,6 +356,7 @@ func (ds *DataStore) UpsertProjectStats(
 	}).Create(stats).Error; err != nil {
 		return fmt.Errorf("upsert project stats failed: %w", err)
 	}
+	slog.DebugContext(ctx, "UpsertProjectStats complete", "count", len(stats))
 	return nil
 }
 
@@ -402,6 +428,49 @@ func (ds *DataStore) UpsertProjects(
 		}).Create(&pe).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
 			return fmt.Errorf("upsert project embedding failed: %w", err)
 		}
+	if ds.db == nil {
+		return fmt.Errorf("database connection not available")
+	}
+	slog.DebugContext(ctx, "UpsertProjects", "count", len(projects))
+	if len(projects) == 0 {
+		return nil
+	}
+	if err := ds.Upsert(ctx, &projects, clause.OnConflict{
+		Columns: []clause.Column{{Name: "category_id"}, {Name: "repository_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"name":        gorm.Expr("EXCLUDED.name"),
+			"description": gorm.Expr("EXCLUDED.description"),
+			"updated_at":  gorm.Expr("NOW()"),
+		}),
+	}, []clause.Column{{Name: "id"}}); err != nil {
+		return fmt.Errorf("upsert project failed: %w", err)
+	}
+
+	slog.DebugContext(ctx, "UpsertProjects embeddings", "count", len(projects))
+	inputs := make([]ProjectInput, len(projects))
+	for i := range projects {
+		inputs[i] = ProjectInput{Name: projects[i].Name, Description: projects[i].Description}
+	}
+	vecs, err := ds.emb.EmbedProjects(ctx, inputs)
+	if err != nil {
+		return fmt.Errorf("generate project embeddings failed: %w", err)
+	}
+	pes := make([]ProjectEmbeddings, len(projects))
+	for i := range projects {
+		pes[i] = ProjectEmbeddings{
+			ProjectID: projects[i].ID,
+			Embedding: pgvector.NewVector(vecs[i]),
+		}
+	}
+	slog.DebugContext(ctx, "UpsertProjects upserting embeddings", "count", len(pes))
+	if err := ds.Upsert(ctx, &pes, clause.OnConflict{
+		Columns: []clause.Column{{Name: "project_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"embedding":  gorm.Expr("EXCLUDED.embedding"),
+			"updated_at": gorm.Expr("NOW()"),
+		}),
+	}, nil); err != nil {
+		return fmt.Errorf("upsert project embedding failed: %w", err)
 	}
 	return nil
 }
@@ -420,6 +489,22 @@ func (ds *DataStore) UpsertProjectMetadata(
 		}).Create(pm).Error; err != nil {
 			return fmt.Errorf("upsert project metadata failed: %w", err)
 		}
+	if ds.db == nil {
+		return fmt.Errorf("database connection not available")
 	}
+	slog.DebugContext(ctx, "UpsertProjectMetadata", "count", len(metas))
+	if len(metas) == 0 {
+		return nil
+	}
+	if err := ds.Upsert(ctx, &metas, clause.OnConflict{
+		Columns: []clause.Column{{Name: "repository_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"readme":     gorm.Expr("EXCLUDED.readme"),
+			"updated_at": gorm.Expr("NOW()"),
+		}),
+	}, nil); err != nil {
+		return fmt.Errorf("upsert project metadata failed: %w", err)
+	}
+	slog.DebugContext(ctx, "UpsertProjectMetadata complete", "count", len(metas))
 	return nil
 }
