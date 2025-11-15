@@ -463,14 +463,6 @@ func (ds *DataStore) UpsertProjects(
 		}
 	}
 	slog.DebugContext(ctx, "UpsertProjects upserting embeddings", "count", len(pes))
-	if err := ds.Upsert(ctx, &pes, clause.OnConflict{
-		Columns: []clause.Column{{Name: "project_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"embedding":  gorm.Expr("EXCLUDED.embedding"),
-			"updated_at": gorm.Expr("NOW()"),
-		}),
-	}, nil); err != nil {
-		return fmt.Errorf("upsert project embedding failed: %w", err)
 	}
 	return nil
 }
