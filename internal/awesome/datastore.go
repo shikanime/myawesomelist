@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/openai/openai-go/v3"
 	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -14,13 +13,13 @@ import (
 
 // DataStore wraps a SQL database and provides typed operations for cols.
 type DataStore struct {
-	db *gorm.DB
-	ai *openai.Client
+	db  *gorm.DB
+	emb *Embeddings
 }
 
 // NewDataStore constructs a DataStore using the provided sql.DB connection.
-func NewDataStore(db *gorm.DB, ai *openai.Client) *DataStore {
-	return &DataStore{db: db, ai: ai}
+func NewDataStore(db *gorm.DB, emb *Embeddings) *DataStore {
+	return &DataStore{db: db, emb: emb}
 }
 
 // Ping verifies the provided database connection is available
@@ -159,7 +158,7 @@ func (ds *DataStore) UpsertCollections(
 		for _, col := range cols {
 			repos = append(repos, col.Repo)
 		}
-		rms, err := NewDataStore(tx, ds.ai).UpsertRepositories(ctx, repos)
+		rms, err := NewDataStore(tx, ds.emb).UpsertRepositories(ctx, repos)
 		if err != nil {
 			return err
 		}
@@ -191,7 +190,7 @@ func (ds *DataStore) UpsertCollections(
 				}
 				cats = append(cats, c)
 			}
-			if err := NewDataStore(tx, ds.ai).UpsertCategories(ctx, cats); err != nil {
+			if err := NewDataStore(tx, ds.emb).UpsertCategories(ctx, cats); err != nil {
 				return fmt.Errorf("upsert categories failed: %w", err)
 			}
 		}
@@ -231,18 +230,9 @@ func (ds *DataStore) SearchProjects(
 
 	// Basic text search on name/description
 	if q != "" {
-		embeddingRes, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
-			Input: openai.EmbeddingNewParamsInputUnion{
-				OfString: openai.String(q),
-			},
-			Model: openai.EmbeddingModel(GetEmbeddingModel()),
-		})
+		queryVec, err := ds.emb.EmbedProject(ctx, q, "")
 		if err != nil {
 			return nil, fmt.Errorf("generate query embedding failed: %w", err)
-		}
-		queryVec := make([]float32, len(embeddingRes.Data[0].Embedding))
-		for i := range queryVec {
-			queryVec[i] = float32(embeddingRes.Data[0].Embedding[i])
 		}
 		db = db.Joins("JOIN project_embeddings pe ON pe.project_id = projects.id").
 			Order(clause.Expr{SQL: "pe.embedding <-> ?", Vars: []interface{}{pgvector.NewVector(queryVec)}})
@@ -372,7 +362,7 @@ func (ds *DataStore) UpsertCategories(
 			projects = append(projects, &cm.Projects[j])
 		}
 	}
-	if err := NewDataStore(ds.db, ds.ai).UpsertProjects(ctx, projects); err != nil {
+	if err := NewDataStore(ds.db, ds.emb).UpsertProjects(ctx, projects); err != nil {
 		return fmt.Errorf("upsert projects failed: %w", err)
 	}
 	return nil
@@ -395,18 +385,9 @@ func (ds *DataStore) UpsertProjects(
 		}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(pm).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
 			return fmt.Errorf("upsert project failed: %w", err)
 		}
-		embeddingRes, err := ds.ai.Embeddings.New(ctx, openai.EmbeddingNewParams{
-			Input: openai.EmbeddingNewParamsInputUnion{
-				OfString: openai.String(pm.Name + " " + pm.Description),
-			},
-			Model: openai.EmbeddingModel(GetEmbeddingModel()),
-		})
+		embedding, err := ds.emb.EmbedProject(ctx, pm.Name, pm.Description)
 		if err != nil {
 			return fmt.Errorf("generate project embedding failed: %w", err)
-		}
-		embedding := make([]float32, len(embeddingRes.Data[0].Embedding))
-		for j := range embedding {
-			embedding[j] = float32(embeddingRes.Data[0].Embedding[j])
 		}
 		pe := ProjectEmbeddings{
 			ProjectID: pm.ID,
