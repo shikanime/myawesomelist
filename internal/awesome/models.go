@@ -89,8 +89,8 @@ func CategoryFromProto(pc *myawesomelistv1.Category) Category {
 
 type Project struct {
 	ID           uint64     `gorm:"primaryKey"`
-	CategoryID   uint64     `gorm:"not null;index"`
-	RepositoryID uint64     `gorm:"not null;index"`
+	CategoryID   uint64     `gorm:"not null;index;uniqueIndex:uq_projects_category_repository"`
+	RepositoryID uint64     `gorm:"not null;uniqueIndex:uq_projects_category_repository"`
 	Repository   Repository `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	Name         string     `gorm:"size:255;not null;index"`
 	Description  string     `gorm:"type:text"`

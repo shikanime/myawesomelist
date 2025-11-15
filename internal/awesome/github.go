@@ -303,7 +303,9 @@ func (c *GitHubClient) GetCollection(
 			"owner", repo.Owner,
 			"repo", repo.Repo,
 			"error", idErr)
-	} else if err = c.d.UpsertProjectMetadata(ctx, []*ProjectMetadata{{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
+	}
+
+	if err = c.d.UpsertProjectMetadata(ctx, []*ProjectMetadata{{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project metadata",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
