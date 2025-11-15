@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"net/url"
 	"os"
 	"os/signal"
@@ -20,8 +20,17 @@ import (
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		slog.Error("command failed", "error", err)
+		os.Exit(1)
 	}
+}
+
+func init() {
+	slog.SetDefault(
+		slog.New(
+			slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: awesome.GetLogLevel()}),
+		),
+	)
 }
 
 var (
@@ -94,17 +103,17 @@ func runServer(cmd *cobra.Command, args []string) error {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			log.Printf("Server failed: %v", err)
+			slog.Error("server failed", "error", err)
 		}
 		if cerr := srv.Close(); cerr != nil {
-			log.Printf("Error during shutdown: %v", cerr)
+			slog.Warn("error during shutdown", "error", cerr)
 		}
 	case sig := <-quit:
-		log.Printf("Received signal %s. Shutting down server...", sig)
+		slog.Info("received signal; shutting down", "signal", sig)
 		if err := srv.Close(); err != nil {
-			log.Printf("Error during shutdown: %v", err)
+			slog.Warn("error during shutdown", "error", err)
 		}
-		log.Println("Server stopped")
+		slog.Info("server stopped")
 	}
 	return nil
 }

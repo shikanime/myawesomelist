@@ -7,8 +7,8 @@ import (
 )
 
 type Embeddings struct {
-    c     *openai.Client
-    model string
+	c     *openai.Client
+	model string
 }
 
 func NewOpenAIEmbeddings(c *openai.Client, model string) *Embeddings {
@@ -16,9 +16,9 @@ func NewOpenAIEmbeddings(c *openai.Client, model string) *Embeddings {
 }
 
 func (e *Embeddings) EmbedProject(
-    ctx context.Context,
-    name string,
-    description string,
+	ctx context.Context,
+	name string,
+	description string,
 ) ([]float32, error) {
 	res, err := e.c.Embeddings.New(ctx, openai.EmbeddingNewParams{
 		Input: openai.EmbeddingNewParamsInputUnion{
@@ -37,21 +37,21 @@ func (e *Embeddings) EmbedProject(
 }
 
 type ProjectInput struct {
-    Name        string
-    Description string
+	Name        string
+	Description string
 }
 
 func (e *Embeddings) EmbedProjects(
-    ctx context.Context,
-    inputs []ProjectInput,
+	ctx context.Context,
+	inputs []ProjectInput,
 ) ([][]float32, error) {
-    out := make([][]float32, len(inputs))
-    for i := range inputs {
-        v, err := e.EmbedProject(ctx, inputs[i].Name, inputs[i].Description)
-        if err != nil {
-            return nil, err
-        }
-        out[i] = v
-    }
-    return out, nil
+	out := make([][]float32, len(inputs))
+	for i := range inputs {
+		v, err := e.EmbedProject(ctx, inputs[i].Name, inputs[i].Description)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = v
+	}
+	return out, nil
 }
