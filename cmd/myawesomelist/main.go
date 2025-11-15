@@ -164,7 +164,10 @@ func openDataStoreFromEnv(ai *openai.Client) (*awesome.DataStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	return awesome.NewDataStore(db, ai), nil
+	return awesome.NewDataStore(
+		db,
+		awesome.NewOpenAIEmbeddings(ai, awesome.GetEmbeddingModel()),
+	), nil
 }
 
 // openDbFromEnv opens a connection to the database using the provided DSN or falls back to the environment variable.
