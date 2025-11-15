@@ -543,40 +543,6 @@ func (ds *DataStore) UpsertProjects(
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
-	if len(projects) == 0 {
-		return nil
-	}
-	if err := ds.Upsert(ctx, &projects, clause.OnConflict{
-		Columns: []clause.Column{{Name: "category_id"}, {Name: "repository_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"name":        gorm.Expr("EXCLUDED.name"),
-			"description": gorm.Expr("EXCLUDED.description"),
-			"updated_at":  gorm.Expr("NOW()"),
-		}),
-	}, []clause.Column{{Name: "id"}}); err != nil {
-		return fmt.Errorf("upsert project failed: %w", err)
-	}
-
-	inputs := make([]ProjectInput, len(projects))
-	for i := range projects {
-		inputs[i] = ProjectInput{Name: projects[i].Name, Description: projects[i].Description}
-	}
-	vecs, err := ds.emb.EmbedProjects(ctx, inputs)
-	if err != nil {
-		return fmt.Errorf("generate project embeddings failed: %w", err)
-	}
-	pes := make([]ProjectEmbeddings, len(projects))
-	for i := range projects {
-		pes[i] = ProjectEmbeddings{ProjectID: projects[i].ID, Embedding: pgvector.NewVector(vecs[i])}
-	}
-	if err := ds.Upsert(ctx, &pes, clause.OnConflict{
-		Columns: []clause.Column{{Name: "project_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"embedding":  gorm.Expr("EXCLUDED.embedding"),
-			"updated_at": gorm.Expr("NOW()"),
-		}),
-	}, nil); err != nil {
-		return fmt.Errorf("upsert project embedding failed: %w", err)
 	}
 	return nil
 }
