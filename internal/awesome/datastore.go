@@ -52,22 +52,16 @@ func (ds *DataStore) UpsertRepositories(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
-	if len(repos) == 0 {
-		return nil, nil
-	}
-	rows := make([]Repository, 0, len(repos))
+	out := make([]*Repository, 0, len(repos))
 	for _, pr := range repos {
-		rows = append(rows, Repository{Hostname: pr.Hostname, Owner: pr.Owner, Repo: pr.Repo})
-	}
-	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{"updated_at": gorm.Expr("NOW()")}),
-	}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(&rows).Error; err != nil {
-		return nil, fmt.Errorf("upsert repository failed: %w", err)
-	}
-	out := make([]*Repository, 0, len(rows))
-	for i := range rows {
-		out = append(out, &rows[i])
+		r := &Repository{Hostname: pr.Hostname, Owner: pr.Owner, Repo: pr.Repo}
+		if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "hostname"}, {Name: "owner"}, {Name: "repo"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"updated_at": gorm.Expr("NOW()")}),
+		}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(r).Error; err != nil {
+			return nil, fmt.Errorf("upsert repository failed: %w", err)
+		}
+		out = append(out, r)
 	}
 	return out, nil
 }
@@ -159,9 +153,6 @@ func (ds *DataStore) UpsertCollections(
 	if ds.db == nil {
 		return fmt.Errorf("database connection not available")
 	}
-	if len(cols) == 0 {
-		return nil
-	}
 	return ds.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		repos := make([]*myawesomelistv1.Repository, 0, len(cols))
 		for _, col := range cols {
@@ -178,7 +169,7 @@ func (ds *DataStore) UpsertCollections(
 		}
 		if err := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "repository_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"language": gorm.Expr("EXCLUDED.language"), "updated_at": gorm.Expr("NOW()")}),
+			DoUpdates: clause.Assignments(map[string]interface{}{"language": gorm.Expr("excluded.language"), "updated_at": gorm.Expr("NOW()")}),
 		}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(&colms).Error; err != nil {
 			return fmt.Errorf("upsert collection failed: %w", err)
 		}
@@ -330,12 +321,6 @@ func (ds *DataStore) UpsertProjectStats(
 	ctx context.Context,
 	stats []*ProjectStats,
 ) error {
-	if ds.db == nil {
-		return fmt.Errorf("database connection not available")
-	}
-	if len(stats) == 0 {
-		return nil
-	}
 	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "repository_id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
@@ -343,7 +328,7 @@ func (ds *DataStore) UpsertProjectStats(
 			"open_issue_count": gorm.Expr("EXCLUDED.open_issue_count"),
 			"updated_at":       gorm.Expr("NOW()"),
 		}),
-	}).Create(&stats).Error; err != nil {
+	}).Create(stats).Error; err != nil {
 		return fmt.Errorf("upsert project stats failed: %w", err)
 	}
 	return nil
@@ -354,42 +339,25 @@ func (ds *DataStore) UpsertCategories(
 	ctx context.Context,
 	categories []*Category,
 ) error {
-	if ds.db == nil {
-		return fmt.Errorf("database connection not available")
-	}
-	if len(categories) == 0 {
-		return nil
-	}
-	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "collection_id"}, {Name: "name"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{"updated_at": gorm.Expr("NOW()")}),
-	}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(&categories).Error; err != nil {
-		return fmt.Errorf("upsert categories failed: %w", err)
-	}
-	repoKey := func(r Repository) string { return r.Hostname + "/" + r.Owner + "/" + r.Repo }
-	repoMap := make(map[string]*myawesomelistv1.Repository)
-	for _, cm := range categories {
-		for j := range cm.Projects {
-			rp := cm.Projects[j].Repository.ToProto()
-			repoMap[repoKey(cm.Projects[j].Repository)] = rp
+	if len(categories) > 0 {
+		if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "collection_id"}, {Name: "name"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"updated_at": gorm.Expr("NOW()")}),
+		}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(categories).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return fmt.Errorf("upsert categories failed: %w", err)
 		}
-	}
-	var repoList []*myawesomelistv1.Repository
-	for _, rp := range repoMap {
-		repoList = append(repoList, rp)
-	}
-	rms, err := ds.UpsertRepositories(ctx, repoList)
-	if err != nil {
-		return fmt.Errorf("upsert project repositories failed: %w", err)
-	}
-	idMap := make(map[string]uint64, len(rms))
-	for _, r := range rms {
-		idMap[repoKey(*r)] = r.ID
 	}
 	var projects []*Project
 	for _, cm := range categories {
 		for j := range cm.Projects {
-			cm.Projects[j].RepositoryID = idMap[repoKey(cm.Projects[j].Repository)]
+			rms, err := ds.UpsertRepositories(
+				ctx,
+				[]*myawesomelistv1.Repository{cm.Projects[j].Repository.ToProto()},
+			)
+			if err != nil {
+				return fmt.Errorf("upsert project repository failed: %w", err)
+			}
+			cm.Projects[j].RepositoryID = rms[0].ID
 			cm.Projects[j].CategoryID = cm.ID
 			projects = append(projects, &cm.Projects[j])
 		}
@@ -405,43 +373,35 @@ func (ds *DataStore) UpsertProjects(
 	ctx context.Context,
 	projects []*Project,
 ) error {
-	if ds.db == nil {
-		return fmt.Errorf("database connection not available")
-	}
-	if len(projects) == 0 {
-		return nil
-	}
-	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "category_id"}, {Name: "repository_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"name":        gorm.Expr("EXCLUDED.name"),
-			"description": gorm.Expr("EXCLUDED.description"),
-			"updated_at":  gorm.Expr("NOW()"),
-		}),
-	}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(&projects).Error; err != nil {
-		return fmt.Errorf("upsert project failed: %w", err)
-	}
-
-	inputs := make([]ProjectInput, len(projects))
 	for i := range projects {
-		inputs[i] = ProjectInput{Name: projects[i].Name, Description: projects[i].Description}
-	}
-	vecs, err := ds.emb.EmbedProjects(ctx, inputs)
-	if err != nil {
-		return fmt.Errorf("generate project embeddings failed: %w", err)
-	}
-	pes := make([]ProjectEmbeddings, len(projects))
-	for i := range projects {
-		pes[i] = ProjectEmbeddings{ProjectID: projects[i].ID, Embedding: pgvector.NewVector(vecs[i])}
-	}
-	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "project_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"embedding":  gorm.Expr("EXCLUDED.embedding"),
-			"updated_at": gorm.Expr("NOW()"),
-		}),
-	}).Create(&pes).Error; err != nil {
-		return fmt.Errorf("upsert project embedding failed: %w", err)
+		pm := projects[i]
+		if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "category_id"}, {Name: "repository_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"name":        pm.Name,
+				"description": pm.Description,
+				"updated_at":  gorm.Expr("NOW()"),
+			}),
+		}).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(pm).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return fmt.Errorf("upsert project failed: %w", err)
+		}
+		embedding, err := ds.emb.EmbedProject(ctx, pm.Name, pm.Description)
+		if err != nil {
+			return fmt.Errorf("generate project embedding failed: %w", err)
+		}
+		pe := ProjectEmbeddings{
+			ProjectID: pm.ID,
+			Embedding: pgvector.NewVector(embedding),
+		}
+		if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "project_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"embedding":  pe.Embedding,
+				"updated_at": gorm.Expr("NOW()"),
+			}),
+		}).Create(&pe).Error; err != nil && !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return fmt.Errorf("upsert project embedding failed: %w", err)
+		}
 	}
 	return nil
 }
@@ -450,20 +410,16 @@ func (ds *DataStore) UpsertProjectMetadata(
 	ctx context.Context,
 	metas []*ProjectMetadata,
 ) error {
-	if ds.db == nil {
-		return fmt.Errorf("database connection not available")
-	}
-	if len(metas) == 0 {
-		return nil
-	}
-	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "repository_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"readme":     gorm.Expr("EXCLUDED.readme"),
-			"updated_at": gorm.Expr("NOW()"),
-		}),
-	}).Create(&metas).Error; err != nil {
-		return fmt.Errorf("upsert project metadata failed: %w", err)
+	for _, pm := range metas {
+		if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "repository_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"readme":     pm.Readme,
+				"updated_at": gorm.Expr("NOW()"),
+			}),
+		}).Create(pm).Error; err != nil {
+			return fmt.Errorf("upsert project metadata failed: %w", err)
+		}
 	}
 	return nil
 }
