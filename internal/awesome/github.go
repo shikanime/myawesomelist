@@ -303,7 +303,7 @@ func (c *GitHubClient) GetCollection(
 			"owner", repo.Owner,
 			"repo", repo.Repo,
 			"error", idErr)
-	} else if err = c.d.UpsertProjectMetadata(ctx, []*ProjectMetadata{&ProjectMetadata{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
+	} else if err = c.d.UpsertProjectMetadata(ctx, []*ProjectMetadata{{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project metadata",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
@@ -413,7 +413,7 @@ func (c *GitHubClient) GetProjectStats(
 			"owner", repo.Owner,
 			"repo", repo.Repo,
 			"error", idErr)
-	} else if err := c.d.UpsertProjectStats(ctx, []*ProjectStats{&ProjectStats{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}}); err != nil {
+	} else if err := c.d.UpsertProjectStats(ctx, []*ProjectStats{{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}}); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project stats",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
