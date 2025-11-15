@@ -260,7 +260,14 @@ func (c *GitHubClient) GetCollection(
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
 
-	if err = c.d.UpSertProjectMetadata(ctx, repo, content); err != nil {
+	rms, idErr := c.d.UpsertRepositories(ctx, []*myawesomelistv1.Repository{repo})
+	if idErr != nil {
+		slog.Warn("Failed to resolve repository id",
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
+			"error", idErr)
+	} else if err = c.d.UpsertProjectMetadata(ctx, []*ProjectMetadata{&ProjectMetadata{RepositoryID: rms[0].ID, Readme: string(content)}}); err != nil {
 		slog.Warn("Failed to upsert project metadata",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
@@ -279,7 +286,7 @@ func (c *GitHubClient) GetCollection(
 	}
 	col = encCol.ToProto(repo)
 
-	if err := c.d.UpSertCollection(ctx, col); err != nil {
+	if err := c.d.UpsertCollections(ctx, []*myawesomelistv1.Collection{col}); err != nil {
 		slog.Warn("Failed to upsert collection",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
@@ -337,7 +344,14 @@ func (c *GitHubClient) GetProjectStats(
 	}
 
 	// Persist stats
-	if err := c.d.UpSertProjectStats(ctx, repo, stats); err != nil {
+	rms, idErr := c.d.UpsertRepositories(ctx, []*myawesomelistv1.Repository{repo})
+	if idErr != nil {
+		slog.Warn("Failed to resolve repository id",
+			"hostname", repo.Hostname,
+			"owner", repo.Owner,
+			"repo", repo.Repo,
+			"error", idErr)
+	} else if err := c.d.UpsertProjectStats(ctx, []*ProjectStats{&ProjectStats{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}}); err != nil {
 		slog.Warn("Failed to upsert project stats",
 			"hostname", repo.Hostname,
 			"owner", repo.Owner,
