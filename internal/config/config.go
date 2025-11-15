@@ -1,6 +1,7 @@
-package awesome
+package config
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"os"
@@ -9,84 +10,44 @@ import (
 	"strings"
 	"time"
 
-	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
+	"log/slog"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
 )
 
-// GitHubRepoConfig represents configuration for a GitHub repository
-type GitHubRepoConfig struct {
-	Repo    *myawesomelistv1.Repository
-	Options []GetCollectionOption
-}
+type Config struct{ v *viper.Viper }
 
-// DefaultGitHubRepos contains the default list of awesome repositories to fetch
-var DefaultGitHubRepos = []GitHubRepoConfig{
-	{
-		Repo: &myawesomelistv1.Repository{
-			Hostname: "github.com",
-			Owner:    "avelino",
-			Repo:     "awesome-go",
-		},
-		Options: []GetCollectionOption{
-			WithStartSection("Actor Model"),
-			WithSubsectionAsCategory(),
-		},
-	},
-	{
-		Repo: &myawesomelistv1.Repository{
-			Hostname: "github.com",
-			Owner:    "h4cc",
-			Repo:     "awesome-elixir",
-		},
-		Options: []GetCollectionOption{
-			WithStartSection("Actors"),
-		},
-	},
-	{
-		Repo: &myawesomelistv1.Repository{
-			Hostname: "github.com",
-			Owner:    "sorrycc",
-			Repo:     "awesome-javascript",
-		},
-		Options: []GetCollectionOption{
-			WithStartSection("Package Managers"),
-			WithEndSection("Worth Reading"),
-		},
-	},
-	{
-		Repo: &myawesomelistv1.Repository{
-			Hostname: "github.com",
-			Owner:    "gostor",
-			Repo:     "awesome-go-storage",
-		},
-		Options: []GetCollectionOption{
-			WithStartSection("Storage Server"),
-		},
-	},
+func New() *Config {
+	vv := viper.New()
+	vv.AutomaticEnv()
+	return &Config{v: vv}
 }
 
 // GetDsn resolves the final DSN using env vars
-func GetDsn() (*url.URL, error) {
-	source := os.Getenv("DSN")
+func (c *Config) GetDsn() (*url.URL, error) {
+	source := c.v.GetString("DSN")
 	if source == "" {
-		user := os.Getenv("PGUSER")
+		user := c.v.GetString("PGUSER")
 		if user == "" {
-			user = os.Getenv("USER")
+			user = c.v.GetString("USER")
 		}
 		if user == "" {
 			user = "postgres"
 		}
 
-		dbName := os.Getenv("PGDATABASE")
+		dbName := c.v.GetString("PGDATABASE")
 		if dbName == "" {
 			dbName = "postgres"
 		}
 
-		host := os.Getenv("PGHOST")
+		host := c.v.GetString("PGHOST")
 		if host == "" {
 			host = "localhost"
 		}
 
-		port, hasPortEnv := os.LookupEnv("PGPORT")
+		port := c.v.GetString("PGPORT")
+		hasPortEnv := port != ""
 		if !hasPortEnv || port == "" {
 			port = "5432"
 		}
@@ -127,20 +88,19 @@ func GetDsn() (*url.URL, error) {
 	return u, nil
 }
 
-func GetGitHubToken() string {
-	// Prefer GITHUB_TOKEN; fall back to GH_TOKEN if present
-	if t := os.Getenv("GITHUB_TOKEN"); t != "" {
+func (c *Config) GetGitHubToken() string {
+	if t := c.v.GetString("GITHUB_TOKEN"); t != "" {
 		return t
 	}
-	return os.Getenv("GH_TOKEN")
+	return c.v.GetString("GH_TOKEN")
 }
 
-func GetAddr() string {
-	port := os.Getenv("PORT")
+func (c *Config) GetAddr() string {
+	port := c.v.GetString("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	host := os.Getenv("HOST")
+	host := c.v.GetString("HOST")
 	if host == "" {
 		host = "localhost"
 	}
@@ -149,9 +109,9 @@ func GetAddr() string {
 
 // GetCollectionCacheTTL returns the TTL for collection cache entries.
 // Reads duration from env var COLLECTION_CACHE_TTL; defaults to 24h.
-func GetCollectionCacheTTL() time.Duration {
+func (c *Config) GetCollectionCacheTTL() time.Duration {
 	const def = 24 * time.Hour
-	if v := os.Getenv("COLLECTION_CACHE_TTL"); v != "" {
+	if v := c.v.GetString("COLLECTION_CACHE_TTL"); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
 			return d
 		}
@@ -161,9 +121,9 @@ func GetCollectionCacheTTL() time.Duration {
 
 // GetProjectStatsTTL returns the TTL for project stats cache entries.
 // Reads duration from env var PROJECT_STATS_TTL; defaults to 6h.
-func GetProjectStatsTTL() time.Duration {
+func (c *Config) GetProjectStatsTTL() time.Duration {
 	const def = 6 * time.Hour
-	if v := os.Getenv("PROJECT_STATS_TTL"); v != "" {
+	if v := c.v.GetString("PROJECT_STATS_TTL"); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
 			return d
 		}
@@ -173,16 +133,43 @@ func GetProjectStatsTTL() time.Duration {
 
 // GetOpenAIAPIBaseURL returns the OpenAI API base URL from env var OPENAI_API_BASE_URL.
 // Defaults to "https://api.openai.com/v1".
-func GetOpenAIBaseURL() string {
-	return os.Getenv("OPENAI_BASE_URL")
-}
+func (c *Config) GetOpenAIBaseURL() string { return c.v.GetString("OPENAI_BASE_URL") }
 
 // GetOpenAIAPIKey returns the OpenAI API key from env var OPENAI_API_KEY.
-func GetOpenAIAPIKey() string {
-	return os.Getenv("OPENAI_API_KEY")
-}
+func (c *Config) GetOpenAIAPIKey() string { return c.v.GetString("OPENAI_API_KEY") }
 
 // GetEmbeddingModel returns the OpenAI embedding model from env var EMBEDDING_MODEL.
-func GetEmbeddingModel() string {
-	return os.Getenv("EMBEDDING_MODEL")
+func (c *Config) GetEmbeddingModel() string { return c.v.GetString("EMBEDDING_MODEL") }
+func (c *Config) Set(key string, value any) { c.v.Set(key, value) }
+
+// GetLogLevel returns the log level from env var LOG_LEVEL mapped to slog.Level.
+// Recognized values: debug, info (default), warn|warning, error.
+func (c *Config) GetLogLevel() slog.Level {
+	switch strings.ToLower(c.v.GetString("LOG_LEVEL")) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
+}
+
+// OnLogLevelChange calls fn with the slog.Level whenever it changes.
+// The initial call is made immediately.
+func (c *Config) OnLogLevelChange(fn func(slog.Level)) {
+	apply := func() { fn(c.GetLogLevel()) }
+	apply()
+	c.v.OnConfigChange(func(e fsnotify.Event) { apply() })
+}
+
+// BindFlags binds all flags in the given FlagSet to this config's Viper instance.
+// Flag binding helpers removed
+
+// Watch watches for changes in the config file and env vars.
+func (c *Config) Watch(ctx context.Context) {
+	c.v.WatchConfig()
+	go func() { <-ctx.Done() }()
 }
