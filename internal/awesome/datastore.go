@@ -273,7 +273,16 @@ func (ds *DataStore) GetProjectStats(
 	if ds.db == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
-	slog.DebugContext(ctx, "GetProjectStats", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo)
+	slog.DebugContext(
+		ctx,
+		"GetProjectStats",
+		"hostname",
+		repo.Hostname,
+		"owner",
+		repo.Owner,
+		"repo",
+		repo.Repo,
+	)
 	var r Repository
 	if err := ds.db.WithContext(ctx).
 		Where("hostname = ? AND owner = ? AND repo = ?", repo.Hostname, repo.Owner, repo.Repo).
@@ -444,7 +453,10 @@ func (ds *DataStore) UpsertProjects(
 	}
 	pes := make([]ProjectEmbeddings, len(projects))
 	for i := range projects {
-		pes[i] = ProjectEmbeddings{ProjectID: projects[i].ID, Embedding: pgvector.NewVector(vecs[i])}
+		pes[i] = ProjectEmbeddings{
+			ProjectID: projects[i].ID,
+			Embedding: pgvector.NewVector(vecs[i]),
+		}
 	}
 	slog.DebugContext(ctx, "UpsertProjects upserting embeddings", "count", len(pes))
 	if err := ds.db.WithContext(ctx).Clauses(clause.OnConflict{
