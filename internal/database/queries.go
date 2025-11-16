@@ -44,13 +44,13 @@ type UpsertProjectArgs struct {
 }
 
 type UpsertCollectionArgs struct {
-    Repo       myawesomelistv1.Repository
-    Language   string
-    Categories []UpsertCategoryArgs
+	Repo       myawesomelistv1.Repository
+	Language   string
+	Categories []UpsertCategoryArgs
 }
 
 type ListCollectionsArgs struct {
-    Repos []*myawesomelistv1.Repository
+	Repos []*myawesomelistv1.Repository
 }
 
 type StaledProjectEmbeddingResult struct {

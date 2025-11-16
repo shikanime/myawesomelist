@@ -1,17 +1,17 @@
 package awesome
 
 import (
-    "context"
-    "fmt"
+	"context"
+	"fmt"
 
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/codes"
-    "myawesomelist.shikanime.studio/internal/agent"
-    "myawesomelist.shikanime.studio/internal/agent/openai"
-    "myawesomelist.shikanime.studio/internal/awesome/github"
-    "myawesomelist.shikanime.studio/internal/awesome/core"
-    "myawesomelist.shikanime.studio/internal/config"
-    "myawesomelist.shikanime.studio/internal/database"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"myawesomelist.shikanime.studio/internal/agent"
+	"myawesomelist.shikanime.studio/internal/agent/openai"
+	"myawesomelist.shikanime.studio/internal/awesome/core"
+	"myawesomelist.shikanime.studio/internal/awesome/github"
+	"myawesomelist.shikanime.studio/internal/config"
+	"myawesomelist.shikanime.studio/internal/database"
 )
 
 // Awesome aggregates external clients used by the application.
@@ -41,6 +41,9 @@ func WithEmbeddingsOptions(opts ...agent.EmbeddingsOption) ClientSetOption {
 
 // NewForConfig initializes Awesome with the given config.
 func NewForConfig(cfg *config.Config) (*Awesome, error) {
+	if err := cfg.Bind(); err != nil {
+		return nil, err
+	}
 	var opts []ClientSetOption
 	if token := cfg.GetOpenAIAPIKey(); token != "" {
 		opts = append(
@@ -70,15 +73,15 @@ func NewForConfig(cfg *config.Config) (*Awesome, error) {
 
 // NewForConfigWithOptions builds Awesome with cfg and forwards embeddings options to the database.
 func NewForConfigWithOptions(cfg *config.Config, opts ...ClientSetOption) (*Awesome, error) {
-    var o ClientSetOptions
-    for _, opt := range opts {
-        opt(&o)
-    }
-    db, err := database.NewForConfig(cfg)
-    if err != nil {
-        return nil, err
-    }
-    return New(db, opts...), nil
+	var o ClientSetOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	db, err := database.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return New(db, opts...), nil
 }
 
 // New constructs an Awesome with the given database and options.
@@ -96,8 +99,8 @@ func (aw *Awesome) GitHub() *github.Client {
 }
 
 func (aw *Awesome) Agent() *core.Agent {
-    emb := agent.NewEmbeddingsForConfig(config.New(), aw.opts.embeddings...)
-    return core.NewAgentClient(aw.db, emb)
+	emb := agent.NewEmbeddingsForConfig(config.New(), aw.opts.embeddings...)
+	return core.NewAgentClient(aw.db, emb)
 }
 
 func (aw *Awesome) Close() error {

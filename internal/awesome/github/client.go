@@ -142,7 +142,7 @@ func (c *Client) ListCollections(
 	ctx, span := tracer.Start(ctx, "GitHub.ListCollections")
 	span.SetAttributes(attribute.Int("repos_len", len(repos)))
 	defer span.End()
-    cols, err := c.d.ListCollections(ctx, database.ListCollectionsArgs{Repos: repos})
+	cols, err := c.d.ListCollections(ctx, database.ListCollectionsArgs{Repos: repos})
 	if err != nil {
 		slog.WarnContext(ctx, "Failed to list collections from datastore", "error", err)
 	}
@@ -301,7 +301,12 @@ func (c *Client) GetCollection(
 		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("failed to read content for %s/%s: %v", repo.Owner, repo.Repo, err)
 	}
-    rms, idErr := c.d.UpsertRepositories(ctx, []*database.UpsertRepositoryArgs{{Hostname: repo.Hostname, Owner: repo.Owner, Repo: repo.Repo}})
+	rms, idErr := c.d.UpsertRepositories(
+		ctx,
+		[]*database.UpsertRepositoryArgs{
+			{Hostname: repo.Hostname, Owner: repo.Owner, Repo: repo.Repo},
+		},
+	)
 	if idErr != nil {
 		slog.WarnContext(
 			ctx,
@@ -315,7 +320,7 @@ func (c *Client) GetCollection(
 			"error",
 			idErr,
 		)
-    } else if err = c.d.UpsertProjectMetadata(ctx, database.UpsertProjectMetadataArgs{RepositoryID: rms[0].ID, Readme: string(content)}); err != nil {
+	} else if err = c.d.UpsertProjectMetadata(ctx, database.UpsertProjectMetadataArgs{RepositoryID: rms[0].ID, Readme: string(content)}); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project metadata", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo, "error", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -331,25 +336,32 @@ func (c *Client) GetCollection(
 			err,
 		)
 	}
-    colProto := encCol.ToProto(repo)
-    // Convert to args-based collections
-    var colArgs []*database.UpsertCollectionArgs
-    colArgs = append(colArgs, &database.UpsertCollectionArgs{
-        Repo:     *repo,
-        Language: colProto.Language,
-        Categories: func() []database.UpsertCategoryArgs {
-            var cats []database.UpsertCategoryArgs
-            for _, cat := range colProto.Categories {
-                var projs []database.CategoryProjectArg
-                for _, p := range cat.Projects {
-                    projs = append(projs, database.CategoryProjectArg{Repository: *p.Repo, Name: p.Name, Description: p.Description})
-                }
-                cats = append(cats, database.UpsertCategoryArgs{Name: cat.Name, Projects: projs})
-            }
-            return cats
-        }(),
-    })
-    if err := c.d.UpsertCollections(ctx, colArgs); err != nil {
+	colProto := encCol.ToProto(repo)
+	// Convert to args-based collections
+	var colArgs []*database.UpsertCollectionArgs
+	colArgs = append(colArgs, &database.UpsertCollectionArgs{
+		Repo:     *repo,
+		Language: colProto.Language,
+		Categories: func() []database.UpsertCategoryArgs {
+			var cats []database.UpsertCategoryArgs
+			for _, cat := range colProto.Categories {
+				var projs []database.CategoryProjectArg
+				for _, p := range cat.Projects {
+					projs = append(
+						projs,
+						database.CategoryProjectArg{
+							Repository:  *p.Repo,
+							Name:        p.Name,
+							Description: p.Description,
+						},
+					)
+				}
+				cats = append(cats, database.UpsertCategoryArgs{Name: cat.Name, Projects: projs})
+			}
+			return cats
+		}(),
+	})
+	if err := c.d.UpsertCollections(ctx, colArgs); err != nil {
 		slog.WarnContext(
 			ctx,
 			"Failed to upsert collection",
@@ -377,7 +389,7 @@ func (c *Client) GetProjectStats(
 	ctx, span := tracer.Start(ctx, "GitHub.GetProjectStats")
 	span.SetAttributes(attribute.String("owner", repo.Owner), attribute.String("repo", repo.Repo))
 	defer span.End()
-    stats, err := c.d.GetProjectStats(ctx, database.GetProjectStatsArgs{Repo: *repo})
+	stats, err := c.d.GetProjectStats(ctx, database.GetProjectStatsArgs{Repo: *repo})
 	if err != nil {
 		slog.WarnContext(
 			ctx,
@@ -435,7 +447,12 @@ func (c *Client) GetProjectStats(
 		StargazersCount: ptr.To(uint32(ptr.Deref(ghRepo.StargazersCount, 0))),
 		OpenIssueCount:  ptr.To(uint32(ptr.Deref(ghRepo.OpenIssuesCount, 0))),
 	}
-    rms, idErr := c.d.UpsertRepositories(ctx, []*database.UpsertRepositoryArgs{{Hostname: repo.Hostname, Owner: repo.Owner, Repo: repo.Repo}})
+	rms, idErr := c.d.UpsertRepositories(
+		ctx,
+		[]*database.UpsertRepositoryArgs{
+			{Hostname: repo.Hostname, Owner: repo.Owner, Repo: repo.Repo},
+		},
+	)
 	if idErr != nil {
 		slog.WarnContext(
 			ctx,
@@ -449,7 +466,7 @@ func (c *Client) GetProjectStats(
 			"error",
 			idErr,
 		)
-    } else if err := c.d.UpsertProjectStats(ctx, database.UpsertProjectStatsArgs{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}); err != nil {
+	} else if err := c.d.UpsertProjectStats(ctx, database.UpsertProjectStatsArgs{RepositoryID: rms[0].ID, StargazersCount: stats.StargazersCount, OpenIssueCount: stats.OpenIssueCount}); err != nil {
 		slog.WarnContext(ctx, "Failed to upsert project stats", "hostname", repo.Hostname, "owner", repo.Owner, "repo", repo.Repo, "error", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

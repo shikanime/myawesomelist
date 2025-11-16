@@ -106,154 +106,200 @@ func (db *Database) UpsertRepositories(
 	ctx, span := tracer.Start(ctx, "Database.UpsertRepositories")
 	span.SetAttributes(attribute.Int("repos_len", len(repos)))
 	defer span.End()
-    if db.pg == nil {
-        return nil, fmt.Errorf("database connection not available")
-    }
-    if len(repos) == 0 {
-        return nil, nil
-    }
-    // queue upserts for each repository arg
-b := &pgx.Batch{}
-for i := range repos {
-    b.Queue(UpsertRepositoryQuery, repos[i].Hostname, repos[i].Owner, repos[i].Repo)
-}
-slog.DebugContext(ctx, "upsert repositories queued", "count", len(repos))
-br := db.pg.SendBatch(ctx, b)
-defer br.Close()
-out := make([]*UpsertRepositoriesResult, 0, len(repos))
-for i := range repos {
-    var id int64
-    if err := br.QueryRow().Scan(&id); err != nil {
-        span.RecordError(err)
-        span.SetStatus(codes.Error, err.Error())
-        return nil, fmt.Errorf("upsert repository failed: %w", err)
-    }
-    out = append(out, &UpsertRepositoriesResult{ID: uint64(id), Hostname: repos[i].Hostname, Owner: repos[i].Owner, Repo: repos[i].Repo})
-}
-slog.DebugContext(ctx, "upsert repositories done", "count", len(out))
-return out, nil
+	if db.pg == nil {
+		return nil, fmt.Errorf("database connection not available")
+	}
+	if len(repos) == 0 {
+		return nil, nil
+	}
+	// queue upserts for each repository arg
+	b := &pgx.Batch{}
+	for i := range repos {
+		b.Queue(UpsertRepositoryQuery, repos[i].Hostname, repos[i].Owner, repos[i].Repo)
+	}
+	slog.DebugContext(ctx, "upsert repositories queued", "count", len(repos))
+	br := db.pg.SendBatch(ctx, b)
+	defer br.Close()
+	out := make([]*UpsertRepositoriesResult, 0, len(repos))
+	for i := range repos {
+		var id int64
+		if err := br.QueryRow().Scan(&id); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, fmt.Errorf("upsert repository failed: %w", err)
+		}
+		out = append(
+			out,
+			&UpsertRepositoriesResult{
+				ID:       uint64(id),
+				Hostname: repos[i].Hostname,
+				Owner:    repos[i].Owner,
+				Repo:     repos[i].Repo,
+			},
+		)
+	}
+	slog.DebugContext(ctx, "upsert repositories done", "count", len(out))
+	return out, nil
 }
 
 // ListCollections retrieves collections for the provided repos from the database
 func (db *Database) ListCollections(
-    ctx context.Context,
-    args ListCollectionsArgs,
+	ctx context.Context,
+	args ListCollectionsArgs,
 ) ([]*myawesomelistv1.Collection, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.ListCollections")
-    span.SetAttributes(attribute.Int("repos_len", len(args.Repos)))
+	span.SetAttributes(attribute.Int("repos_len", len(args.Repos)))
 	defer span.End()
 	if db.pg == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
-    query, qargs, err := RenderListCollectionsQuery(args.Repos)
+	query, qargs, err := RenderListCollectionsQuery(args.Repos)
 	if err != nil {
 		return nil, err
 	}
-    slog.DebugContext(ctx, "list collections query", "sql", query, "args_len", len(qargs))
-    cr, err := db.pg.Query(ctx, query, qargs...)
+	slog.DebugContext(ctx, "list collections query", "sql", query, "args_len", len(qargs))
+	cr, err := db.pg.Query(ctx, query, qargs...)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("list collections query failed: %w", err)
 	}
 	defer cr.Close()
-    type colRow struct {
-        ID           uint64
-        RepositoryID uint64
-        Language     string
-        UpdatedAt    time.Time
-        Hostname     string
-        Owner        string
-        Repo         string
-    }
-    var cols []colRow
-    for cr.Next() {
-        var c colRow
-        if err = cr.Scan(&c.ID, &c.RepositoryID, &c.Language, &c.UpdatedAt, &c.Hostname, &c.Owner, &c.Repo); err != nil {
-            return nil, err
-        }
-        cols = append(cols, c)
-    }
-    // categories per collection
-    if len(cols) == 0 {
-        return nil, nil
-    }
-    ids := make([]uint64, len(cols))
-    for i := range cols { ids[i] = cols[i].ID }
-    // local row structs for mapping
-    type categoryRow struct {
-        ID           uint64
-        CollectionID uint64
-        Name         string
-        UpdatedAt    time.Time
-    }
-    type projectRow struct {
-        ID           uint64
-        CategoryID   uint64
-        RepositoryID uint64
-        Name         string
-        Description  string
-        UpdatedAt    time.Time
-        Hostname     string
-        Owner        string
-        Repo         string
-    }
-    // predeclare maps to assemble output later
-    catsByCol := make(map[uint64][]categoryRow)
-    pm := make(map[uint64][]projectRow)
-    catRows, err := db.pg.Query(ctx, CategoriesByCollectionIDsQuery, ids)
-    if err == nil {
-        defer catRows.Close()
-        scannedCats, err := pgx.CollectRows(catRows, pgx.RowToStructByPos[categoryRow])
+	type colRow struct {
+		ID           uint64
+		RepositoryID uint64
+		Language     string
+		UpdatedAt    time.Time
+		Hostname     string
+		Owner        string
+		Repo         string
+	}
+	var cols []colRow
+	for cr.Next() {
+		var c colRow
+		if err = cr.Scan(&c.ID, &c.RepositoryID, &c.Language, &c.UpdatedAt, &c.Hostname, &c.Owner, &c.Repo); err != nil {
+			return nil, err
+		}
+		cols = append(cols, c)
+	}
+	// categories per collection
+	if len(cols) == 0 {
+		return nil, nil
+	}
+	ids := make([]uint64, len(cols))
+	for i := range cols {
+		ids[i] = cols[i].ID
+	}
+	// local row structs for mapping
+	type categoryRow struct {
+		ID           uint64
+		CollectionID uint64
+		Name         string
+		UpdatedAt    time.Time
+	}
+	type projectRow struct {
+		ID           uint64
+		CategoryID   uint64
+		RepositoryID uint64
+		Name         string
+		Description  string
+		UpdatedAt    time.Time
+		Hostname     string
+		Owner        string
+		Repo         string
+	}
+	// predeclare maps to assemble output later
+	catsByCol := make(map[uint64][]categoryRow)
+	pm := make(map[uint64][]projectRow)
+	catRows, err := db.pg.Query(ctx, CategoriesByCollectionIDsQuery, ids)
+	if err == nil {
+		defer catRows.Close()
+		scannedCats, err := pgx.CollectRows(catRows, pgx.RowToStructByPos[categoryRow])
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
 		slog.DebugContext(ctx, "list collections scanned cats", "count", len(scannedCats))
-        for i := range scannedCats {
-            catsByCol[scannedCats[i].CollectionID] = append(catsByCol[scannedCats[i].CollectionID], scannedCats[i])
-        }
+		for i := range scannedCats {
+			catsByCol[scannedCats[i].CollectionID] = append(
+				catsByCol[scannedCats[i].CollectionID],
+				scannedCats[i],
+			)
+		}
 	}
 	// projects
-    var catIDs []uint64
-    for _, col := range cols {
-        for _, cat := range catsByCol[col.ID] {
-            catIDs = append(catIDs, cat.ID)
-        }
-    }
-    if len(catIDs) > 0 {
-        pr, err := db.pg.Query(ctx, ProjectsByCategoryIDsQuery, catIDs)
-        if err == nil {
-            defer pr.Close()
-            scannedProjs, err := pgx.CollectRows(pr, pgx.RowToStructByPos[projectRow])
+	var catIDs []uint64
+	for _, col := range cols {
+		for _, cat := range catsByCol[col.ID] {
+			catIDs = append(catIDs, cat.ID)
+		}
+	}
+	if len(catIDs) > 0 {
+		pr, err := db.pg.Query(ctx, ProjectsByCategoryIDsQuery, catIDs)
+		if err == nil {
+			defer pr.Close()
+			scannedProjs, err := pgx.CollectRows(pr, pgx.RowToStructByPos[projectRow])
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
 				return nil, err
 			}
 			slog.DebugContext(ctx, "list collections scanned projects", "count", len(scannedProjs))
-            for i := range scannedProjs {
-                pm[scannedProjs[i].CategoryID] = append(pm[scannedProjs[i].CategoryID], scannedProjs[i])
-            }
-            // accumulated in pm map
-        }
-    }
-    var out []*myawesomelistv1.Collection
-    for _, col := range cols {
-        pc := &myawesomelistv1.Collection{Id: col.ID, Language: col.Language, UpdatedAt: timestamppb.New(col.UpdatedAt), Repo: &myawesomelistv1.Repository{Hostname: col.Hostname, Owner: col.Owner, Repo: col.Repo}}
-        for _, cat := range catsByCol[col.ID] {
-            var ps []*myawesomelistv1.Project
-            for _, p := range pm[cat.ID] {
-                ps = append(ps, &myawesomelistv1.Project{Id: p.ID, Name: p.Name, Description: p.Description, Repo: &myawesomelistv1.Repository{Hostname: p.Hostname, Owner: p.Owner, Repo: p.Repo}, UpdatedAt: timestamppb.New(p.UpdatedAt)})
-            }
-            pc.Categories = append(pc.Categories, &myawesomelistv1.Category{Id: cat.ID, Name: cat.Name, UpdatedAt: timestamppb.New(cat.UpdatedAt), Projects: ps})
-        }
-        out = append(out, pc)
-    }
-    slog.DebugContext(ctx, "list collections done", "collections", len(out))
-    return out, nil
+			for i := range scannedProjs {
+				pm[scannedProjs[i].CategoryID] = append(
+					pm[scannedProjs[i].CategoryID],
+					scannedProjs[i],
+				)
+			}
+			// accumulated in pm map
+		}
+	}
+	var out []*myawesomelistv1.Collection
+	for _, col := range cols {
+		pc := &myawesomelistv1.Collection{
+			Id:        col.ID,
+			Language:  col.Language,
+			UpdatedAt: timestamppb.New(col.UpdatedAt),
+			Repo: &myawesomelistv1.Repository{
+				Hostname: col.Hostname,
+				Owner:    col.Owner,
+				Repo:     col.Repo,
+			},
+		}
+		for _, cat := range catsByCol[col.ID] {
+			var ps []*myawesomelistv1.Project
+			for _, p := range pm[cat.ID] {
+				ps = append(
+					ps,
+					&myawesomelistv1.Project{
+						Id:          p.ID,
+						Name:        p.Name,
+						Description: p.Description,
+						Repo: &myawesomelistv1.Repository{
+							Hostname: p.Hostname,
+							Owner:    p.Owner,
+							Repo:     p.Repo,
+						},
+						UpdatedAt: timestamppb.New(p.UpdatedAt),
+					},
+				)
+			}
+			pc.Categories = append(
+				pc.Categories,
+				&myawesomelistv1.Category{
+					Id:        cat.ID,
+					Name:      cat.Name,
+					UpdatedAt: timestamppb.New(cat.UpdatedAt),
+					Projects:  ps,
+				},
+			)
+		}
+		out = append(out, pc)
+	}
+	slog.DebugContext(ctx, "list collections done", "collections", len(out))
+	return out, nil
 }
 
 // GetCollection retrieves a collection from the database
@@ -333,7 +379,11 @@ func (db *Database) GetCollection(
 		Id:        col.ID,
 		Language:  col.Language,
 		UpdatedAt: timestamppb.New(col.UpdatedAt),
-		Repo:      &myawesomelistv1.Repository{Hostname: col.Repository.Hostname, Owner: col.Repository.Owner, Repo: col.Repository.Repo},
+		Repo: &myawesomelistv1.Repository{
+			Hostname: col.Repository.Hostname,
+			Owner:    col.Repository.Owner,
+			Repo:     col.Repository.Repo,
+		},
 	}
 	for _, cat := range col.Categories {
 		pc.Categories = append(pc.Categories, &myawesomelistv1.Category{
@@ -347,8 +397,12 @@ func (db *Database) GetCollection(
 						Id:          p.ID,
 						Name:        p.Name,
 						Description: p.Description,
-						Repo:        &myawesomelistv1.Repository{Hostname: p.Repository.Hostname, Owner: p.Repository.Owner, Repo: p.Repository.Repo},
-						UpdatedAt:   timestamppb.New(p.UpdatedAt),
+						Repo: &myawesomelistv1.Repository{
+							Hostname: p.Repository.Hostname,
+							Owner:    p.Repository.Owner,
+							Repo:     p.Repository.Repo,
+						},
+						UpdatedAt: timestamppb.New(p.UpdatedAt),
 					})
 				}
 				return ps
@@ -372,7 +426,14 @@ func (db *Database) UpsertCollections(
 	}
 	repos := make([]*UpsertRepositoryArgs, 0, len(cols))
 	for _, col := range cols {
-		repos = append(repos, &UpsertRepositoryArgs{Hostname: col.Repo.Hostname, Owner: col.Repo.Owner, Repo: col.Repo.Repo})
+		repos = append(
+			repos,
+			&UpsertRepositoryArgs{
+				Hostname: col.Repo.Hostname,
+				Owner:    col.Repo.Owner,
+				Repo:     col.Repo.Repo,
+			},
+		)
 	}
 	rms, err := db.UpsertRepositories(ctx, repos)
 	if err != nil {
@@ -380,31 +441,31 @@ func (db *Database) UpsertCollections(
 	}
 	slog.DebugContext(ctx, "upsert collections repos resolved", "count", len(rms))
 
-    b := &pgx.Batch{}
-    for i := range cols {
-        b.Queue(UpsertCollectionQuery, rms[i].ID, cols[i].Language)
-    }
-    slog.DebugContext(ctx, "upsert collections queued", "count", len(cols))
-    br := db.pg.SendBatch(ctx, b)
-    defer br.Close()
-    colIDs := make([]uint64, len(cols))
-    for i := range cols {
-        var id int64
-        if err := br.QueryRow().Scan(&id); err != nil {
-            span.RecordError(err)
-            span.SetStatus(codes.Error, err.Error())
-            return fmt.Errorf("upsert collection failed: %w", err)
-        }
-        colIDs[i] = uint64(id)
-    }
+	b := &pgx.Batch{}
+	for i := range cols {
+		b.Queue(UpsertCollectionQuery, rms[i].ID, cols[i].Language)
+	}
+	slog.DebugContext(ctx, "upsert collections queued", "count", len(cols))
+	br := db.pg.SendBatch(ctx, b)
+	defer br.Close()
+	colIDs := make([]uint64, len(cols))
+	for i := range cols {
+		var id int64
+		if err := br.QueryRow().Scan(&id); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return fmt.Errorf("upsert collection failed: %w", err)
+		}
+		colIDs[i] = uint64(id)
+	}
 
 	for i, col := range cols {
 		cats := make([]*UpsertCategoryArgs, 0, len(col.Categories))
-        for _, catArg := range col.Categories {
-            c := &UpsertCategoryArgs{CollectionID: colIDs[i], Name: catArg.Name}
-            c.Projects = catArg.Projects
-            cats = append(cats, c)
-        }
+		for _, catArg := range col.Categories {
+			c := &UpsertCategoryArgs{CollectionID: colIDs[i], Name: catArg.Name}
+			c.Projects = catArg.Projects
+			cats = append(cats, c)
+		}
 		if err := db.UpsertCategories(ctx, cats); err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -489,7 +550,10 @@ func (db *Database) GetProjectStats(
 ) (*myawesomelistv1.ProjectStats, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.GetProjectStats")
-	span.SetAttributes(attribute.String("owner", args.Repo.Owner), attribute.String("repo", args.Repo.Repo))
+	span.SetAttributes(
+		attribute.String("owner", args.Repo.Owner),
+		attribute.String("repo", args.Repo.Repo),
+	)
 	defer span.End()
 	if db.pg == nil {
 		return nil, fmt.Errorf("database connection not available")
@@ -515,7 +579,12 @@ func (db *Database) GetProjectStats(
 		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("query project stats failed: %w", err)
 	}
-	return &myawesomelistv1.ProjectStats{Id: id, StargazersCount: stargazers, OpenIssueCount: openIssues, UpdatedAt: timestamppb.New(updated)}, nil
+	return &myawesomelistv1.ProjectStats{
+		Id:              id,
+		StargazersCount: stargazers,
+		OpenIssueCount:  openIssues,
+		UpdatedAt:       timestamppb.New(updated),
+	}, nil
 }
 
 func (db *Database) GetProjectsStats(
@@ -552,7 +621,15 @@ func (db *Database) GetProjectsStats(
 			span.SetStatus(codes.Error, err.Error())
 			return nil, fmt.Errorf("query project stats failed: %w", err)
 		}
-		out = append(out, &myawesomelistv1.ProjectStats{Id: id, StargazersCount: stargazers, OpenIssueCount: openIssues, UpdatedAt: timestamppb.New(updated)})
+		out = append(
+			out,
+			&myawesomelistv1.ProjectStats{
+				Id:              id,
+				StargazersCount: stargazers,
+				OpenIssueCount:  openIssues,
+				UpdatedAt:       timestamppb.New(updated),
+			},
+		)
 	}
 	return out, nil
 }
@@ -612,7 +689,13 @@ func (db *Database) UpsertCategories(
 			for _, project := range cm.Projects {
 				rms, err := db.UpsertRepositories(
 					ctx,
-					[]*UpsertRepositoryArgs{{Hostname: project.Repository.Hostname, Owner: project.Repository.Owner, Repo: project.Repository.Repo}},
+					[]*UpsertRepositoryArgs{
+						{
+							Hostname: project.Repository.Hostname,
+							Owner:    project.Repository.Owner,
+							Repo:     project.Repository.Repo,
+						},
+					},
 				)
 				if err != nil || len(rms) == 0 {
 					return fmt.Errorf("upsert project repository failed: %w", err)
@@ -672,7 +755,14 @@ func (db *Database) UpsertProjectMetadata(
 	ctx context.Context,
 	args UpsertProjectMetadataArgs,
 ) error {
-	slog.DebugContext(ctx, "upsert project metadata", "repo_id", args.RepositoryID, "readme_len", len(args.Readme))
+	slog.DebugContext(
+		ctx,
+		"upsert project metadata",
+		"repo_id",
+		args.RepositoryID,
+		"readme_len",
+		len(args.Readme),
+	)
 	b := &pgx.Batch{}
 	b.Queue(UpsertProjectMetadataQuery, args.RepositoryID, args.Readme)
 	br := db.pg.SendBatch(ctx, b)
@@ -683,7 +773,10 @@ func (db *Database) UpsertProjectMetadata(
 	return nil
 }
 
-func (db *Database) ListStaledProjectEmbeddings(ctx context.Context, args ListStaledProjectEmbeddingsArgs) ([]StaledProjectEmbeddingResult, error) {
+func (db *Database) ListStaledProjectEmbeddings(
+	ctx context.Context,
+	args ListStaledProjectEmbeddingsArgs,
+) ([]StaledProjectEmbeddingResult, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.ListStaledProjectEmbeddings")
 	defer span.End()
@@ -707,7 +800,10 @@ func (db *Database) ListStaledProjectEmbeddings(ctx context.Context, args ListSt
 	return rows, nil
 }
 
-func (db *Database) UpsertProjectEmbedding(ctx context.Context, args UpsertProjectEmbeddingArgs) error {
+func (db *Database) UpsertProjectEmbedding(
+	ctx context.Context,
+	args UpsertProjectEmbeddingArgs,
+) error {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.UpsertProjectEmbedding")
 	span.SetAttributes(attribute.Int("vector_dim", len(args.Vec)))
