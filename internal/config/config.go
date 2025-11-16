@@ -14,7 +14,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"golang.org/x/sync/errgroup"
 )
 
 type Config struct{ v *viper.Viper }
@@ -26,34 +25,71 @@ func New() *Config {
 
 func (c *Config) Bind() error {
 	c.v.AutomaticEnv()
-	var g errgroup.Group
-	g.Go(func() error { return c.v.BindEnv("dsn", "DSN") })
-	g.Go(func() error { return c.v.BindEnv("pguser", "PGUSER") })
-	g.Go(func() error { return c.v.BindEnv("user", "USER") })
-	g.Go(func() error { return c.v.BindEnv("pgdatabase", "PGDATABASE") })
-	g.Go(func() error { return c.v.BindEnv("pghost", "PGHOST") })
-	g.Go(func() error { return c.v.BindEnv("pgport", "PGPORT") })
-	g.Go(func() error { return c.v.BindEnv("github_token", "GITHUB_TOKEN", "GH_TOKEN") })
-	g.Go(func() error { return c.v.BindEnv("port", "PORT") })
-	g.Go(func() error { return c.v.BindEnv("host", "HOST") })
-	g.Go(func() error { return c.v.BindEnv("collection_cache_ttl", "COLLECTION_CACHE_TTL") })
-	g.Go(func() error { return c.v.BindEnv("project_stats_ttl", "PROJECT_STATS_TTL") })
-	g.Go(func() error { return c.v.BindEnv("project_embeddings_ttl", "PROJECT_EMBEDDINGS_TTL") })
-	g.Go(func() error { return c.v.BindEnv("openai_base_url", "OPENAI_BASE_URL") })
-	g.Go(func() error { return c.v.BindEnv("openai_api_key", "OPENAI_API_KEY") })
-	g.Go(func() error { return c.v.BindEnv("embedding_model", "EMBEDDING_MODEL") })
-	g.Go(func() error { return c.v.BindEnv("log_level", "LOG_LEVEL") })
-	g.Go(func() error { return c.v.BindEnv("scaleway_verified", "SCALEWAY_VERIFIED") })
-	g.Go(func() error { return c.v.BindEnv("otel_service_name", "OTEL_SERVICE_NAME") })
-	g.Go(func() error { return c.v.BindEnv("service_name", "SERVICE_NAME") })
-	return g.Wait()
+	if err := c.v.BindEnv("dsn", "DSN"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("postgres_user", "PGUSER"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("user", "USER"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("postgres_database", "PGDATABASE"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("postgres_host", "PGHOST"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("postgres_port", "PGPORT"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("github_token", "GITHUB_TOKEN", "GH_TOKEN"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("port", "PORT"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("host", "HOST"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("collection_cache_ttl", "COLLECTION_CACHE_TTL"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("project_stats_ttl", "PROJECT_STATS_TTL"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("project_embeddings_ttl", "PROJECT_EMBEDDINGS_TTL"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("openai_base_url", "OPENAI_BASE_URL"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("openai_api_key", "OPENAI_API_KEY"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("embedding_model", "EMBEDDING_MODEL"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("log_level", "LOG_LEVEL"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("scaleway_verified", "SCALEWAY_VERIFIED"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("otel_service_name", "OTEL_SERVICE_NAME"); err != nil {
+		return err
+	}
+	if err := c.v.BindEnv("service_name", "SERVICE_NAME"); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetDsn resolves the final DSN using env vars
 func (c *Config) GetDsn() (*url.URL, error) {
 	source := c.v.GetString("dsn")
 	if source == "" {
-		user := c.v.GetString("pguser")
+		user := c.v.GetString("postgres_user")
 		if user == "" {
 			user = c.v.GetString("user")
 		}
@@ -61,17 +97,17 @@ func (c *Config) GetDsn() (*url.URL, error) {
 			user = "postgres"
 		}
 
-		dbName := c.v.GetString("pgdatabase")
+		dbName := c.v.GetString("postgres_database")
 		if dbName == "" {
 			dbName = "postgres"
 		}
 
-		host := c.v.GetString("pghost")
+		host := c.v.GetString("postgres_host")
 		if host == "" {
 			host = "localhost"
 		}
 
-		port := c.v.GetString("pgport")
+		port := c.v.GetString("postgres_port")
 		hasPortEnv := port != ""
 		if !hasPortEnv || port == "" {
 			port = "5432"
