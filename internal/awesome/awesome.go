@@ -1,18 +1,17 @@
 package awesome
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"myawesomelist.shikanime.studio/internal/agent"
-	"myawesomelist.shikanime.studio/internal/agent/openai"
-	"myawesomelist.shikanime.studio/internal/awesome/github"
-	"myawesomelist.shikanime.studio/internal/config"
-	"myawesomelist.shikanime.studio/internal/database"
-	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/codes"
+    "myawesomelist.shikanime.studio/internal/agent"
+    "myawesomelist.shikanime.studio/internal/agent/openai"
+    "myawesomelist.shikanime.studio/internal/awesome/github"
+    "myawesomelist.shikanime.studio/internal/awesome/core"
+    "myawesomelist.shikanime.studio/internal/config"
+    "myawesomelist.shikanime.studio/internal/database"
 )
 
 // Awesome aggregates external clients used by the application.
@@ -71,15 +70,15 @@ func NewForConfig(cfg *config.Config) (*Awesome, error) {
 
 // NewForConfigWithOptions builds Awesome with cfg and forwards embeddings options to the database.
 func NewForConfigWithOptions(cfg *config.Config, opts ...ClientSetOption) (*Awesome, error) {
-	var o ClientSetOptions
-	for _, opt := range opts {
-		opt(&o)
-	}
-	db, err := database.NewForConfigWithEmbeddingsOptions(cfg, o.embeddings...)
-	if err != nil {
-		return nil, err
-	}
-	return New(db, opts...), nil
+    var o ClientSetOptions
+    for _, opt := range opts {
+        opt(&o)
+    }
+    db, err := database.NewForConfig(cfg)
+    if err != nil {
+        return nil, err
+    }
+    return New(db, opts...), nil
 }
 
 // New constructs an Awesome with the given database and options.
@@ -96,33 +95,9 @@ func (aw *Awesome) GitHub() *github.Client {
 	return github.NewClient(aw.db, aw.opts.github...)
 }
 
-// Core returns a core client backed by the datastore.
-type Core struct{ db *database.Database }
-
-func NewCoreClient(db *database.Database) *Core { return &Core{db: db} }
-func (aw *Awesome) Core() *Core                 { return NewCoreClient(aw.db) }
-
-func (c *Core) SearchProjects(
-	ctx context.Context,
-	q string,
-	limit uint32,
-	repos []*myawesomelistv1.Repository,
-) ([]*myawesomelistv1.Project, error) {
-	tracer := otel.Tracer("myawesomelist/core")
-	ctx, span := tracer.Start(ctx, "Core.SearchProjects")
-	span.SetAttributes(
-		attribute.String("query", q),
-		attribute.Int("repos_len", len(repos)),
-		attribute.Int("limit", int(limit)),
-	)
-	defer span.End()
-	out, err := c.db.SearchProjects(ctx, q, limit, repos)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return nil, err
-	}
-	return out, nil
+func (aw *Awesome) Agent() *core.Agent {
+    emb := agent.NewEmbeddingsForConfig(config.New(), aw.opts.embeddings...)
+    return core.NewAgentClient(aw.db, emb)
 }
 
 func (aw *Awesome) Close() error {

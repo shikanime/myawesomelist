@@ -5,10 +5,89 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/pgvector/pgvector-go"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
+
+type UpsertRepositoriesResult struct {
+	ID       uint64
+	Hostname string
+	Owner    string
+	Repo     string
+}
+
+type UpsertRepositoryArgs struct {
+	Hostname string
+	Owner    string
+	Repo     string
+}
+
+type CategoryProjectArg struct {
+	Repository  myawesomelistv1.Repository
+	Name        string
+	Description string
+}
+
+type UpsertCategoryArgs struct {
+	CollectionID uint64
+	Name         string
+	Projects     []CategoryProjectArg
+}
+
+type UpsertProjectArgs struct {
+	CategoryID   uint64
+	RepositoryID uint64
+	Name         string
+	Description  string
+}
+
+type UpsertCollectionArgs struct {
+    Repo       myawesomelistv1.Repository
+    Language   string
+    Categories []UpsertCategoryArgs
+}
+
+type ListCollectionsArgs struct {
+    Repos []*myawesomelistv1.Repository
+}
+
+type StaledProjectEmbeddingResult struct {
+	ID           uint64
+	CategoryID   uint64
+	RepositoryID uint64
+	Name         string
+	Description  string
+	UpdatedAt    time.Time
+	Hostname     string
+	Owner        string
+	Repo         string
+}
+
+type UpsertProjectEmbeddingArgs struct {
+	ProjectID uint64
+	Vec       []float32
+}
+
+type ListStaledProjectEmbeddingsArgs struct {
+	TTL time.Duration
+}
+
+type UpsertProjectMetadataArgs struct {
+	RepositoryID uint64
+	Readme       string
+}
+
+type GetProjectStatsArgs struct {
+	Repo myawesomelistv1.Repository
+}
+
+type UpsertProjectStatsArgs struct {
+	RepositoryID    uint64
+	StargazersCount *uint32
+	OpenIssueCount  *uint32
+}
 
 var UpsertRepositoryQuery = strings.Join([]string{
 	"INSERT INTO repositories (hostname, owner, repo)",
@@ -85,6 +164,15 @@ var ProjectsByCategoryIDsQuery = strings.Join([]string{
 	"SELECT p.id, p.category_id, p.repository_id, p.name, p.description, p.updated_at,",
 	"r.hostname, r.owner, r.repo FROM projects p JOIN repositories r ON r.id = p.repository_id",
 	"WHERE p.category_id = ANY($1::bigint[])",
+}, " ")
+
+var ProjectsStaledEmbeddingsQuery = strings.Join([]string{
+	"SELECT p.id, p.category_id, p.repository_id, p.name, p.description, p.updated_at,",
+	"r.hostname, r.owner, r.repo FROM projects p",
+	"JOIN repositories r ON r.id = p.repository_id",
+	"LEFT JOIN project_embeddings pe ON pe.project_id = p.id",
+	"WHERE pe.updated_at IS NULL",
+	"OR ($1::double precision >= 0 AND EXTRACT(EPOCH FROM NOW() - pe.updated_at) > $1::double precision)",
 }, " ")
 
 var ProjectStatsByRepoIDQuery = strings.Join([]string{

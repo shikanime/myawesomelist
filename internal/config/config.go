@@ -131,6 +131,15 @@ func (c *Config) GetProjectStatsTTL() time.Duration {
 	return def
 }
 
+func (c *Config) GetProjectEmbeddingsTTL() time.Duration {
+    if v := c.v.GetString("PROJECT_EMBEDDINGS_TTL"); v != "" {
+        if d, err := time.ParseDuration(v); err == nil {
+            return d
+        }
+    }
+    return -1
+}
+
 // GetOpenAIAPIBaseURL returns the OpenAI API base URL from env var OPENAI_API_BASE_URL.
 // Defaults to "https://api.openai.com/v1".
 func (c *Config) GetOpenAIBaseURL() string { return c.v.GetString("OPENAI_BASE_URL") }

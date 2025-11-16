@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"myawesomelist.shikanime.studio/internal/awesome"
 	"myawesomelist.shikanime.studio/internal/awesome/http"
 	"myawesomelist.shikanime.studio/internal/config"
 	"myawesomelist.shikanime.studio/internal/database"
@@ -23,7 +24,7 @@ func main() {
 		defer cleanup()
 	}
 	config.SetupLog(cfg)
-	if err := NewCmdForConf(cfg).Execute(); err != nil {
+	if err := NewCmdForConfig(cfg).Execute(); err != nil {
 		slog.ErrorContext(ctx, "command execution failed", "error", err)
 		os.Exit(1)
 	}
@@ -75,7 +76,7 @@ func RunMigrateUpWithConf(cfg *config.Config) error {
 	if dsn != "" {
 		cfg.Set("DSN", dsn)
 	}
-	mg, err := database.NewMigratorForConf(cfg)
+	mg, err := database.NewMigratorForConfig(cfg)
 	if err != nil {
 		return err
 	}
@@ -87,15 +88,27 @@ func RunMigrateDownWithConf(cfg *config.Config) error {
 	if dsn != "" {
 		cfg.Set("DSN", dsn)
 	}
-	mg, err := database.NewMigratorForConf(cfg)
+	mg, err := database.NewMigratorForConfig(cfg)
 	if err != nil {
 		return err
 	}
 	return mg.Down()
 }
 
+func RunEmbedAllProjectsWithConf(cfg *config.Config) error {
+	if dsn != "" {
+		cfg.Set("DSN", dsn)
+	}
+	aw, err := awesome.NewForConfig(cfg)
+	if err != nil {
+		return err
+	}
+	defer aw.Close()
+	return aw.Agent().UpsertAllStaledProjectEmbeddings(context.Background(), cfg.GetProjectEmbeddingsTTL())
+}
+
 // NewServeCmdForConf returns a new cobra.Command for running the API server with the given configuration.
-func NewServerStartCmdForConf(cfg *config.Config) *cobra.Command {
+func NewServerStartCmdForConfig(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "start",
 		Short: "Run the API server",
@@ -106,14 +119,14 @@ func NewServerStartCmdForConf(cfg *config.Config) *cobra.Command {
 	return c
 }
 
-func NewServerCmdForConf(cfg *config.Config) *cobra.Command {
+func NewServerCmdForConfig(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{Use: "server", Short: "Server commands"}
-	c.AddCommand(NewServerStartCmdForConf(cfg))
+	c.AddCommand(NewServerStartCmdForConfig(cfg))
 	return c
 }
 
 // NewMigrateUpCmdForConf returns a new cobra.Command for applying all pending migrations with the given configuration.
-func NewMigrateUpCmdForConf(cfg *config.Config) *cobra.Command {
+func NewMigrateUpCmdForConfig(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "apply",
 		Short: "Apply all pending migrations",
@@ -122,7 +135,7 @@ func NewMigrateUpCmdForConf(cfg *config.Config) *cobra.Command {
 }
 
 // NewMigrateDownCmdForConf returns a new cobra.Command for reverting all applied migrations with the given configuration.
-func NewMigrateDownCmdForConf(cfg *config.Config) *cobra.Command {
+func NewMigrateDownCmdForConfig(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete",
 		Short: "Revert all applied migrations",
@@ -131,17 +144,38 @@ func NewMigrateDownCmdForConf(cfg *config.Config) *cobra.Command {
 }
 
 // NewMigrateCmdForConf returns a new cobra.Command for database migrations with the given configuration.
-func NewMigrateCmdForConf(cfg *config.Config) *cobra.Command {
+func NewMigrateCmdForConfig(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{Use: "migrations", Short: "Database migrations"}
-	c.AddCommand(NewMigrateUpCmdForConf(cfg), NewMigrateDownCmdForConf(cfg))
+	c.AddCommand(NewMigrateUpCmdForConfig(cfg), NewMigrateDownCmdForConfig(cfg))
+	return c
+}
+
+func NewJobsEmbStartCmdForConfig(cfg *config.Config) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "start",
+		Short: "Embed staled project embeddings",
+		RunE:  func(_ *cobra.Command, _ []string) error { return RunEmbedAllProjectsWithConf(cfg) },
+	}
+	return c
+}
+
+func NewJobsEmbCmdForConfig(cfg *config.Config) *cobra.Command {
+	c := &cobra.Command{Use: "embeding", Short: "Embeddings jobs"}
+	c.AddCommand(NewJobsEmbStartCmdForConfig(cfg))
+	return c
+}
+
+func NewJobsCmdForConfig(cfg *config.Config) *cobra.Command {
+	c := &cobra.Command{Use: "jobs", Short: "Background jobs"}
+	c.AddCommand(NewJobsEmbCmdForConfig(cfg))
 	return c
 }
 
 // NewCmdForConf returns a new cobra.Command for the awesome list server and utilities with the given configuration.
-func NewCmdForConf(cfg *config.Config) *cobra.Command {
+func NewCmdForConfig(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{Use: "myawesomelist", Short: "Awesome list server and utilities"}
 	c.PersistentFlags().
 		StringVar(&dsn, "dsn", "", "Database source name in the format driver://dataSourceName. Falls back to DSN environment variable")
-	c.AddCommand(NewServerCmdForConf(cfg), NewMigrateCmdForConf(cfg))
+	c.AddCommand(NewServerCmdForConfig(cfg), NewMigrateCmdForConfig(cfg), NewJobsCmdForConfig(cfg))
 	return c
 }

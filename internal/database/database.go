@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,15 +13,56 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"myawesomelist.shikanime.studio/internal/agent"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"myawesomelist.shikanime.studio/internal/config"
 	dbpgx "myawesomelist.shikanime.studio/internal/database/pgx"
 	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
 )
 
+type Repository struct {
+	ID       uint64
+	Hostname string
+	Owner    string
+	Repo     string
+}
+
+type Project struct {
+	ID           uint64
+	CategoryID   uint64
+	RepositoryID uint64
+	Repository   Repository
+	Name         string
+	Description  string
+	UpdatedAt    time.Time
+}
+
+type Category struct {
+	ID           uint64
+	CollectionID uint64
+	Name         string
+	Projects     []Project
+	UpdatedAt    time.Time
+}
+
+type Collection struct {
+	ID           uint64
+	RepositoryID uint64
+	Repository   Repository
+	Language     string
+	Categories   []Category
+	UpdatedAt    time.Time
+}
+
+type ProjectStats struct {
+	ID              uint64
+	RepositoryID    uint64
+	StargazersCount *uint32
+	OpenIssueCount  *uint32
+	UpdatedAt       time.Time
+}
+
 type Database struct {
-	pg  *pgxpool.Pool
-	emb *agent.Embeddings
+	pg *pgxpool.Pool
 }
 
 // NewForConfig constructs a Database using the provided config.
@@ -30,25 +72,11 @@ func NewForConfig(cfg *config.Config) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClientWithPgxAndEmbedding(pg, agent.NewEmbeddingsForConfig(cfg)), nil
+	return NewClient(pg), nil
 }
 
-// NewForConfigWithEmbeddingsOptions constructs a Database using cfg and forwards embeddings options.
-func NewForConfigWithEmbeddingsOptions(
-	cfg *config.Config,
-	opts ...agent.EmbeddingsOption,
-) (*Database, error) {
-	pg, err := dbpgx.NewClientForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return NewClientWithPgxAndEmbedding(pg, agent.NewEmbeddingsForConfig(cfg, opts...)), nil
-}
-
-// NewClientWithPgxAndEmbedding constructs a Database using the provided pgx pool and embeddings.
-func NewClientWithPgxAndEmbedding(pg *pgxpool.Pool, emb *agent.Embeddings) *Database {
-	return &Database{pg: pg, emb: emb}
-}
+// NewClient constructs a Database using the provided pgx pool.
+func NewClient(pg *pgxpool.Pool) *Database { return &Database{pg: pg} }
 
 // Ping verifies the provided database connection is available
 func (db *Database) Ping(ctx context.Context) error {
@@ -69,169 +97,163 @@ func (db *Database) Close() error {
 	return nil
 }
 
+// UpsertRepositories upserts repositories into the database
 func (db *Database) UpsertRepositories(
 	ctx context.Context,
-	repos []*myawesomelistv1.Repository,
-) ([]*Repository, error) {
+	repos []*UpsertRepositoryArgs,
+) ([]*UpsertRepositoriesResult, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.UpsertRepositories")
 	span.SetAttributes(attribute.Int("repos_len", len(repos)))
 	defer span.End()
-	if db.pg == nil {
-		return nil, fmt.Errorf("database connection not available")
-	}
-	if len(repos) == 0 {
-		return nil, nil
-	}
-	rows := make([]Repository, 0, len(repos))
-	for _, pr := range repos {
-		rows = append(rows, Repository{Hostname: pr.Hostname, Owner: pr.Owner, Repo: pr.Repo})
-	}
-	b := &pgx.Batch{}
-	for i := range rows {
-		b.Queue(
-			UpsertRepositoryQuery,
-			rows[i].Hostname,
-			rows[i].Owner,
-			rows[i].Repo,
-		)
-	}
-	slog.DebugContext(ctx, "upsert repositories queued", "count", len(rows))
-	br := db.pg.SendBatch(ctx, b)
-	defer br.Close()
-	for i := range rows {
-		var id int64
-		if err := br.QueryRow().Scan(&id); err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			return nil, fmt.Errorf("upsert repository failed: %w", err)
-		}
-		rows[i].ID = uint64(id)
-	}
-	out := make([]*Repository, 0, len(rows))
-	for i := range rows {
-		out = append(out, &rows[i])
-	}
-	slog.DebugContext(ctx, "upsert repositories done", "count", len(out))
-	return out, nil
+    if db.pg == nil {
+        return nil, fmt.Errorf("database connection not available")
+    }
+    if len(repos) == 0 {
+        return nil, nil
+    }
+    // queue upserts for each repository arg
+b := &pgx.Batch{}
+for i := range repos {
+    b.Queue(UpsertRepositoryQuery, repos[i].Hostname, repos[i].Owner, repos[i].Repo)
+}
+slog.DebugContext(ctx, "upsert repositories queued", "count", len(repos))
+br := db.pg.SendBatch(ctx, b)
+defer br.Close()
+out := make([]*UpsertRepositoriesResult, 0, len(repos))
+for i := range repos {
+    var id int64
+    if err := br.QueryRow().Scan(&id); err != nil {
+        span.RecordError(err)
+        span.SetStatus(codes.Error, err.Error())
+        return nil, fmt.Errorf("upsert repository failed: %w", err)
+    }
+    out = append(out, &UpsertRepositoriesResult{ID: uint64(id), Hostname: repos[i].Hostname, Owner: repos[i].Owner, Repo: repos[i].Repo})
+}
+slog.DebugContext(ctx, "upsert repositories done", "count", len(out))
+return out, nil
 }
 
 // ListCollections retrieves collections for the provided repos from the database
 func (db *Database) ListCollections(
-	ctx context.Context,
-	repos []*myawesomelistv1.Repository,
+    ctx context.Context,
+    args ListCollectionsArgs,
 ) ([]*myawesomelistv1.Collection, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.ListCollections")
-	span.SetAttributes(attribute.Int("repos_len", len(repos)))
+    span.SetAttributes(attribute.Int("repos_len", len(args.Repos)))
 	defer span.End()
 	if db.pg == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
-	query, args, err := RenderListCollectionsQuery(repos)
+    query, qargs, err := RenderListCollectionsQuery(args.Repos)
 	if err != nil {
 		return nil, err
 	}
-	slog.DebugContext(ctx, "list collections query", "sql", query, "args_len", len(args))
-	cr, err := db.pg.Query(ctx, query, args...)
+    slog.DebugContext(ctx, "list collections query", "sql", query, "args_len", len(qargs))
+    cr, err := db.pg.Query(ctx, query, qargs...)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("list collections query failed: %w", err)
 	}
 	defer cr.Close()
-	var cols []Collection
-	for cr.Next() {
-		var c Collection
-		var host, owner, repo string
-		if err = cr.Scan(&c.ID, &c.RepositoryID, &c.Language, &c.UpdatedAt, &host, &owner, &repo); err != nil {
-			return nil, err
-		}
-		slog.DebugContext(ctx, "list collections scanned", "collections", len(cols))
-		c.Repository = Repository{ID: c.RepositoryID, Hostname: host, Owner: owner, Repo: repo}
-		cols = append(cols, c)
-	}
-	// categories per collection
-	if len(cols) == 0 {
-		return nil, nil
-	}
-	ids := make([]uint64, len(cols))
-	for i := range cols {
-		ids[i] = cols[i].ID
-	}
-	catRows, err := db.pg.Query(ctx, CategoriesByCollectionIDsQuery, ids)
-	if err == nil {
-		defer catRows.Close()
-		catsByCol := make(map[uint64][]Category)
-		scannedCats, err := pgx.CollectRows(catRows, func(r pgx.CollectableRow) (Category, error) {
-			var cat Category
-			if err := r.Scan(&cat.ID, &cat.CollectionID, &cat.Name, &cat.UpdatedAt); err != nil {
-				return Category{}, err
-			}
-			return cat, nil
-		})
+    type colRow struct {
+        ID           uint64
+        RepositoryID uint64
+        Language     string
+        UpdatedAt    time.Time
+        Hostname     string
+        Owner        string
+        Repo         string
+    }
+    var cols []colRow
+    for cr.Next() {
+        var c colRow
+        if err = cr.Scan(&c.ID, &c.RepositoryID, &c.Language, &c.UpdatedAt, &c.Hostname, &c.Owner, &c.Repo); err != nil {
+            return nil, err
+        }
+        cols = append(cols, c)
+    }
+    // categories per collection
+    if len(cols) == 0 {
+        return nil, nil
+    }
+    ids := make([]uint64, len(cols))
+    for i := range cols { ids[i] = cols[i].ID }
+    // local row structs for mapping
+    type categoryRow struct {
+        ID           uint64
+        CollectionID uint64
+        Name         string
+        UpdatedAt    time.Time
+    }
+    type projectRow struct {
+        ID           uint64
+        CategoryID   uint64
+        RepositoryID uint64
+        Name         string
+        Description  string
+        UpdatedAt    time.Time
+        Hostname     string
+        Owner        string
+        Repo         string
+    }
+    // predeclare maps to assemble output later
+    catsByCol := make(map[uint64][]categoryRow)
+    pm := make(map[uint64][]projectRow)
+    catRows, err := db.pg.Query(ctx, CategoriesByCollectionIDsQuery, ids)
+    if err == nil {
+        defer catRows.Close()
+        scannedCats, err := pgx.CollectRows(catRows, pgx.RowToStructByPos[categoryRow])
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
 		slog.DebugContext(ctx, "list collections scanned cats", "count", len(scannedCats))
-		for i := range scannedCats {
-			catsByCol[scannedCats[i].CollectionID] = append(
-				catsByCol[scannedCats[i].CollectionID],
-				scannedCats[i],
-			)
-		}
-		for i := range cols {
-			cols[i].Categories = catsByCol[cols[i].ID]
-		}
+        for i := range scannedCats {
+            catsByCol[scannedCats[i].CollectionID] = append(catsByCol[scannedCats[i].CollectionID], scannedCats[i])
+        }
 	}
 	// projects
-	var catIDs []uint64
-	for _, col := range cols {
-		for _, cat := range col.Categories {
-			catIDs = append(catIDs, cat.ID)
-		}
-	}
-	if len(catIDs) > 0 {
-		pr, err := db.pg.Query(ctx, ProjectsByCategoryIDsQuery, catIDs)
-		if err == nil {
-			defer pr.Close()
-			pm := make(map[uint64][]Project)
-			scannedProjs, err := pgx.CollectRows(pr, func(r pgx.CollectableRow) (Project, error) {
-				var p Project
-				var h, o, rp string
-				if err := r.Scan(&p.ID, &p.CategoryID, &p.RepositoryID, &p.Name, &p.Description, &p.UpdatedAt, &h, &o, &rp); err != nil {
-					return Project{}, err
-				}
-				p.Repository = Repository{ID: p.RepositoryID, Hostname: h, Owner: o, Repo: rp}
-				return p, nil
-			})
+    var catIDs []uint64
+    for _, col := range cols {
+        for _, cat := range catsByCol[col.ID] {
+            catIDs = append(catIDs, cat.ID)
+        }
+    }
+    if len(catIDs) > 0 {
+        pr, err := db.pg.Query(ctx, ProjectsByCategoryIDsQuery, catIDs)
+        if err == nil {
+            defer pr.Close()
+            scannedProjs, err := pgx.CollectRows(pr, pgx.RowToStructByPos[projectRow])
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
 				return nil, err
 			}
 			slog.DebugContext(ctx, "list collections scanned projects", "count", len(scannedProjs))
-			for i := range scannedProjs {
-				pm[scannedProjs[i].CategoryID] = append(
-					pm[scannedProjs[i].CategoryID],
-					scannedProjs[i],
-				)
-			}
-			for j := range cols {
-				for i := range cols[j].Categories {
-					cols[j].Categories[i].Projects = pm[cols[j].Categories[i].ID]
-				}
-			}
-		}
-	}
-	var out []*myawesomelistv1.Collection
-	for _, col := range cols {
-		out = append(out, col.ToProto())
-	}
-	slog.DebugContext(ctx, "list collections done", "collections", len(out))
-	return out, nil
+            for i := range scannedProjs {
+                pm[scannedProjs[i].CategoryID] = append(pm[scannedProjs[i].CategoryID], scannedProjs[i])
+            }
+            // accumulated in pm map
+        }
+    }
+    var out []*myawesomelistv1.Collection
+    for _, col := range cols {
+        pc := &myawesomelistv1.Collection{Id: col.ID, Language: col.Language, UpdatedAt: timestamppb.New(col.UpdatedAt), Repo: &myawesomelistv1.Repository{Hostname: col.Hostname, Owner: col.Owner, Repo: col.Repo}}
+        for _, cat := range catsByCol[col.ID] {
+            var ps []*myawesomelistv1.Project
+            for _, p := range pm[cat.ID] {
+                ps = append(ps, &myawesomelistv1.Project{Id: p.ID, Name: p.Name, Description: p.Description, Repo: &myawesomelistv1.Repository{Hostname: p.Hostname, Owner: p.Owner, Repo: p.Repo}, UpdatedAt: timestamppb.New(p.UpdatedAt)})
+            }
+            pc.Categories = append(pc.Categories, &myawesomelistv1.Category{Id: cat.ID, Name: cat.Name, UpdatedAt: timestamppb.New(cat.UpdatedAt), Projects: ps})
+        }
+        out = append(out, pc)
+    }
+    slog.DebugContext(ctx, "list collections done", "collections", len(out))
+    return out, nil
 }
 
 // GetCollection retrieves a collection from the database
@@ -307,13 +329,39 @@ func (db *Database) GetCollection(
 			}
 		}
 	}
-	return col.ToProto(), nil
+	pc := &myawesomelistv1.Collection{
+		Id:        col.ID,
+		Language:  col.Language,
+		UpdatedAt: timestamppb.New(col.UpdatedAt),
+		Repo:      &myawesomelistv1.Repository{Hostname: col.Repository.Hostname, Owner: col.Repository.Owner, Repo: col.Repository.Repo},
+	}
+	for _, cat := range col.Categories {
+		pc.Categories = append(pc.Categories, &myawesomelistv1.Category{
+			Id:        cat.ID,
+			Name:      cat.Name,
+			UpdatedAt: timestamppb.New(cat.UpdatedAt),
+			Projects: func() []*myawesomelistv1.Project {
+				var ps []*myawesomelistv1.Project
+				for _, p := range cat.Projects {
+					ps = append(ps, &myawesomelistv1.Project{
+						Id:          p.ID,
+						Name:        p.Name,
+						Description: p.Description,
+						Repo:        &myawesomelistv1.Repository{Hostname: p.Repository.Hostname, Owner: p.Repository.Owner, Repo: p.Repository.Repo},
+						UpdatedAt:   timestamppb.New(p.UpdatedAt),
+					})
+				}
+				return ps
+			}(),
+		})
+	}
+	return pc, nil
 }
 
 // UpsertCollections stores collections in the database
 func (db *Database) UpsertCollections(
 	ctx context.Context,
-	cols []*myawesomelistv1.Collection,
+	cols []*UpsertCollectionArgs,
 ) error {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.UpsertCollections")
@@ -322,9 +370,9 @@ func (db *Database) UpsertCollections(
 	if db.pg == nil {
 		return fmt.Errorf("database connection not available")
 	}
-	repos := make([]*myawesomelistv1.Repository, 0, len(cols))
+	repos := make([]*UpsertRepositoryArgs, 0, len(cols))
 	for _, col := range cols {
-		repos = append(repos, col.Repo)
+		repos = append(repos, &UpsertRepositoryArgs{Hostname: col.Repo.Hostname, Owner: col.Repo.Owner, Repo: col.Repo.Repo})
 	}
 	rms, err := db.UpsertRepositories(ctx, repos)
 	if err != nil {
@@ -332,43 +380,31 @@ func (db *Database) UpsertCollections(
 	}
 	slog.DebugContext(ctx, "upsert collections repos resolved", "count", len(rms))
 
-	colms := make([]Collection, 0, len(cols))
-	for i, col := range cols {
-		colms = append(colms, Collection{RepositoryID: rms[i].ID, Language: col.Language})
-	}
-	b := &pgx.Batch{}
-	for i := range colms {
-		b.Queue(UpsertCollectionQuery, colms[i].RepositoryID, colms[i].Language)
-	}
-	slog.DebugContext(ctx, "upsert collections queued", "count", len(colms))
-	br := db.pg.SendBatch(ctx, b)
-	defer br.Close()
-	for i := range colms {
-		var id int64
-		if err := br.QueryRow().Scan(&id); err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			return fmt.Errorf("upsert collection failed: %w", err)
-		}
-		colms[i].ID = uint64(id)
-	}
+    b := &pgx.Batch{}
+    for i := range cols {
+        b.Queue(UpsertCollectionQuery, rms[i].ID, cols[i].Language)
+    }
+    slog.DebugContext(ctx, "upsert collections queued", "count", len(cols))
+    br := db.pg.SendBatch(ctx, b)
+    defer br.Close()
+    colIDs := make([]uint64, len(cols))
+    for i := range cols {
+        var id int64
+        if err := br.QueryRow().Scan(&id); err != nil {
+            span.RecordError(err)
+            span.SetStatus(codes.Error, err.Error())
+            return fmt.Errorf("upsert collection failed: %w", err)
+        }
+        colIDs[i] = uint64(id)
+    }
 
 	for i, col := range cols {
-		cats := make([]*Category, 0, len(col.Categories))
-		for _, cat := range col.Categories {
-			c := &Category{CollectionID: colms[i].ID, Name: cat.Name}
-			for _, p := range cat.Projects {
-				c.Projects = append(
-					c.Projects,
-					Project{
-						Repository:  RepositoryFromProto(p.Repo),
-						Name:        p.Name,
-						Description: p.Description,
-					},
-				)
-			}
-			cats = append(cats, c)
-		}
+		cats := make([]*UpsertCategoryArgs, 0, len(col.Categories))
+        for _, catArg := range col.Categories {
+            c := &UpsertCategoryArgs{CollectionID: colIDs[i], Name: catArg.Name}
+            c.Projects = catArg.Projects
+            cats = append(cats, c)
+        }
 		if err := db.UpsertCategories(ctx, cats); err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -382,14 +418,14 @@ func (db *Database) UpsertCollections(
 // SearchProjects executes a datastore-backed search across repositories.
 func (db *Database) SearchProjects(
 	ctx context.Context,
-	q string,
+	embeddings [][]float32,
 	limit uint32,
 	repos []*myawesomelistv1.Repository,
 ) ([]*myawesomelistv1.Project, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.SearchProjects")
 	span.SetAttributes(
-		attribute.String("query", q),
+		attribute.Bool("embedding_used", len(embeddings) > 0),
 		attribute.Int("repos_len", len(repos)),
 		attribute.Int("limit", int(limit)),
 	)
@@ -398,15 +434,8 @@ func (db *Database) SearchProjects(
 		return nil, fmt.Errorf("database connection not available")
 	}
 	var embedding *pgvector.Vector
-	if q != "" {
-		vecs, err := db.emb.EmbedProjects(
-			ctx,
-			[]*myawesomelistv1.Project{{Name: q, Description: q}},
-		)
-		if err != nil {
-			return nil, fmt.Errorf("generate query embedding failed: %w", err)
-		}
-		v := pgvector.NewVector(vecs[0])
+	if len(embeddings) > 0 {
+		v := pgvector.NewVector(embeddings[0])
 		embedding = &v
 	}
 	slog.DebugContext(ctx, "search projects embedding", "used", embedding != nil)
@@ -433,11 +462,19 @@ func (db *Database) SearchProjects(
 	defer rows.Close()
 	var out []*myawesomelistv1.Project
 	for rows.Next() {
-		var p Project
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.UpdatedAt, &p.Repository.Hostname, &p.Repository.Owner, &p.Repository.Repo); err != nil {
+		var id uint64
+		var name, desc, host, owner, repo string
+		var updated time.Time
+		if err := rows.Scan(&id, &name, &desc, &updated, &host, &owner, &repo); err != nil {
 			return nil, err
 		}
-		out = append(out, p.ToProto())
+		out = append(out, &myawesomelistv1.Project{
+			Id:          id,
+			Name:        name,
+			Description: desc,
+			Repo:        &myawesomelistv1.Repository{Hostname: host, Owner: owner, Repo: repo},
+			UpdatedAt:   timestamppb.New(updated),
+		})
 	}
 	slog.DebugContext(ctx, "search projects results", "count", len(out))
 	return out, rows.Err()
@@ -448,25 +485,28 @@ func (db *Database) SearchProjects(
 // GetProjectStats retrieves project stats from the datastore
 func (db *Database) GetProjectStats(
 	ctx context.Context,
-	repo *myawesomelistv1.Repository,
+	args GetProjectStatsArgs,
 ) (*myawesomelistv1.ProjectStats, error) {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.GetProjectStats")
-	span.SetAttributes(attribute.String("owner", repo.Owner), attribute.String("repo", repo.Repo))
+	span.SetAttributes(attribute.String("owner", args.Repo.Owner), attribute.String("repo", args.Repo.Repo))
 	defer span.End()
 	if db.pg == nil {
 		return nil, fmt.Errorf("database connection not available")
 	}
 	var rid uint64
-	if err := db.pg.QueryRow(ctx, RepoIDQuery, repo.Hostname, repo.Owner, repo.Repo).Scan(&rid); err != nil {
+	if err := db.pg.QueryRow(ctx, RepoIDQuery, args.Repo.Hostname, args.Repo.Owner, args.Repo.Repo).Scan(&rid); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to resolve repository: %w", err)
 	}
-	var ps ProjectStats
+	var id uint64
+	var stargazers *uint32
+	var openIssues *uint32
+	var updated time.Time
 	err := db.pg.QueryRow(ctx, ProjectStatsByRepoIDQuery, rid).
-		Scan(&ps.ID, &ps.RepositoryID, &ps.StargazersCount, &ps.OpenIssueCount, &ps.UpdatedAt)
+		Scan(&id, &rid, &stargazers, &openIssues, &updated)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -475,7 +515,7 @@ func (db *Database) GetProjectStats(
 		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("query project stats failed: %w", err)
 	}
-	return ps.ToProto(), nil
+	return &myawesomelistv1.ProjectStats{Id: id, StargazersCount: stargazers, OpenIssueCount: openIssues, UpdatedAt: timestamppb.New(updated)}, nil
 }
 
 func (db *Database) GetProjectsStats(
@@ -498,9 +538,12 @@ func (db *Database) GetProjectsStats(
 			}
 			return nil, fmt.Errorf("failed to resolve repository: %w", err)
 		}
-		var ps ProjectStats
+		var id uint64
+		var stargazers *uint32
+		var openIssues *uint32
+		var updated time.Time
 		err := db.pg.QueryRow(ctx, ProjectStatsByRepoIDQuery, rid).
-			Scan(&ps.ID, &ps.RepositoryID, &ps.StargazersCount, &ps.OpenIssueCount, &ps.UpdatedAt)
+			Scan(&id, &rid, &stargazers, &openIssues, &updated)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				continue
@@ -509,7 +552,7 @@ func (db *Database) GetProjectsStats(
 			span.SetStatus(codes.Error, err.Error())
 			return nil, fmt.Errorf("query project stats failed: %w", err)
 		}
-		out = append(out, ps.ToProto())
+		out = append(out, &myawesomelistv1.ProjectStats{Id: id, StargazersCount: stargazers, OpenIssueCount: openIssues, UpdatedAt: timestamppb.New(updated)})
 	}
 	return out, nil
 }
@@ -517,16 +560,15 @@ func (db *Database) GetProjectsStats(
 // UpsertProjectStats stores project stats in the datastore
 func (db *Database) UpsertProjectStats(
 	ctx context.Context,
-	repoID uint64,
-	stats *myawesomelistv1.ProjectStats,
+	args UpsertProjectStatsArgs,
 ) error {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.UpsertProjectStats")
-	span.SetAttributes(attribute.Int("repo_id", int(repoID)))
+	span.SetAttributes(attribute.Int("repo_id", int(args.RepositoryID)))
 	defer span.End()
-	slog.DebugContext(ctx, "upsert project stats", "repo_id", repoID)
+	slog.DebugContext(ctx, "upsert project stats", "repo_id", args.RepositoryID)
 	b := &pgx.Batch{}
-	b.Queue(UpsertProjectStatsQuery, repoID, stats.StargazersCount, stats.OpenIssueCount)
+	b.Queue(UpsertProjectStatsQuery, args.RepositoryID, args.StargazersCount, args.OpenIssueCount)
 	br := db.pg.SendBatch(ctx, b)
 	defer br.Close()
 	if _, err := br.Exec(); err != nil {
@@ -538,9 +580,10 @@ func (db *Database) UpsertProjectStats(
 }
 
 // UpsertCategories upserts categories and fills IDs in the provided slice
+
 func (db *Database) UpsertCategories(
 	ctx context.Context,
-	categories []*Category,
+	categories []*UpsertCategoryArgs,
 ) error {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.UpsertCategories")
@@ -553,6 +596,8 @@ func (db *Database) UpsertCategories(
 		}
 		br := db.pg.SendBatch(ctx, b)
 		defer br.Close()
+		// collect generated category IDs to propagate into project args
+		ids := make([]uint64, len(categories))
 		for i := range categories {
 			var id int64
 			if err := br.QueryRow().Scan(&id); err != nil {
@@ -560,28 +605,31 @@ func (db *Database) UpsertCategories(
 				span.SetStatus(codes.Error, err.Error())
 				return fmt.Errorf("upsert categories failed: %w", err)
 			}
-			categories[i].ID = uint64(id)
+			ids[i] = uint64(id)
 		}
-	}
-	var projects []*Project
-	for _, cm := range categories {
-		for _, project := range cm.Projects {
-			rms, err := db.UpsertRepositories(
-				ctx,
-				[]*myawesomelistv1.Repository{project.Repository.ToProto()},
-			)
-			if err != nil || len(rms) == 0 {
-				return fmt.Errorf("upsert project repository failed: %w", err)
+		var projects []*UpsertProjectArgs
+		for i, cm := range categories {
+			for _, project := range cm.Projects {
+				rms, err := db.UpsertRepositories(
+					ctx,
+					[]*UpsertRepositoryArgs{{Hostname: project.Repository.Hostname, Owner: project.Repository.Owner, Repo: project.Repository.Repo}},
+				)
+				if err != nil || len(rms) == 0 {
+					return fmt.Errorf("upsert project repository failed: %w", err)
+				}
+				projects = append(projects, &UpsertProjectArgs{
+					CategoryID:   ids[i],
+					RepositoryID: rms[0].ID,
+					Name:         project.Name,
+					Description:  project.Description,
+				})
 			}
-			project.RepositoryID = rms[0].ID
-			project.CategoryID = cm.ID
-			projects = append(projects, &project)
 		}
-	}
-	if err := db.UpsertProjects(ctx, projects); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return fmt.Errorf("upsert projects failed: %w", err)
+		if err := db.UpsertProjects(ctx, projects); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return fmt.Errorf("upsert projects failed: %w", err)
+		}
 	}
 	return nil
 }
@@ -589,7 +637,7 @@ func (db *Database) UpsertCategories(
 // UpsertProjects upserts projects and their embeddings
 func (db *Database) UpsertProjects(
 	ctx context.Context,
-	projects []*Project,
+	projects []*UpsertProjectArgs,
 ) error {
 	tracer := otel.Tracer("myawesomelist/database")
 	ctx, span := tracer.Start(ctx, "Database.UpsertProjects")
@@ -607,61 +655,71 @@ func (db *Database) UpsertProjects(
 	}
 	br := db.pg.SendBatch(ctx, b)
 	defer br.Close()
-	for i := range projects {
+	for range projects {
 		var id int64
 		if err := br.QueryRow().Scan(&id); err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return fmt.Errorf("upsert project failed: %w", err)
 		}
-		projects[i].ID = uint64(id)
+		_ = uint64(id)
 	}
 
-	inputs := make([]*myawesomelistv1.Project, len(projects))
-	for i, project := range projects {
-		inputs[i] = project.ToProto()
-	}
-	vecs, err := db.emb.EmbedProjects(ctx, inputs)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return fmt.Errorf("generate project embeddings failed: %w", err)
-	}
-	pes := make([]ProjectEmbeddings, len(projects))
-	for i, project := range projects {
-		pes[i] = ProjectEmbeddings{
-			ProjectID: project.ID,
-			Embedding: pgvector.NewVector(vecs[i]),
-		}
-	}
-	eb := &pgx.Batch{}
-	for _, pe := range pes {
-		eb.Queue(UpsertProjectEmbeddingQuery, pe.ProjectID, pe.Embedding)
-	}
-	ebr := db.pg.SendBatch(ctx, eb)
-	defer ebr.Close()
-	for range pes {
-		if _, err := ebr.Exec(); err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			return fmt.Errorf("upsert project embedding failed: %w", err)
-		}
-	}
 	return nil
 }
 
 func (db *Database) UpsertProjectMetadata(
 	ctx context.Context,
-	repoID uint64,
-	readme string,
+	args UpsertProjectMetadataArgs,
 ) error {
-	slog.DebugContext(ctx, "upsert project metadata", "repo_id", repoID, "readme_len", len(readme))
+	slog.DebugContext(ctx, "upsert project metadata", "repo_id", args.RepositoryID, "readme_len", len(args.Readme))
 	b := &pgx.Batch{}
-	b.Queue(UpsertProjectMetadataQuery, repoID, readme)
+	b.Queue(UpsertProjectMetadataQuery, args.RepositoryID, args.Readme)
 	br := db.pg.SendBatch(ctx, b)
 	defer br.Close()
 	if _, err := br.Exec(); err != nil {
 		return fmt.Errorf("upsert project metadata failed: %w", err)
+	}
+	return nil
+}
+
+func (db *Database) ListStaledProjectEmbeddings(ctx context.Context, args ListStaledProjectEmbeddingsArgs) ([]StaledProjectEmbeddingResult, error) {
+	tracer := otel.Tracer("myawesomelist/database")
+	ctx, span := tracer.Start(ctx, "Database.ListStaledProjectEmbeddings")
+	defer span.End()
+	if db.pg == nil {
+		return nil, fmt.Errorf("database connection not available")
+	}
+	ttlSeconds := int64(args.TTL.Seconds())
+	pr, err := db.pg.Query(ctx, ProjectsStaledEmbeddingsQuery, ttlSeconds)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("list staled project embeddings query failed: %w", err)
+	}
+	defer pr.Close()
+	rows, err := pgx.CollectRows(pr, pgx.RowToStructByPos[StaledProjectEmbeddingResult])
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (db *Database) UpsertProjectEmbedding(ctx context.Context, args UpsertProjectEmbeddingArgs) error {
+	tracer := otel.Tracer("myawesomelist/database")
+	ctx, span := tracer.Start(ctx, "Database.UpsertProjectEmbedding")
+	span.SetAttributes(attribute.Int("vector_dim", len(args.Vec)))
+	defer span.End()
+	if db.pg == nil {
+		return fmt.Errorf("database connection not available")
+	}
+	v := pgvector.NewVector(args.Vec)
+	if _, err := db.pg.Exec(ctx, UpsertProjectEmbeddingQuery, args.ProjectID, v); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return fmt.Errorf("upsert project embedding failed: %w", err)
 	}
 	return nil
 }

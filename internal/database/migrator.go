@@ -31,7 +31,7 @@ func NewMigrator(pg *pgxpool.Pool) (*Migrator, error) {
 }
 
 // NewMigratorForConf constructs a Migrator from configuration by creating a pgx pool internally.
-func NewMigratorForConf(cfg *config.Config) (*Migrator, error) {
+func NewMigratorForConfig(cfg *config.Config) (*Migrator, error) {
 	pg, err := dbpgx.NewClientForConfig(cfg)
 	if err != nil {
 		return nil, err
