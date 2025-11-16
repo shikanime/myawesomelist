@@ -7,6 +7,7 @@ import (
 
 // SetupLog configures a global slog logger whose level follows LOG_LEVEL changes.
 func SetupLog(cfg *Config) {
+	_ = cfg.Bind()
 	var lv slog.LevelVar
 	lv.Set(cfg.GetLogLevel())
 	cfg.OnLogLevelChange(func(level slog.Level) { lv.Set(level) })

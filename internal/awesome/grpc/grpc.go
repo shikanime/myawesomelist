@@ -1,18 +1,18 @@
 package grpc
 
 import (
-    "context"
-    "errors"
-    "log/slog"
+	"context"
+	"errors"
+	"log/slog"
 
-    "connectrpc.com/connect"
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/attribute"
-    "go.opentelemetry.io/otel/codes"
-    "myawesomelist.shikanime.studio/internal/awesome"
-    "myawesomelist.shikanime.studio/internal/awesome/github"
-    myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
-    myawesomelistv1connect "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1/myawesomelistv1connect"
+	"connectrpc.com/connect"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"myawesomelist.shikanime.studio/internal/awesome"
+	"myawesomelist.shikanime.studio/internal/awesome/github"
+	myawesomelistv1 "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1"
+	myawesomelistv1connect "myawesomelist.shikanime.studio/pkgs/proto/myawesomelist/v1/myawesomelistv1connect"
 )
 
 var _ myawesomelistv1connect.AwesomeServiceHandler = (*AwesomeService)(nil)
@@ -197,7 +197,7 @@ func (s *AwesomeService) SearchProjects(
 		"repos",
 		len(repos),
 	)
-    projects, err := s.clients.Agent().SearchProjects(ctx, req.Msg)
+	projects, err := s.clients.Agent().SearchProjects(ctx, req.Msg)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

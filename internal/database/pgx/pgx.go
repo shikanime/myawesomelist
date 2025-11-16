@@ -9,6 +9,9 @@ import (
 
 // NewClientForConfig creates a pgxpool.Pool using DSN information from cfg.
 func NewClientForConfig(cfg *config.Config) (*pgxpool.Pool, error) {
+	if err := cfg.Bind(); err != nil {
+		return nil, err
+	}
 	dsnURL, err := cfg.GetDsn()
 	if err != nil {
 		return nil, err

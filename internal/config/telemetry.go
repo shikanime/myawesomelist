@@ -12,6 +12,9 @@ import (
 )
 
 func SetupTelemetry(ctx context.Context, cfg *Config) (func(), error) {
+	if err := cfg.Bind(); err != nil {
+		return func() {}, err
+	}
 	exp, err := otlptracehttp.New(ctx)
 	if err != nil {
 		return func() {}, err

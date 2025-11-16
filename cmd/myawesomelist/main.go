@@ -17,6 +17,10 @@ import (
 func main() {
 	ctx := context.Background()
 	cfg := config.New()
+	if err := cfg.Bind(); err != nil {
+		slog.ErrorContext(ctx, "config binding failed", "error", err)
+		os.Exit(1)
+	}
 	cleanup, err := config.SetupTelemetry(ctx, cfg)
 	if err != nil {
 		slog.WarnContext(ctx, "telemetry setup failed", "error", err)
@@ -40,7 +44,7 @@ func RunServerWithConf(cfg *config.Config) error {
 	ctx := context.Background()
 	cfg.Watch(ctx)
 	if dsn != "" {
-		cfg.Set("DSN", dsn)
+		cfg.Set("dsn", dsn)
 	}
 	srv, err := http.NewServerForConfig(cfg)
 	if err != nil {
@@ -74,7 +78,7 @@ func RunServerWithConf(cfg *config.Config) error {
 // RunMigrateUpWithConf applies all pending migrations with the given configuration.
 func RunMigrateUpWithConf(cfg *config.Config) error {
 	if dsn != "" {
-		cfg.Set("DSN", dsn)
+		cfg.Set("dsn", dsn)
 	}
 	mg, err := database.NewMigratorForConfig(cfg)
 	if err != nil {
@@ -86,7 +90,7 @@ func RunMigrateUpWithConf(cfg *config.Config) error {
 // RunMigrateDownWithConf reverts all applied migrations with the given configuration.
 func RunMigrateDownWithConf(cfg *config.Config) error {
 	if dsn != "" {
-		cfg.Set("DSN", dsn)
+		cfg.Set("dsn", dsn)
 	}
 	mg, err := database.NewMigratorForConfig(cfg)
 	if err != nil {
@@ -97,14 +101,15 @@ func RunMigrateDownWithConf(cfg *config.Config) error {
 
 func RunEmbedAllProjectsWithConf(cfg *config.Config) error {
 	if dsn != "" {
-		cfg.Set("DSN", dsn)
+		cfg.Set("dsn", dsn)
 	}
 	aw, err := awesome.NewForConfig(cfg)
 	if err != nil {
 		return err
 	}
 	defer aw.Close()
-	return aw.Agent().UpsertAllStaledProjectEmbeddings(context.Background(), cfg.GetProjectEmbeddingsTTL())
+	return aw.Agent().
+		UpsertAllStaledProjectEmbeddings(context.Background(), cfg.GetProjectEmbeddingsTTL())
 }
 
 // NewServeCmdForConf returns a new cobra.Command for running the API server with the given configuration.
